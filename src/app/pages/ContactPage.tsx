@@ -20,7 +20,7 @@ export function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-24 bg-cream">
+    <div className="min-h-screen pt-32 pb-24 bg-bg">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -30,7 +30,7 @@ export function ContactPage() {
           <h1 className="font-display text-[clamp(3rem,6vw,5rem)] leading-[0.95] mb-6">
             {language === 'es' ? 'Contáctanos' : 'Contact Us'}
           </h1>
-          <p className="text-xl text-ink-soft max-w-2xl mx-auto">
+          <p className="text-xl text-text-muted max-w-2xl mx-auto">
             {language === 'es'
               ? 'Estamos aquí para responder tus preguntas'
               : "We're here to answer your questions"}
@@ -45,19 +45,19 @@ export function ContactPage() {
             animate="visible"
             className="space-y-8"
           >
-            <div className="bg-white p-8 rounded-xl shadow-[var(--shadow-card)]">
+            <div className="bg-surface-card p-8 rounded-xl shadow-[var(--shadow-card)]">
               <h2 className="font-display text-2xl mb-6">
                 {language === 'es' ? 'Información de Contacto' : 'Contact Information'}
               </h2>
 
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <MapPin className="text-accent flex-shrink-0" size={24} />
+                  <MapPin className="text-gold flex-shrink-0" size={24} />
                   <div>
                     <p className="font-semibold mb-1">
                       {language === 'es' ? 'Dirección' : 'Address'}
                     </p>
-                    <p className="text-ink-soft">
+                    <p className="text-text-muted">
                       {siteSettings.address}
                       <br />
                       {siteSettings.city}, {siteSettings.state}{' '}
@@ -67,14 +67,14 @@ export function ContactPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <Phone className="text-accent flex-shrink-0" size={24} />
+                  <Phone className="text-gold flex-shrink-0" size={24} />
                   <div>
                     <p className="font-semibold mb-1">
                       {language === 'es' ? 'Teléfono / WhatsApp' : 'Phone / WhatsApp'}
                     </p>
                     <a
                       href={`tel:${siteSettings.phone}`}
-                      className="text-ink-soft hover:text-accent transition-colors"
+                      className="text-text-muted hover:text-gold transition-colors"
                     >
                       {siteSettings.phone}
                     </a>
@@ -82,14 +82,14 @@ export function ContactPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <Mail className="text-accent flex-shrink-0" size={24} />
+                  <Mail className="text-gold flex-shrink-0" size={24} />
                   <div>
                     <p className="font-semibold mb-1">
                       {language === 'es' ? 'Correo Electrónico' : 'Email'}
                     </p>
                     <a
                       href={`mailto:${siteSettings.email}`}
-                      className="text-ink-soft hover:text-accent transition-colors"
+                      className="text-text-muted hover:text-gold transition-colors"
                     >
                       {siteSettings.email}
                     </a>
@@ -97,12 +97,12 @@ export function ContactPage() {
                 </div>
 
                 <div className="flex gap-4">
-                  <Clock className="text-accent flex-shrink-0" size={24} />
+                  <Clock className="text-gold flex-shrink-0" size={24} />
                   <div>
                     <p className="font-semibold mb-2">
                       {language === 'es' ? 'Horario' : 'Hours'}
                     </p>
-                    <div className="space-y-1 text-sm text-ink-soft">
+                    <div className="space-y-1 text-sm text-text-muted">
                       {siteSettings.businessHours.map((hours) => (
                         <div key={hours.day} className="flex justify-between gap-4">
                           <span>{hours.day}:</span>
@@ -131,7 +131,7 @@ export function ContactPage() {
           >
             <form
               onSubmit={handleSubmit}
-              className="bg-white p-8 rounded-xl shadow-[var(--shadow-card)] space-y-6"
+              className="bg-surface-card p-8 rounded-xl shadow-[var(--shadow-card)] space-y-6"
             >
               <div>
                 <label className="block text-sm font-semibold mb-2">
@@ -140,7 +140,7 @@ export function ContactPage() {
                 <input
                   type="text"
                   required
-                  className="w-full px-4 py-3 border border-black/10 rounded-lg focus:outline-none focus:border-accent transition-colors"
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-surface focus:outline-none focus:border-gold text-text transition-colors"
                 />
               </div>
 
@@ -151,7 +151,7 @@ export function ContactPage() {
                 <input
                   type="email"
                   required
-                  className="w-full px-4 py-3 border border-black/10 rounded-lg focus:outline-none focus:border-accent transition-colors"
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-surface focus:outline-none focus:border-gold text-text transition-colors"
                 />
               </div>
 
@@ -161,7 +161,7 @@ export function ContactPage() {
                 </label>
                 <input
                   type="tel"
-                  className="w-full px-4 py-3 border border-black/10 rounded-lg focus:outline-none focus:border-accent transition-colors"
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-surface focus:outline-none focus:border-gold text-text transition-colors"
                 />
               </div>
 
@@ -172,13 +172,13 @@ export function ContactPage() {
                 <textarea
                   required
                   rows={5}
-                  className="w-full px-4 py-3 border border-black/10 rounded-lg focus:outline-none focus:border-accent transition-colors resize-none"
+                  className="w-full px-4 py-3 border border-border rounded-lg bg-surface focus:outline-none focus:border-gold text-text transition-colors resize-none"
                 ></textarea>
               </div>
 
               <button
                 type="submit"
-                className="w-full px-6 py-4 bg-accent hover:bg-accent-hover text-white font-bold uppercase tracking-wider rounded-lg transition-all"
+                className="w-full px-6 py-4 bg-gold hover:bg-gold-hover text-ink font-bold uppercase tracking-wider rounded-lg transition-all"
               >
                 {language === 'es' ? 'Enviar Mensaje' : 'Send Message'}
               </button>

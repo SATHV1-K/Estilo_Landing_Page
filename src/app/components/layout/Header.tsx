@@ -29,14 +29,14 @@ export function Header() {
       variants={fadeInDown}
       initial="hidden"
       animate="visible"
-      className="fixed top-0 left-0 right-0 z-50 bg-cream/95 backdrop-blur-sm"
+      className="fixed top-0 left-0 right-0 z-50 bg-bg/95 backdrop-blur-sm border-b border-border"
       style={{ boxShadow: 'var(--shadow-nav)' }}
     >
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="text-2xl font-display font-bold text-ink">
+            <div className="text-2xl font-display font-bold text-white">
               ESTILO LATINO
             </div>
           </Link>
@@ -59,7 +59,7 @@ export function Header() {
             <LanguageToggle />
             
             <button
-              className="lg:hidden p-2 text-ink hover:bg-black/5 rounded-lg transition-colors"
+              className="lg:hidden p-2 text-text hover:bg-white/10 rounded-lg transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -83,8 +83,8 @@ export function Header() {
                   to={item.path}
                   className={`px-4 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors ${
                     location.pathname === item.path
-                      ? 'bg-black text-white'
-                      : 'bg-white text-ink hover:bg-black/5'
+                      ? 'bg-gold text-ink'
+                      : 'bg-surface text-text hover:bg-surface-elevated'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >

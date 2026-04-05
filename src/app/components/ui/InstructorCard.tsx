@@ -14,7 +14,7 @@ export function InstructorCard({ instructor }: InstructorCardProps) {
   return (
     <motion.div
       variants={cardReveal}
-      className="group relative bg-white rounded-lg overflow-hidden shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300"
+      className="group relative bg-surface-card rounded-lg overflow-hidden shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-300"
       whileHover={{ y: -4 }}
     >
       {/* Photo */}
@@ -61,7 +61,7 @@ export function InstructorCard({ instructor }: InstructorCardProps) {
         <h3 className="font-display text-2xl uppercase tracking-tight mb-2">
           {instructor.name}
         </h3>
-        <p className="text-accent font-semibold text-sm uppercase tracking-wider">
+        <p className="text-gold font-semibold text-sm uppercase tracking-wider">
           {instructor.specialty}
         </p>
       </div>

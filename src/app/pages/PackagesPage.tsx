@@ -27,7 +27,7 @@ export function PackagesPage() {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-24 bg-cream">
+    <div className="min-h-screen pt-32 pb-24 bg-bg">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -37,7 +37,7 @@ export function PackagesPage() {
           <h1 className="font-display text-[clamp(3rem,6vw,5rem)] leading-[0.95] mb-6">
             {language === 'es' ? 'Paquetes y Precios' : 'Packages & Pricing'}
           </h1>
-          <p className="text-xl text-ink-soft max-w-2xl mx-auto">
+          <p className="text-xl text-text-muted max-w-2xl mx-auto">
             {language === 'es'
               ? 'Elige el paquete perfecto para tus necesidades'
               : 'Choose the perfect package for your needs'}
@@ -52,8 +52,8 @@ export function PackagesPage() {
               onClick={() => setSelectedCategory(category.id)}
               className={`px-6 py-3 rounded-full text-sm font-semibold uppercase tracking-wider transition-all ${
                 selectedCategory === category.id
-                  ? 'bg-black text-white'
-                  : 'bg-white text-ink hover:bg-black/5'
+                  ? 'bg-gold text-ink'
+                  : 'bg-surface-card text-text hover:bg-surface-elevated'
               }`}
             >
               {category.label}
@@ -72,32 +72,32 @@ export function PackagesPage() {
             <motion.div
               key={pkg.id}
               variants={fadeInUp}
-              className="bg-white rounded-xl p-8 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all group"
+              className="bg-surface-card rounded-xl p-8 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all group"
             >
               <h3 className="font-display text-3xl mb-2">
                 {language === 'es' ? pkg.nameEs : pkg.name}
               </h3>
 
-              <div className="text-5xl font-bold text-accent my-6">
+              <div className="text-5xl font-bold text-gold my-6">
                 {formatPrice(pkg.price)}
               </div>
 
               {pkg.classCount && (
-                <p className="text-lg text-ink-soft mb-2">
+                <p className="text-lg text-text-muted mb-2">
                   {pkg.classCount}{' '}
                   {language === 'es' ? 'clases' : 'classes'}
                 </p>
               )}
 
               {pkg.expirationMonths && (
-                <p className="text-sm text-ink-soft mb-6">
+                <p className="text-sm text-text-muted mb-6">
                   {language === 'es' ? 'Expira en' : 'Expires in'}{' '}
                   {pkg.expirationMonths}{' '}
                   {language === 'es' ? 'mes(es)' : 'month(s)'}
                 </p>
               )}
 
-              <p className="text-ink-soft mb-8 text-sm leading-relaxed">
+              <p className="text-text-muted mb-8 text-sm leading-relaxed">
                 {language === 'es' ? pkg.descriptionEs : pkg.description}
               </p>
 
@@ -105,7 +105,7 @@ export function PackagesPage() {
                 href={pkg.paymentLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-white font-bold uppercase tracking-wider rounded-lg transition-all group-hover:-translate-y-1"
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold hover:bg-gold-hover text-ink font-bold uppercase tracking-wider rounded-lg transition-all group-hover:-translate-y-1"
               >
                 {language === 'es' ? 'Pagar Aquí' : 'Pay Here'}
                 <ExternalLink size={16} />
@@ -120,9 +120,9 @@ export function PackagesPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 p-6 bg-accent/10 rounded-lg text-center"
+            className="mt-12 p-6 bg-gold/10 rounded-lg text-center"
           >
-            <p className="text-ink-soft">
+            <p className="text-text-muted">
               {language === 'es'
                 ? 'Todas las tarjetas de clases son válidas solo para clases de Salsa y Bachata para adultos.'
                 : 'All class cards are valid only for adult Salsa & Bachata classes.'}

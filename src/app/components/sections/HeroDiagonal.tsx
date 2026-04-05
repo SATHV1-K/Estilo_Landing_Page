@@ -42,11 +42,11 @@ export function HeroDiagonal({
   const { language } = useI18n();
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-cream pt-20">
+    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-bg pt-20">
       <div className="absolute inset-0 z-0">
         {/* Diagonal Split Background */}
         <div
-          className="absolute inset-0 bg-cream"
+          className="absolute inset-0 bg-bg"
           style={{
             clipPath: 'polygon(0 0, 45% 0, 50% 100%, 0 100%)',
           }}
@@ -73,7 +73,7 @@ export function HeroDiagonal({
               {(headlineAccent || headlineAccentEs) && (
                 <>
                   <br />
-                  <span className="text-accent">
+                  <span className="text-gold">
                     {language === 'es' ? headlineAccentEs : headlineAccent}
                   </span>
                 </>
@@ -84,7 +84,7 @@ export function HeroDiagonal({
               variants={heroSubheadline}
               initial="hidden"
               animate="visible"
-              className="text-[clamp(1rem,2vw,1.5rem)] uppercase tracking-wider font-semibold text-ink-soft"
+              className="text-[clamp(1rem,2vw,1.5rem)] uppercase tracking-wider font-semibold text-text-muted"
             >
               {language === 'es' ? subheadlineEs : subheadline}
             </motion.p>

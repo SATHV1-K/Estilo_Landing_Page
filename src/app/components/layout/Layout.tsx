@@ -15,7 +15,7 @@ export function Layout() {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream">
+    <div className="min-h-screen flex flex-col bg-bg">
       <AnnouncementBar />
       <Header />
       <main className="flex-1">

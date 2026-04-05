@@ -19,7 +19,7 @@ export function InstructorGrid({ instructors }: InstructorGridProps) {
   const activeInstructors = instructors.filter((i) => i.isActive);
 
   return (
-    <section className="py-24 bg-cream">
+    <section className="py-24 bg-surface">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         {/* Section Heading */}
         <div className="text-center mb-16">
@@ -30,7 +30,7 @@ export function InstructorGrid({ instructors }: InstructorGridProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.4 }}
-            className="text-xl uppercase tracking-wider text-ink-soft mt-4"
+            className="text-xl uppercase tracking-wider text-text-muted mt-4"
           >
             {translations.sections.instructors.subtitle[language]}
           </motion.p>

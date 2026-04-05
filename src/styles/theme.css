@@ -1,24 +1,39 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* ─── Estilo Latino Color Palette ─── */
-  --cream: #F5F2ED;
-  --cream-warm: #FAF6F0;
-  --surface: #FFFFFF;
-  --ink: #1A1A1A;
-  --ink-soft: #6B6B6B;
-  --accent: #7C3AED;
-  --accent-hover: #6D28D9;
-  --accent-warm: #D4A017;
-  --black: #000000;
-  --white: #FFFFFF;
-  --photo-blue: #B8D4E3;
-  --gradient-start: #F5F2ED;
-  --gradient-end: #E8D5F5;
-  --success: #22C55E;
-  --error: #EF4444;
-  --warning: #F59E0B;
-  
+  /* ─── Estilo Latino Dark Theme ─── */
+  --bg:              #0A0A0A;
+  --surface:         #141414;
+  --surface-card:    #1A1A1A;
+  --surface-elevated:#222222;
+  --border:          #2A2A2A;
+  --border-strong:   #3A3A3A;
+  --gold:            #F6B000;
+  --gold-hover:      #D49800;
+  --gold-light:      #F9C840;
+  --text:            #E8E8E8;
+  --text-muted:      #999999;
+  --text-dim:        #666666;
+  --ink:             #0A0A0A;
+  --white:           #FFFFFF;
+  --black:           #000000;
+  --photo-blue:      #B8D4E3;
+  --success:         #22C55E;
+  --error:           #EF4444;
+  --warning:         #F59E0B;
+  --info:            #3B82F6;
+
+  /* ─── Legacy aliases (keep old names pointing to new values so any missed refs stay readable) ─── */
+  --cream:           var(--bg);
+  --cream-warm:      var(--surface);
+  --surface-white:   var(--surface-card);
+  --accent:          var(--gold);
+  --accent-hover:    var(--gold-hover);
+  --accent-warm:     var(--gold);
+  --ink-soft:        var(--text-muted);
+  --gradient-start:  var(--bg);
+  --gradient-end:    var(--surface-card);
+
   /* ─── Spacing ─── */
   --space-1: 4px;
   --space-2: 8px;
@@ -31,58 +46,67 @@
   --space-9: 96px;
   --space-10: 120px;
   --space-11: 160px;
-  
+
   /* ─── Shadows & Borders ─── */
-  --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
-  --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.12);
-  --shadow-nav: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.5);
+  --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.7);
+  --shadow-nav: 0 2px 12px rgba(0,0,0,0.5);
   --radius-pill: 9999px;
   --radius-card: 8px;
   --radius-button: 8px;
-  --border-subtle: 1px solid rgba(0,0,0,0.08);
-  
-  /* ─── Legacy vars for compatibility ─── */
+  --border-subtle: 1px solid rgba(255,255,255,0.06);
+
+  /* ─── Legacy vars for shadcn/ui compatibility ─── */
   --font-size: 16px;
-  --background: var(--cream);
-  --foreground: var(--ink);
-  --card: var(--surface);
-  --card-foreground: var(--ink);
-  --primary: var(--accent);
-  --primary-foreground: var(--white);
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--surface-card);
+  --card-foreground: var(--text);
+  --primary: var(--gold);
+  --primary-foreground: var(--ink);
   --destructive: var(--error);
   --destructive-foreground: var(--white);
-  --border: rgba(0, 0, 0, 0.08);
-  --ring: var(--accent);
+  --ring: var(--gold);
   --radius: 0.5rem;
 }
 
 @theme inline {
-  --color-cream: var(--cream);
-  --color-cream-warm: var(--cream-warm);
-  --color-surface: var(--surface);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-accent-warm: var(--accent-warm);
-  --color-black: var(--black);
-  --color-white: var(--white);
-  --color-photo-blue: var(--photo-blue);
-  --color-gradient-start: var(--gradient-start);
-  --color-gradient-end: var(--gradient-end);
-  --color-success: var(--success);
-  --color-error: var(--error);
-  --color-warning: var(--warning);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
+  --color-bg:              var(--bg);
+  --color-surface:         var(--surface);
+  --color-surface-card:    var(--surface-card);
+  --color-surface-elevated:var(--surface-elevated);
+  --color-border:          var(--border);
+  --color-border-strong:   var(--border-strong);
+  --color-gold:            var(--gold);
+  --color-gold-hover:      var(--gold-hover);
+  --color-gold-light:      var(--gold-light);
+  --color-text:            var(--text);
+  --color-text-muted:      var(--text-muted);
+  --color-text-dim:        var(--text-dim);
+  --color-ink:             var(--ink);
+  --color-white:           var(--white);
+  --color-black:           var(--black);
+  --color-photo-blue:      var(--photo-blue);
+  --color-success:         var(--success);
+  --color-error:           var(--error);
+  --color-warning:         var(--warning);
+  --color-info:            var(--info);
+  /* legacy aliases */
+  --color-cream:           var(--bg);
+  --color-cream-warm:      var(--surface);
+  --color-accent:          var(--gold);
+  --color-accent-hover:    var(--gold-hover);
+  --color-accent-warm:     var(--gold);
+  --color-ink-soft:        var(--text-muted);
+  --color-background:      var(--background);
+  --color-foreground:      var(--foreground);
+  --color-card:            var(--card);
   --color-card-foreground: var(--card-foreground);
-  --color-primary: var(--primary);
+  --color-primary:         var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-destructive: var(--destructive);
+  --color-destructive:     var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-ring: var(--ring);
+  --color-ring:            var(--ring);
 }
 
 @layer base {
@@ -93,12 +117,20 @@
   html {
     font-size: var(--font-size);
     scroll-behavior: smooth;
+    background-color: #0A0A0A;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    @apply bg-cream text-ink;
+    @apply bg-bg text-text;
     font-family: 'DM Sans', sans-serif;
     line-height: 1.6;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
   }
 
   h1, h2, h3, h4, h5, h6 {

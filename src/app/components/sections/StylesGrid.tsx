@@ -20,12 +20,7 @@ export function StylesGrid({ styles, maxVisible = 6 }: StylesGridProps) {
   const visibleStyles = styles.filter((s) => s.isActive).slice(0, maxVisible);
 
   return (
-    <section
-      className="py-24 relative overflow-hidden"
-      style={{
-        background: `linear-gradient(180deg, var(--gradient-start) 0%, var(--gradient-end) 100%)`,
-      }}
-    >
+    <section className="py-24 relative overflow-hidden bg-surface">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         {/* Section Heading */}
         <div className="text-center mb-16">
@@ -34,7 +29,7 @@ export function StylesGrid({ styles, maxVisible = 6 }: StylesGridProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.4 }}
-            className="text-xl uppercase tracking-wider text-ink-soft mt-4"
+            className="text-xl uppercase tracking-wider text-text-muted mt-4"
           >
             {translations.sections.styles.subtitle[language]}
           </motion.p>

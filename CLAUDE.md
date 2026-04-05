@@ -6,13 +6,18 @@
 
 Next.js 14+ (App Router), TypeScript, Tailwind CSS, Framer Motion, Prisma. Bilingual (EN/ES).
 
+## THEME: DARK — Black & Gold
+
+The entire public site uses a dark theme based on the studio logo: black background, gold (#F6B000) accent, white text. The admin panel (/admin/*) keeps a light theme.
+
 ## Design System — NON-NEGOTIABLE RULES
 
 ### Typography
 
 - **Display / Headlines:** `font-display` → Bebas Neue. Always `uppercase`. Never use Inter, Roboto, Arial, or system fonts for headings.
 - **Body / UI:** `font-body` → DM Sans. Sentence case.
-- **Never** use any font not listed above. If you're tempted to reach for Inter or sans-serif as a display font, stop — use Bebas Neue.
+- **Never** use any font not listed above.
+- **Dark bg text rendering:** The root html/body MUST have `-webkit-font-smoothing: antialiased` and `font-smoothing: antialiased`.
 
 Font scale (use Tailwind classes):
 ```
@@ -24,83 +29,102 @@ body          → clamp(0.95rem, 1.1vw, 1.125rem), line-height 1.6
 
 ### Colors
 
-Use these Tailwind tokens. Do NOT invent new colors.
-
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `cream` / `cream-warm` | #F5F2ED / #FAF6F0 | Page background, card backgrounds |
-| `ink` / `ink-soft` | #1A1A1A / #6B6B6B | Primary text / secondary text |
-| `accent` / `accent-hover` | #7C3AED / #6D28D9 | CTA buttons, links, subscribe |
-| `accent-warm` | #D4A017 | Secondary accent (gold) |
-| `black` | #000000 | Nav pills, marquee, card labels |
-| `white` | #FFFFFF | Text on dark backgrounds |
-| `photo-blue` | #B8D4E3 | Dance photo backdrop |
-| `lavender` | #E8D5F5 | Styles section gradient end |
+| `bg` | `#0A0A0A` | Page background — near-black, NOT pure #000 |
+| `surface` | `#141414` | Alternate section backgrounds |
+| `surface-card` | `#1A1A1A` | Cards, panels, grid cells |
+| `surface-elevated` | `#222222` | Modals, dropdowns, hovered cards |
+| `border` | `#2A2A2A` | Subtle borders, dividers |
+| `border-strong` | `#3A3A3A` | Input borders, visible dividers |
+| `gold` | `#F6B000` | PRIMARY ACCENT — CTAs, buttons, active states, links, highlights |
+| `gold-hover` | `#D49800` | Button hover state |
+| `gold-light` | `#F9C840` | Subtle highlights, badge backgrounds |
+| `white` | `#FFFFFF` | Headlines, primary text emphasis |
+| `text` | `#E8E8E8` | Body text (slightly off-white for eye comfort) |
+| `text-muted` | `#999999` | Secondary text, captions |
+| `text-dim` | `#666666` | Placeholders, disabled text — LARGE TEXT ONLY (fails AA at small sizes) |
+| `ink` | `#0A0A0A` | Text ON gold buttons (dark text on gold bg) |
+| `error` | `#EF4444` | Error states |
+| `success` | `#22C55E` | Success states |
 
-Background is ALWAYS `cream` (#F5F2ED), never pure white for page backgrounds. Cards and elevated surfaces use `white` or `cream-warm`.
-
-### Spacing
-
-Base unit: 8px. Section vertical padding: `py-section` (clamp 3rem–7.5rem). Container: `max-w-site` (1440px) with `px-16` desktop, `px-6` mobile. Card gap: `gap-6`.
+**CRITICAL COLOR RULES:**
+- Page background is ALWAYS `bg` (#0A0A0A), NEVER white, cream, or any light color
+- Cards/cells use `surface-card` (#1A1A1A), NOT white
+- Primary accent is `gold` (#F6B000), NOT purple — there is NO purple in this design
+- Text on gold buttons is `ink` (#0A0A0A dark), NOT white
+- Body text is `text` (#E8E8E8), NOT pure white (reduces eye strain)
+- `text-dim` (#666) is ONLY for placeholder text or decorative elements ≥18px — never for readable body text
 
 ### Component Patterns
 
-**NavPill:** Black rounded-full pill, white uppercase text (DM Sans 600, text-xs, tracking-widest). Hover: bg-gray-800 or scale-[1.02].
+**NavPill:**
+- Inactive: transparent bg, `text` color, no border. Hover: `gold` color.
+- Active: `bg-gold text-ink` (gold background, dark text), `rounded-full`, `font-bold`.
 
-**CTAButton:** `bg-accent` rounded-lg pill with white uppercase label + separate white rounded-lg square with arrow icon appended right. Hover: `bg-accent-hover`, `translateY(-2px)`, shadow increase.
+**CTAButton:** `bg-gold text-ink` rounded-lg with bold uppercase label + separate `bg-ink text-gold` rounded-lg square with arrow icon. Hover: `bg-gold-hover`, `translateY(-2px)`, gold glow shadow `box-shadow: 0 8px 24px rgba(246,176,0,0.3)`.
 
-**StyleCard:** Tall image with `overflow-hidden rounded-lg`. Black bar at bottom with white uppercase Bebas Neue text. Image zooms to `scale-105` on hover. Card lifts `translateY(-8px)` on hover.
+**Ghost Button:** Transparent bg, `text-gold`, `border-2 border-gold`. Hover: `bg-gold/10`.
 
-**InstructorCard:** Portrait photo (aspect-[4/5]) + name (Bebas Neue, uppercase) + specialty (DM Sans, normal case). Card on cream-warm bg.
+**StyleCard:** `bg-surface-card` rounded-lg, `overflow-hidden`. Black label bar at bottom with white Bebas Neue text. Image zooms `scale-105` on hover. Card lifts `translateY(-8px)` with gold-tinted shadow on hover.
 
-**MarqueeTicker:** Full-width `bg-black` bar. Repeating text "BAILA ★ DANCE ★ SALSA ★ BACHATA" in white Bebas Neue, animated `translateX` loop 30s linear infinite. Duplicate content for seamless loop.
+**InstructorCard:** `bg-surface-card` rounded-lg. Photo `aspect-[4/5]`. Name in white Bebas Neue uppercase. Specialty in `text-gold`.
 
-**SectionHeading:** Bebas Neue, `text-section` size, uppercase, centered. Animate with letter stagger on scroll.
+**MarqueeTicker:** `bg-gold text-ink` full-width bar. Repeating "BAILA ★ DANCE ★ SALSA ★ BACHATA" in Bebas Neue, uppercase. CSS `translateX` loop 30s linear infinite. Black text on gold background.
 
-**LatinBadge:** Circular SVG with text path "MUEVE TU CUERPO" rotating 20s linear infinite. Icon center (conga drum or maracas).
+**SectionHeading:** Bebas Neue, `text-section`, `text-white`, uppercase, centered. May use `text-gold` for emphasis word. Animate with letter stagger on scroll.
+
+**LatinBadge:** Circular SVG, gold stroke/icon, text path in gold. Rotates 20s linear infinite.
+
+**Schedule Grid Cells:** `bg-surface-card` rounded-lg, `border-l-4` (category color), `min-h-[80px]`. Class name: white bold uppercase. Detail: `text-muted`. Empty cells: `bg-[#111111]`.
+
+**Schedule Day Pills:** `bg-gold text-ink rounded-full font-bold uppercase`.
+
+**Filter Pills:** Inactive: transparent, `text-text`, `border border-border-strong`. Active: `bg-gold text-ink border-gold`. Hover inactive: `border-gold text-gold`.
+
+**Input Fields:** `bg-surface border border-border-strong text-text rounded-lg`. Focus: `border-gold`, `ring-2 ring-gold/15`. Placeholder: `text-dim`.
+
+**Footer:** `bg-surface` with `border-t border-border`. Heading: white Bebas Neue. Links: `text-muted`, hover `text-gold`. Subscribe button: `bg-gold text-ink`.
+
+**Logo Bar / "As Seen On":** Header bar `bg-gold text-ink`. Container `bg-surface-card border border-border`. Partner logos: `filter: brightness(0) invert(1) opacity-50`, hover `opacity-100`.
+
+**ChatWidget:** `bg-gold text-ink rounded-xl`, shadow `0 4px 16px rgba(246,176,0,0.3)`.
 
 ### Layout Patterns
 
-- **Hero:** Diagonal clip-path split. Left ~45% cream bg (headline + sub + CTA). Right ~55% dance photo on photo-blue bg. Angle ~15°.
-- **Sections:** Cream bg default. Styles section: gradient cream→lavender. Marquee + card labels: black bg.
-- **Grids:** Styles: 3-col (desktop), 2-col (tablet), 1-col (mobile). Instructors: 4-col → 2 → 1. Schedule: table → cards on mobile.
-- **Footer:** 3-column on cream bg: Community (social links) | Newsletter (email + subscribe) | Legal (FAQ, terms, privacy). Purple subscribe button.
+- **Hero:** Diagonal clip-path split. Left side `bg-bg` with white headline + gold accent word + gold CTA. Right side: dance photo (photo-blue backdrop CAN stay for contrast pop against dark).
+- **Sections:** Alternate between `bg-bg` and `bg-surface` for visual rhythm.
+- **Marquee:** `bg-gold text-ink` (gold bar, dark text).
+- **Footer:** `bg-surface` with `border-t border-border`.
+- **Admin panel:** KEEP LIGHT THEME — white/cream bg, dark text. Do NOT apply dark theme to /admin/* routes.
+
+### Focus & Accessibility
+
+- Global `*:focus-visible { outline: 2px solid #F6B000; outline-offset: 2px; }`
+- Skip-to-content link: `bg-gold text-ink`
+- All interactive elements MUST have visible focus rings
+- Minimum contrast: 4.5:1 for normal text, 3:1 for large text
+- `prefers-reduced-motion: reduce` — disable transforms, marquee pauses, badge stops
 
 ## Animations — ALWAYS USE FRAMER MOTION
 
-Import from `@/lib/animations` when available, or use these variants directly:
+Same variants — animations are color-independent:
 
 ```typescript
-// Scroll-triggered fade-in-up (DEFAULT for most elements)
 { hidden: { opacity: 0, y: 40 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }
-
-// Stagger container (wrap children)
 { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }
-
-// Scale-in (cards)
 { hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } } }
-
-// Slide-in from right (hero image)
 { hidden: { opacity: 0, x: 100 }, visible: { opacity: 1, x: 0, transition: { duration: 0.7 } } }
-
-// Letter-by-letter reveal (section headings)
-// Wrap each letter in <motion.span> with:
 { hidden: { opacity: 0, y: 40, rotateX: -90 }, visible: { opacity: 1, y: 0, rotateX: 0 } }
-// Parent stagger: 0.05s between letters
-
-// Clip reveal left-to-right (headlines)
 { hidden: { clipPath: "inset(0 100% 0 0)" }, visible: { clipPath: "inset(0 0% 0 0)", transition: { duration: 0.8 } } }
 ```
 
 **Rules:**
-- Every section gets scroll-triggered reveal using `whileInView` with `viewport={{ once: true, amount: 0.2 }}`
-- Cards in grids use stagger (0.1s between items)
-- Hero elements use page-load animation (not scroll-triggered) with staggered delays
-- Parallax: hero image at 0.3 factor, photo strip at 0.3 factor
-- All hovers: 200-300ms ease transition
-- ALWAYS add `@media (prefers-reduced-motion: reduce)` handling — disable transforms, keep opacity-only transitions
-- Marquee: CSS `animation: marquee 30s linear infinite` — NOT Framer Motion (performance)
-- Badge rotation: CSS `animation: spin-slow 20s linear infinite` — NOT Framer Motion
+- Every section: `whileInView` with `viewport={{ once: true, amount: 0.2 }}`
+- Cards: stagger 0.1s
+- Hero: page-load animation, NOT scroll-triggered
+- Marquee + badge: CSS animation ONLY (not Framer Motion)
+- Gold glow on CTA hover: `box-shadow: 0 0 30px rgba(246,176,0,0.25)`
 
 ## File Structure
 
@@ -114,21 +138,18 @@ src/components/
 src/lib/           → animations.ts, data.ts, auth.ts, hooks/, types.ts
 ```
 
-When creating a new component, check if a similar one exists first. Reuse existing UI primitives (CTAButton, StyleCard, etc.) — don't reinvent them.
-
-## Admin Panel
-
-Routes under `/admin/*`. Protected by NextAuth middleware. White background, DM Sans only (no Bebas Neue in admin). Clean forms with floating labels, purple focus rings. Toast notifications top-right. Sidebar navigation 256px wide, collapses on mobile.
-
 ## Common Mistakes to Avoid
 
-- ❌ Using Inter, Roboto, Arial, or system fonts anywhere
-- ❌ Pure white (#FFFFFF) page backgrounds (use cream #F5F2ED)
-- ❌ Purple gradients on white backgrounds (generic AI look)
+- ❌ Using ANY purple (#7C3AED) — replaced by gold (#F6B000)
+- ❌ Light/white/cream page backgrounds on public pages (use #0A0A0A)
+- ❌ White cards (use #1A1A1A surface-card)
+- ❌ White text on gold buttons (use dark #0A0A0A on gold)
+- ❌ Pure #FFFFFF for body text (use #E8E8E8, white only for headlines)
+- ❌ #666666 for small readable text (fails AA — large text only)
+- ❌ Using Inter, Roboto, Arial anywhere
 - ❌ Forgetting uppercase on headlines and nav pills
-- ❌ Using Framer Motion for marquee/badge rotation (use CSS animation for performance)
-- ❌ Skipping scroll animations on sections (every section needs whileInView)
-- ❌ Hard-coding English text without ES equivalent field
-- ❌ Creating new color values not in the palette above
-- ❌ Rounded corners > 8px on cards (except pills which are rounded-full)
-- ❌ Missing hover states on interactive elements
+- ❌ Using Framer Motion for marquee/badge (use CSS)
+- ❌ Skipping focus-visible rings (must be gold)
+- ❌ Applying dark theme to admin pages (admin stays light)
+- ❌ Forgetting `-webkit-font-smoothing: antialiased`
+- ❌ Lavender gradients, cream backgrounds, or old light theme remnants

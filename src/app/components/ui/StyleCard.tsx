@@ -18,7 +18,7 @@ export function StyleCard({ style }: StyleCardProps) {
     <Link to={`/styles/${style.slug}`}>
       <motion.div
         variants={cardReveal}
-        className="group relative bg-white rounded-lg overflow-hidden shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-300 cursor-pointer"
+        className="group relative bg-surface-card rounded-lg overflow-hidden shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-300 cursor-pointer"
         whileHover={{ y: -8 }}
         transition={{ duration: 0.3 }}
       >

@@ -15,8 +15,8 @@ export function NavPill({ to, active = false, children }: NavPillProps) {
       <motion.div
         className={`px-5 py-2.5 rounded-full text-sm font-semibold uppercase tracking-wider transition-all duration-200 ${
           active
-            ? 'bg-black text-white'
-            : 'bg-transparent text-ink hover:bg-black hover:text-white'
+            ? 'bg-gold text-ink'
+            : 'bg-transparent text-text hover:bg-white/10 hover:text-white'
         }`}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}

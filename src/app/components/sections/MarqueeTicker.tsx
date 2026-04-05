@@ -22,7 +22,7 @@ export function MarqueeTicker({
   const allItems = [...items, ...items, ...items];
 
   return (
-    <div className="w-full bg-black py-6 overflow-hidden">
+    <div className="w-full bg-gold py-6 overflow-hidden">
       <motion.div
         className="flex gap-12 whitespace-nowrap"
         animate={{
@@ -36,7 +36,7 @@ export function MarqueeTicker({
       >
         {allItems.map((item, index) => (
           <div key={index} className="flex items-center gap-12 flex-shrink-0">
-            <span className="text-white font-display text-5xl lg:text-6xl tracking-tighter">
+            <span className="text-ink font-display text-5xl lg:text-6xl tracking-tighter">
               {item}
             </span>
             <motion.div
@@ -51,7 +51,7 @@ export function MarqueeTicker({
                 delay: index * 0.2,
               }}
             >
-              <SeparatorIcon className="text-accent-warm" size={32} />
+              <SeparatorIcon className="text-ink" size={32} />
             </motion.div>
           </div>
         ))}

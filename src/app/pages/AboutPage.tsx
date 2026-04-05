@@ -33,7 +33,7 @@ export function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen pt-32 pb-24 bg-cream">
+    <div className="min-h-screen pt-32 pb-24 bg-bg">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -56,11 +56,11 @@ export function AboutPage() {
             <motion.div
               key={index}
               variants={fadeInUp}
-              className="text-center p-8 bg-white rounded-xl shadow-[var(--shadow-card)]"
+              className="text-center p-8 bg-surface-card rounded-xl shadow-[var(--shadow-card)]"
             >
-              <stat.icon className="w-12 h-12 text-accent mx-auto mb-4" />
+              <stat.icon className="w-12 h-12 text-gold mx-auto mb-4" />
               <div className="text-4xl font-display mb-2">{stat.value}</div>
-              <div className="text-sm text-ink-soft uppercase tracking-wider">
+              <div className="text-sm text-text-muted uppercase tracking-wider">
                 {stat.label}
               </div>
             </motion.div>
@@ -72,7 +72,7 @@ export function AboutPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="max-w-4xl mx-auto space-y-6 text-lg leading-relaxed text-ink"
+          className="max-w-4xl mx-auto space-y-6 text-lg leading-relaxed text-text"
         >
           <p>
             {language === 'es'

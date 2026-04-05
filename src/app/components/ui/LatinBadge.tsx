@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 export function LatinBadge() {
   return (
     <motion.div
-      className="w-32 h-32 rounded-full bg-accent-warm flex items-center justify-center shadow-2xl relative overflow-hidden"
+      className="w-32 h-32 rounded-full bg-gold flex items-center justify-center shadow-2xl relative overflow-hidden"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, delay: 0.8 }}

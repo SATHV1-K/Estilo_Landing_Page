@@ -28,11 +28,11 @@ export function CTAButton({
 
   const variantClasses = {
     primary:
-      'bg-accent hover:bg-accent-hover text-white shadow-lg hover:shadow-xl',
+      'bg-gold hover:bg-gold-hover text-ink shadow-lg hover:shadow-xl',
     secondary:
-      'bg-accent-warm hover:bg-yellow-600 text-white shadow-lg hover:shadow-xl',
+      'bg-gold-light hover:bg-gold text-ink shadow-lg hover:shadow-xl',
     outline:
-      'bg-transparent border-2 border-accent text-accent hover:bg-accent hover:text-white',
+      'bg-transparent border-2 border-gold text-gold hover:bg-gold hover:text-ink',
   };
 
   const sizeClasses = {

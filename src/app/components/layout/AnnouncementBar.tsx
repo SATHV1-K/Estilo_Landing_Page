@@ -24,7 +24,7 @@ export function AnnouncementBar() {
         initial={{ height: 0, opacity: 0 }}
         animate={{ height: 'auto', opacity: 1 }}
         exit={{ height: 0, opacity: 0 }}
-        className="bg-accent text-white overflow-hidden"
+        className="bg-gold text-ink overflow-hidden"
       >
         <div className="max-w-[1440px] mx-auto px-4 lg:px-16 py-3 flex items-center justify-between gap-4">
           {announcement.link ? (

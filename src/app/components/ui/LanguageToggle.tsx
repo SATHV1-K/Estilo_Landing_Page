@@ -14,26 +14,26 @@ export function LanguageToggle() {
   return (
     <button
       onClick={toggleLanguage}
-      className="relative flex items-center gap-2 px-3 py-1.5 bg-white border border-black/10 rounded-full text-xs font-semibold uppercase tracking-wider"
+      className="relative flex items-center gap-2 px-3 py-1.5 bg-surface border border-border rounded-full text-xs font-semibold uppercase tracking-wider"
       aria-label="Toggle language"
     >
       <span
         className={`transition-colors ${
-          language === 'en' ? 'text-ink' : 'text-ink-soft'
+          language === 'en' ? 'text-white' : 'text-text-muted'
         }`}
       >
         EN
       </span>
-      <span className="text-ink-soft">|</span>
+      <span className="text-text-muted">|</span>
       <span
         className={`transition-colors ${
-          language === 'es' ? 'text-ink' : 'text-ink-soft'
+          language === 'es' ? 'text-white' : 'text-text-muted'
         }`}
       >
         ES
       </span>
       <motion.div
-        className="absolute inset-0 bg-accent rounded-full -z-10"
+        className="absolute inset-0 bg-gold rounded-full -z-10"
         initial={false}
         animate={{
           opacity: 0,

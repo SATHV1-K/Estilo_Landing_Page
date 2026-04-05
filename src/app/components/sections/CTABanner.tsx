@@ -21,7 +21,7 @@ export function CTABanner({
   const { ref, isInView } = useScrollReveal({ amount: 0.5 });
 
   return (
-    <section className="py-24 bg-ink text-white">
+    <section className="py-24 bg-surface text-white">
       <motion.div
         ref={ref as any}
         variants={fadeInUp}

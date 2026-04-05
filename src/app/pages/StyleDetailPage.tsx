@@ -44,14 +44,14 @@ export function StyleDetailPage() {
       </section>
 
       {/* Content */}
-      <section className="py-24 bg-cream">
+      <section className="py-24 bg-bg">
         <div className="max-w-4xl mx-auto px-4 lg:px-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <p className="text-xl leading-relaxed text-ink mb-8">
+            <p className="text-xl leading-relaxed text-text mb-8">
               {language === 'es' ? style.descriptionEs : style.description}
             </p>
 
