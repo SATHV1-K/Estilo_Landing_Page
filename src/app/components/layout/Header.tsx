@@ -35,11 +35,16 @@ export function Header() {
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center">
+          <Link to="/" className="flex items-center flex-shrink-0">
             <img
               src="/logo.png"
               alt="Estilo Latino Dance Company"
-              className="h-14 w-auto"
+              style={{
+                width: '130px',
+                height: '60px',
+                objectFit: 'cover',
+                objectPosition: 'center 48%',
+              }}
             />
           </Link>
 
