@@ -133,6 +133,18 @@ const entryVariants = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.28, ease: 'easeOut' } },
 };
 
+// ─── Payment links ────────────────────────────────────────
+
+const paymentLinks: Record<string, string> = {
+  kids:    'https://square.link/u/9GoE8ILA?src=sheet',
+  salsa:   'https://square.link/u/zYAZzk20?src=sheet',
+  bachata: 'https://square.link/u/JnmrkHBX?src=sheet',
+  street:  'https://square.link/u/eJjcA1AE?src=sheet',
+  ballet:  'https://square.link/u/eJjcA1AE?src=sheet',
+  special: 'https://square.link/u/eJjcA1AE?src=sheet',
+  team:    'https://square.link/u/eJjcA1AE?src=sheet',
+};
+
 // ─── Sub-components ───────────────────────────────────────
 
 function SaturdayEntry() {
@@ -176,8 +188,42 @@ function SaturdayEntry() {
   );
 }
 
+function PayButton({ href, fullWidth }: { href: string; fullWidth?: boolean }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={[
+        'font-body font-bold text-xs uppercase tracking-wide px-4 py-2 rounded-lg transition-all duration-200 whitespace-nowrap',
+        fullWidth ? 'block w-full text-center' : 'block',
+      ].join(' ')}
+      style={{
+        background: 'rgba(246,176,0,0.1)',
+        border: '1px solid var(--gold)',
+        color: 'var(--gold)',
+      }}
+      onMouseEnter={e => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.background = 'var(--gold)';
+        el.style.color = 'var(--ink)';
+        el.style.boxShadow = '0 0 16px rgba(246,176,0,0.25)';
+      }}
+      onMouseLeave={e => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.background = 'rgba(246,176,0,0.1)';
+        el.style.color = 'var(--gold)';
+        el.style.boxShadow = '';
+      }}
+    >
+      Pay →
+    </a>
+  );
+}
+
 function ClassEntryRow({ cls, isLast }: { cls: WeeklyClass; isLast: boolean }) {
   const color = categoryColors[cls.category];
+  const payLink = paymentLinks[cls.category];
   return (
     <motion.div variants={entryVariants} className="flex gap-4">
       <div className="flex flex-col items-center flex-shrink-0" style={{ width: 14 }}>
@@ -186,27 +232,39 @@ function ClassEntryRow({ cls, isLast }: { cls: WeeklyClass; isLast: boolean }) {
           <div className="w-[3px] flex-1 mt-1 min-h-[36px]" style={{ background: color, opacity: 0.3 }} />
         )}
       </div>
-      <div className="flex-1 pb-5">
-        <div className="flex items-baseline gap-3 flex-wrap">
-          <span className="font-body font-medium text-sm flex-shrink-0 w-16" style={{ color: 'var(--text-muted)' }}>
-            {cls.time}
-          </span>
-          <span className="font-body font-bold text-base leading-snug" style={{ color: 'var(--white)' }}>
-            {cls.name}
-          </span>
-        </div>
-        {cls.detail && (
-          <p className="font-body text-sm mt-0.5 pl-[76px] leading-snug" style={{ color: 'var(--text-muted)' }}>
-            {cls.detail}
+      <div className="flex-1 pb-5 flex flex-col sm:flex-row sm:items-center gap-x-4">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <span className="font-body font-medium text-sm flex-shrink-0 w-16" style={{ color: 'var(--text-muted)' }}>
+              {cls.time}
+            </span>
+            <span className="font-body font-bold text-base leading-snug" style={{ color: 'var(--white)' }}>
+              {cls.name}
+            </span>
+          </div>
+          {cls.detail && (
+            <p className="font-body text-sm mt-0.5 pl-[76px] leading-snug" style={{ color: 'var(--text-muted)' }}>
+              {cls.detail}
+            </p>
+          )}
+          <p className="font-body text-xs mt-1 pl-[76px] flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
+            <Clock size={11} style={{ flexShrink: 0 }} />
+            <span>1 hour</span>
+            <span>·</span>
+            <MapPin size={11} style={{ flexShrink: 0 }} />
+            <span>Main Studio</span>
           </p>
+          {payLink && (
+            <div className="sm:hidden mt-2 pl-[76px]">
+              <PayButton href={payLink} fullWidth />
+            </div>
+          )}
+        </div>
+        {payLink && (
+          <div className="hidden sm:block flex-shrink-0">
+            <PayButton href={payLink} />
+          </div>
         )}
-        <p className="font-body text-xs mt-1 pl-[76px] flex items-center gap-2" style={{ color: 'var(--text-dim)' }}>
-          <Clock size={11} style={{ flexShrink: 0 }} />
-          <span>1 hour</span>
-          <span>·</span>
-          <MapPin size={11} style={{ flexShrink: 0 }} />
-          <span>Main Studio</span>
-        </p>
       </div>
     </motion.div>
   );
