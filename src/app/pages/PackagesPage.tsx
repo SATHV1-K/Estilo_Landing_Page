@@ -1,10 +1,11 @@
 // PackagesPage - Pricing packages
 
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { motion } from 'motion/react';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Phone } from 'lucide-react';
 import { useI18n } from '../../lib/i18n';
-import { packages } from '../../lib/data';
+import { packages, siteSettings } from '../../lib/data';
 import { staggerContainer, fadeInUp } from '../../lib/animations';
 
 export function PackagesPage() {
@@ -13,8 +14,10 @@ export function PackagesPage() {
 
   const categories = [
     { id: 'adults-salsa-bachata', label: language === 'es' ? 'Salsa y Bachata' : 'Salsa & Bachata' },
-    { id: 'adults-street', label: language === 'es' ? 'Baile Urbano' : 'Street Dance' },
+    { id: 'adults-street', label: language === 'es' ? 'Urbano / HipHop' : 'Urban / HipHop' },
     { id: 'kids', label: language === 'es' ? 'Niños' : 'Kids' },
+    { id: 'private', label: language === 'es' ? 'Privadas' : 'Privates' },
+    { id: 'event', label: language === 'es' ? 'Eventos Especiales' : 'Special Events' },
   ];
 
   const filteredPackages = packages.filter(
@@ -22,9 +25,11 @@ export function PackagesPage() {
   );
 
   const formatPrice = (price: number | null) => {
-    if (price === null) return language === 'es' ? 'Consultar' : 'Contact Us';
+    if (price === null) return language === 'es' ? 'A Consultar' : 'Call Us';
     return `$${(price / 100).toFixed(0)}`;
   };
+
+  const isContactCategory = selectedCategory === 'private' || selectedCategory === 'event';
 
   return (
     <div className="min-h-screen pt-32 pb-24 bg-bg">
@@ -63,6 +68,7 @@ export function PackagesPage() {
 
         {/* Package Cards */}
         <motion.div
+          key={selectedCategory}
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
@@ -72,7 +78,7 @@ export function PackagesPage() {
             <motion.div
               key={pkg.id}
               variants={fadeInUp}
-              className="bg-surface-card rounded-xl p-8 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all group"
+              className="bg-surface-card rounded-xl p-8 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all group flex flex-col"
             >
               <h3 className="font-display text-3xl mb-2">
                 {language === 'es' ? pkg.nameEs : pkg.name}
@@ -97,22 +103,55 @@ export function PackagesPage() {
                 </p>
               )}
 
-              <p className="text-text-muted mb-8 text-sm leading-relaxed">
+              <p className="text-text-muted mb-8 text-sm leading-relaxed flex-1">
                 {language === 'es' ? pkg.descriptionEs : pkg.description}
               </p>
 
-              <a
-                href={pkg.paymentLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold hover:bg-gold-hover text-ink font-bold uppercase tracking-wider rounded-lg transition-all group-hover:-translate-y-1"
-              >
-                {language === 'es' ? 'Pagar Aquí' : 'Pay Here'}
-                <ExternalLink size={16} />
-              </a>
+              {pkg.paymentLink ? (
+                <a
+                  href={pkg.paymentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold hover:bg-gold-hover text-ink font-bold uppercase tracking-wider rounded-lg transition-all group-hover:-translate-y-1"
+                >
+                  {language === 'es' ? 'Pagar Aquí' : 'Pay Here'}
+                  <ExternalLink size={16} />
+                </a>
+              ) : (
+                <a
+                  href={`tel:${siteSettings.phone.replace(/\D/g, '')}`}
+                  className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold hover:bg-gold-hover text-ink font-bold uppercase tracking-wider rounded-lg transition-all group-hover:-translate-y-1"
+                >
+                  <Phone size={16} />
+                  {language === 'es' ? 'Llámanos' : 'Call Us'}
+                </a>
+              )}
             </motion.div>
           ))}
         </motion.div>
+
+        {/* Contact note for special categories */}
+        {isContactCategory && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-12 p-6 bg-gold/10 border border-gold/20 rounded-lg text-center"
+          >
+            <p className="text-text-muted mb-3">
+              {language === 'es'
+                ? 'Todos los paquetes de esta categoría son personalizados. Contáctanos para obtener un presupuesto.'
+                : 'All packages in this category are custom. Contact us to get a quote.'}
+            </p>
+            <p className="text-gold font-semibold">{siteSettings.phone}</p>
+            <Link
+              to="/contact"
+              className="mt-4 inline-block text-sm text-text-muted hover:text-gold underline underline-offset-4 transition-colors"
+            >
+              {language === 'es' ? 'O envíanos un mensaje →' : 'Or send us a message →'}
+            </Link>
+          </motion.div>
+        )}
 
         {/* Punch Card Note */}
         {selectedCategory === 'adults-salsa-bachata' && (

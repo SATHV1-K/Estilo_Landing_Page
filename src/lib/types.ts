@@ -13,6 +13,7 @@ export interface DanceStyle {
   ageGroup: "kids" | "adults" | "all";
   sortOrder: number;
   isActive: boolean;
+  contactOnly?: boolean;
 }
 
 export interface Instructor {
@@ -54,7 +55,7 @@ export interface Package {
   expirationMonths?: number;
   description: string;
   descriptionEs: string;
-  paymentLink: string;
+  paymentLink?: string;
   sortOrder: number;
   isActive: boolean;
 }

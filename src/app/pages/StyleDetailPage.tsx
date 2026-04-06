@@ -55,14 +55,25 @@ export function StyleDetailPage() {
               {language === 'es' ? style.descriptionEs : style.description}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <CTAButton to="/schedule" size="lg">
-                {language === 'es' ? 'Ver Horario' : 'View Schedule'}
-              </CTAButton>
-              <CTAButton to="/contact" variant="outline" size="lg">
-                {language === 'es' ? 'Clase de Prueba' : 'Try a Class'}
-              </CTAButton>
-            </div>
+            {style.contactOnly ? (
+              <div className="flex flex-col sm:flex-row gap-4">
+                <CTAButton to="/contact" size="lg">
+                  {language === 'es' ? 'Contáctanos' : 'Contact Us'}
+                </CTAButton>
+                <CTAButton to="/packages" variant="outline" size="lg">
+                  {language === 'es' ? 'Ver Paquetes' : 'View Packages'}
+                </CTAButton>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-4">
+                <CTAButton to="/schedule" size="lg">
+                  {language === 'es' ? 'Ver Horario' : 'View Schedule'}
+                </CTAButton>
+                <CTAButton to="/contact" variant="outline" size="lg">
+                  {language === 'es' ? 'Clase de Prueba' : 'Try a Class'}
+                </CTAButton>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>

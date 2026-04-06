@@ -5,6 +5,7 @@ import { MarqueeTicker } from '../components/sections/MarqueeTicker';
 import { StylesGrid } from '../components/sections/StylesGrid';
 import { InstructorGrid } from '../components/sections/InstructorGrid';
 import { CTABanner } from '../components/sections/CTABanner';
+import { TestimonialsCarousel } from '../components/sections/TestimonialsCarousel';
 import { danceStyles, instructors } from '../../lib/data';
 import { useI18n } from '../../lib/i18n';
 
@@ -27,11 +28,13 @@ export function HomePage() {
         showBadge={true}
       />
 
-      <MarqueeTicker items={['SALSA', 'BACHATA', 'BALLET', 'STREET DANCE', 'LATIN RHYTHMS']} />
+      <MarqueeTicker items={['SALSA ON1', 'SALSA CALEÑA', 'BACHATA', 'URBAN / HIPHOP', 'LATIN RHYTHMS KIDS', 'WEDDINGS', 'SWEET 16', 'PRIVATES', 'CORPORATE']} />
 
       <StylesGrid styles={danceStyles} maxVisible={6} />
 
       <InstructorGrid instructors={instructors} />
+
+      <TestimonialsCarousel />
 
       <CTABanner
         title={

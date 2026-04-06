@@ -213,3 +213,18 @@
     transform: translateX(0);
   }
 }
+
+@keyframes scroll-testimonials {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@utility animate-scroll-testimonials {
+  animation: scroll-testimonials 60s linear infinite;
+}
+
+/* Reduced-motion: stop carousel, show static grid */
+@media (prefers-reduced-motion: reduce) {
+  .testimonials-outer { display: none; }
+  .testimonials-grid  { display: grid !important; }
+}
