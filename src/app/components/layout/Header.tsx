@@ -35,10 +35,12 @@ export function Header() {
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="text-2xl font-display font-bold text-white">
-              ESTILO LATINO
-            </div>
+          <Link to="/" className="flex items-center">
+            <img
+              src="/logo.png"
+              alt="Estilo Latino Dance Company"
+              className="h-14 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
