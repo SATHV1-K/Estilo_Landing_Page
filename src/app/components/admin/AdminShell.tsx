@@ -6,7 +6,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router';
 import {
   LayoutDashboard, Sparkles, FileText, Image, Users,
   Layers, Calendar, Star, LogOut, Menu, X, ChevronRight,
-  Package, Settings,
+  Package, Settings, Bell,
 } from 'lucide-react';
 import { isAdminLoggedIn, adminLogin, adminLogout } from '../../../lib/specialClasses';
 
@@ -31,6 +31,7 @@ const NAV_ITEMS = [
   { to: '/admin/special-classes', label: 'Special Classes', icon: Sparkles },
   { to: '/admin/reviews',         label: 'Reviews',         icon: Star },
   { to: '/admin/packages',        label: 'Packages',        icon: Package },
+  { to: '/admin/alerts',          label: 'Alerts',          icon: Bell },
   { to: '/admin/settings',        label: 'Settings',        icon: Settings },
 ] as const;
 

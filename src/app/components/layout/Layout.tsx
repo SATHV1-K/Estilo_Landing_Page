@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { AnnouncementBar } from './AnnouncementBar';
+import { AlertPopup } from './AlertPopup';
 
 export function Layout() {
   const location = useLocation();
@@ -16,6 +17,7 @@ export function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-bg">
+      <AlertPopup />
       <AnnouncementBar />
       <Header />
       <main className="flex-1">

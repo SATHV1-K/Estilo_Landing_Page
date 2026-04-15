@@ -2,8 +2,8 @@
 // Mirrors the shape expected by public pages; data.ts seed values are used
 // as defaults on first load so the public site always has content.
 
-import { danceStyles as seedStyles, instructors as seedInstructors } from './data';
-import type { DanceStyle, Instructor } from './types';
+import { danceStyles as seedStyles, instructors as seedInstructors, packages as seedPackages, siteSettings as seedSiteSettings } from './data';
+import type { DanceStyle, Instructor, Package } from './types';
 
 // ─── ID helper ───────────────────────────────────────────────────────────────
 
@@ -81,6 +81,9 @@ const KEYS = {
   reviews:     'estilo_reviews',
   content:     'estilo_content',
   media:       'estilo_media',
+  packages:    'estilo_packages',
+  settings:    'estilo_settings',
+  alerts:      'estilo_alerts',
 } as const;
 
 function read<T>(key: string): T[] {
@@ -557,4 +560,221 @@ export function formatBytes(bytes: number): string {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PACKAGES
+// ─────────────────────────────────────────────────────────────────────────────
+
+function seedPackagesIfEmpty(): void {
+  const raw = localStorage.getItem(KEYS.packages);
+  if (!raw) write(KEYS.packages, seedPackages);
+}
+
+/** All packages sorted by sortOrder (including inactive — for admin). */
+export function getAllPackages(): Package[] {
+  seedPackagesIfEmpty();
+  return read<Package>(KEYS.packages).sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/** Active packages only, sorted — for public pages. */
+export function getPackages(): Package[] {
+  return getAllPackages().filter(p => p.isActive);
+}
+
+export function savePackage(
+  data: Omit<Package, 'id'> & { id?: string }
+): Package {
+  const list = read<Package>(KEYS.packages);
+  if (data.id) {
+    const idx = list.findIndex(p => p.id === data.id);
+    const updated = data as Package;
+    if (idx >= 0) list[idx] = updated;
+    else list.push(updated);
+    write(KEYS.packages, list);
+    return updated;
+  }
+  const maxOrder = list.reduce((m, p) => Math.max(m, p.sortOrder), 0);
+  const created: Package = {
+    ...(data as Omit<Package, 'id'>),
+    id: genId(),
+    sortOrder: maxOrder + 1,
+  };
+  list.push(created);
+  write(KEYS.packages, list);
+  return created;
+}
+
+export function deletePackage(id: string): void {
+  write(KEYS.packages, read<Package>(KEYS.packages).filter(p => p.id !== id));
+}
+
+export function reorderPackages(ids: string[]): void {
+  const list = read<Package>(KEYS.packages);
+  ids.forEach((id, idx) => {
+    const item = list.find(p => p.id === id);
+    if (item) item.sortOrder = idx + 1;
+  });
+  write(KEYS.packages, list);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SITE SETTINGS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface AdminSiteSettings {
+  studioName: string;
+  studioNameShort: string;
+  tagline: string;
+  address: string;
+  addressLine2: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+  whatsapp: string;
+  email: string;
+  googleMapsEmbed: string;
+  socialLinks: { platform: string; url: string; label: string }[];
+  businessHours: { day: string; open: string; close: string; isClosed: boolean }[];
+  metaTitle: string;
+  metaDescription: string;
+  footerText: string;
+}
+
+const DEFAULT_SETTINGS: AdminSiteSettings = {
+  studioName:       seedSiteSettings.studioName,
+  studioNameShort:  seedSiteSettings.studioNameShort,
+  tagline:          seedSiteSettings.tagline,
+  address:          seedSiteSettings.address,
+  addressLine2:     seedSiteSettings.addressLine2,
+  city:             seedSiteSettings.city,
+  state:            seedSiteSettings.state,
+  zip:              seedSiteSettings.zip,
+  phone:            seedSiteSettings.phone,
+  whatsapp:         seedSiteSettings.whatsapp,
+  email:            seedSiteSettings.email,
+  googleMapsEmbed:  seedSiteSettings.googleMapsEmbed,
+  socialLinks:      seedSiteSettings.socialLinks,
+  businessHours:    seedSiteSettings.businessHours,
+  metaTitle:        'Estilo Latino Dance Company | Elizabeth, NJ',
+  metaDescription:  'Salsa, Bachata, Ballet, Street Dance classes in Elizabeth, NJ',
+  footerText:       '',
+};
+
+export function getSiteSettings(): AdminSiteSettings {
+  try {
+    const raw = localStorage.getItem(KEYS.settings);
+    return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
+export function saveSiteSettings(settings: AdminSiteSettings): void {
+  localStorage.setItem(KEYS.settings, JSON.stringify(settings));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ALERTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface Alert {
+  id: string;
+  title: string;
+  titleEs: string;
+  message: string;      // Body text shown in the popup modal
+  messageEs: string;    // Body text in Spanish
+  type: 'info' | 'warning' | 'promo';
+  link?: string;
+  linkLabel?: string;
+  startDate?: string;   // YYYY-MM-DD, optional
+  endDate?: string;     // YYYY-MM-DD, optional
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const SEED_ALERTS: Omit<Alert, 'id' | 'createdAt' | 'updatedAt'>[] = [
+  {
+    title:     'First Class FREE for New Students!',
+    titleEs:   '¡Primera Clase GRATIS para Nuevos Estudiantes!',
+    message:   'New classes are starting soon. Come try salsa, bachata, or cumbia — your first class is completely free. No experience needed.',
+    messageEs: 'Las nuevas clases están comenzando pronto. Ven a probar salsa, bachata o cumbia — tu primera clase es completamente gratis. No se necesita experiencia.',
+    type:      'promo',
+    link:      '/packages',
+    linkLabel: 'See Packages',
+    isActive:  true,
+    sortOrder: 1,
+  },
+];
+
+function seedAlertsIfEmpty(): void {
+  const raw = localStorage.getItem(KEYS.alerts);
+  if (!raw) {
+    const ts = now();
+    const seeded: Alert[] = SEED_ALERTS.map(a => ({
+      ...a,
+      id: genId(),
+      createdAt: ts,
+      updatedAt: ts,
+    }));
+    write(KEYS.alerts, seeded);
+  }
+}
+
+export function getAlerts(): Alert[] {
+  seedAlertsIfEmpty();
+  return read<Alert>(KEYS.alerts).sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/** Returns alerts that are active and within their date range (if set). */
+export function getActiveAlerts(): Alert[] {
+  const today = new Date().toISOString().slice(0, 10);
+  return getAlerts().filter(a => {
+    if (!a.isActive) return false;
+    if (a.startDate && a.startDate > today) return false;
+    if (a.endDate && a.endDate < today) return false;
+    return true;
+  });
+}
+
+export function saveAlert(
+  data: Omit<Alert, 'id' | 'createdAt' | 'updatedAt'> & { id?: string; createdAt?: string }
+): Alert {
+  const list = read<Alert>(KEYS.alerts);
+  const ts = now();
+  if (data.id) {
+    const idx = list.findIndex(a => a.id === data.id);
+    const updated: Alert = { ...(data as Alert), updatedAt: ts };
+    if (idx >= 0) list[idx] = updated;
+    else list.push(updated);
+    write(KEYS.alerts, list);
+    return updated;
+  }
+  const maxOrder = list.reduce((m, a) => Math.max(m, a.sortOrder), 0);
+  const created: Alert = {
+    ...(data as Omit<Alert, 'id' | 'createdAt' | 'updatedAt'>),
+    id: genId(),
+    sortOrder: data.sortOrder ?? maxOrder + 1,
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  list.push(created);
+  write(KEYS.alerts, list);
+  return created;
+}
+
+export function deleteAlert(id: string): void {
+  write(KEYS.alerts, read<Alert>(KEYS.alerts).filter(a => a.id !== id));
+}
+
+export function reorderAlerts(ids: string[]): void {
+  const list = read<Alert>(KEYS.alerts);
+  ids.forEach((id, idx) => {
+    const item = list.find(a => a.id === id);
+    if (item) item.sortOrder = idx + 1;
+  });
+  write(KEYS.alerts, list);
 }

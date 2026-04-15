@@ -1,22 +1,23 @@
-// AnnouncementBar - Optional top banner
+// AnnouncementBar — shows the first active alert from adminData.
+// Falls back to nothing if no active alerts exist.
 
 import { Link } from 'react-router';
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useI18n } from '../../../lib/i18n';
-import { siteSettings } from '../../../lib/data';
+import { getActiveAlerts } from '../../../lib/adminData';
 
 export function AnnouncementBar() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [dismissed, setDismissed] = useState(false);
   const { language } = useI18n();
 
-  if (!siteSettings.announcementBar?.isActive || !isVisible) {
-    return null;
-  }
+  const alerts = getActiveAlerts();
+  const alert  = alerts[0];
 
-  const announcement = siteSettings.announcementBar;
-  const text = language === 'es' ? announcement.textEs : announcement.text;
+  if (!alert || dismissed) return null;
+
+  const text = language === 'es' && alert.titleEs ? alert.titleEs : alert.title;
 
   return (
     <AnimatePresence>
@@ -27,19 +28,30 @@ export function AnnouncementBar() {
         className="bg-gold text-ink overflow-hidden"
       >
         <div className="max-w-[1440px] mx-auto px-4 lg:px-16 py-3 flex items-center justify-between gap-4">
-          {announcement.link ? (
-            <Link
-              to={announcement.link}
-              className="text-sm font-medium text-center flex-1 hover:underline"
-            >
-              {text}
-            </Link>
+          {alert.link ? (
+            alert.link.startsWith('http') ? (
+              <a
+                href={alert.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-center flex-1 hover:underline"
+              >
+                {text}
+              </a>
+            ) : (
+              <Link
+                to={alert.link}
+                className="text-sm font-medium text-center flex-1 hover:underline"
+              >
+                {text}
+              </Link>
+            )
           ) : (
             <p className="text-sm font-medium text-center flex-1">{text}</p>
           )}
 
           <button
-            onClick={() => setIsVisible(false)}
+            onClick={() => setDismissed(true)}
             className="flex-shrink-0 p-1 hover:bg-white/20 rounded transition-colors"
             aria-label="Close announcement"
           >

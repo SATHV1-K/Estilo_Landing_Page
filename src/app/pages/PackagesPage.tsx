@@ -5,8 +5,13 @@ import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { ExternalLink, Phone } from 'lucide-react';
 import { useI18n } from '../../lib/i18n';
-import { packages, siteSettings } from '../../lib/data';
+import { getPackages, getSiteSettings, getContent } from '../../lib/adminData';
 import { staggerContainer, fadeInUp } from '../../lib/animations';
+
+const PUNCHCARD_DEFAULT = 'All class cards are valid only for adult Salsa & Bachata classes.';
+
+const packages     = getPackages();
+const siteSettings = getSiteSettings();
 
 export function PackagesPage() {
   const { language } = useI18n();
@@ -162,9 +167,7 @@ export function PackagesPage() {
             className="mt-12 p-6 bg-gold/10 rounded-lg text-center"
           >
             <p className="text-text-muted">
-              {language === 'es'
-                ? 'Todas las tarjetas de clases son válidas solo para clases de Salsa y Bachata para adultos.'
-                : 'All class cards are valid only for adult Salsa & Bachata classes.'}
+              {getContent('packages.punchcard.notice', PUNCHCARD_DEFAULT)}
             </p>
           </motion.div>
         )}

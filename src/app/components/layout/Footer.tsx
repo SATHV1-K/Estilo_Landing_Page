@@ -4,8 +4,10 @@ import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { Facebook, Instagram, Youtube, Music } from 'lucide-react';
 import { useI18n, translations } from '../../../lib/i18n';
-import { siteSettings } from '../../../lib/data';
+import { getSiteSettings } from '../../../lib/adminData';
 import { fadeInUp, staggerContainer } from '../../../lib/animations';
+
+const siteSettings = getSiteSettings();
 import { useScrollReveal } from '../../../lib/hooks/useScrollReveal';
 
 export function Footer() {
@@ -138,8 +140,10 @@ export function Footer() {
           className="mt-16 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-text-dim"
         >
           <p>
-            © {currentYear} {siteSettings.studioName}.{' '}
-            {translations.footer.rights[language]}.
+            {siteSettings.footerText
+              ? siteSettings.footerText
+              : `© ${currentYear} ${siteSettings.studioName}. ${translations.footer.rights[language]}.`
+            }
           </p>
           <div className="flex gap-6">
             <Link to="/privacy" className="hover:text-gold transition-colors">

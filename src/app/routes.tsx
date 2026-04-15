@@ -23,6 +23,7 @@ import { ScheduleAdminPage } from './pages/admin/ScheduleAdminPage';
 import { ReviewsAdminPage } from './pages/admin/ReviewsAdminPage';
 import { PackagesAdminPage } from './pages/admin/PackagesAdminPage';
 import { SettingsPage } from './pages/admin/SettingsPage';
+import { AlertsAdminPage } from './pages/admin/AlertsAdminPage';
 
 export const router = createBrowserRouter([
   // ── Admin panel ── all routes share AdminShell (auth gate + sidebar) ────────
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
       { path: 'reviews',          Component: ReviewsAdminPage },
       { path: 'packages',         Component: PackagesAdminPage },
       { path: 'settings',         Component: SettingsPage },
+      { path: 'alerts',           Component: AlertsAdminPage },
     ],
   },
 
