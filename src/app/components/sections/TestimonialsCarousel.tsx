@@ -1,8 +1,10 @@
-// TestimonialsCarousel - Auto-scrolling review carousel section
+// TestimonialsCarousel — reads reviews from adminData (localStorage).
+// Seed data includes all 15 real Google reviews so the carousel is
+// populated from the moment the page loads.
 
 import { motion } from 'motion/react';
 import { fadeInUp } from '../../../lib/animations';
-import { reviews, type Review } from '../../../data/reviews';
+import { getReviews, type Review } from '../../../lib/adminData';
 
 function StarRating({ stars }: { stars: number }) {
   return (
@@ -52,6 +54,7 @@ function ReviewCard({ review }: { review: Review }) {
 }
 
 export function TestimonialsCarousel() {
+  const reviews = getReviews().filter((r) => r.isActive);
   const doubled = [...reviews, ...reviews];
 
   return (
@@ -86,15 +89,15 @@ export function TestimonialsCarousel() {
         <div className="testimonials-outer overflow-hidden">
           <div className="testimonials-track flex gap-6 animate-scroll-testimonials hover:[animation-play-state:paused]">
             {doubled.map((review, i) => (
-              <ReviewCard key={i} review={review} />
+              <ReviewCard key={`${review.id}-${i}`} review={review} />
             ))}
           </div>
         </div>
 
         {/* Reduced-motion fallback: static grid (hidden by default, shown via CSS) */}
         <div className="testimonials-grid hidden px-4 lg:px-16 max-w-[1440px] mx-auto grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reviews.map((review, i) => (
-            <ReviewCard key={i} review={review} />
+          {reviews.map((review) => (
+            <ReviewCard key={review.id} review={review} />
           ))}
         </div>
       </motion.div>

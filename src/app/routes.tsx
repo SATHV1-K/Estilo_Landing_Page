@@ -2,6 +2,7 @@
 
 import { createBrowserRouter } from 'react-router';
 import { Layout } from './components/layout/Layout';
+import { AdminShell } from './components/admin/AdminShell';
 import { HomePage } from './pages/HomePage';
 import { StylesPage } from './pages/StylesPage';
 import { StyleDetailPage } from './pages/StyleDetailPage';
@@ -11,21 +12,52 @@ import { InstructorsPage } from './pages/InstructorsPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { SpecialClassesPage } from './pages/AdminPage';
+import { ReservationSuccessPage } from './pages/ReservationSuccessPage';
+import { DashboardPage } from './pages/admin/DashboardPage';
+import { ContentPage } from './pages/admin/ContentPage';
+import { MediaPage } from './pages/admin/MediaPage';
+import { InstructorsAdminPage } from './pages/admin/InstructorsAdminPage';
+import { StylesAdminPage } from './pages/admin/StylesAdminPage';
+import { ScheduleAdminPage } from './pages/admin/ScheduleAdminPage';
+import { ReviewsAdminPage } from './pages/admin/ReviewsAdminPage';
+import { PackagesAdminPage } from './pages/admin/PackagesAdminPage';
+import { SettingsPage } from './pages/admin/SettingsPage';
 
 export const router = createBrowserRouter([
+  // ── Admin panel ── all routes share AdminShell (auth gate + sidebar) ────────
+  {
+    path: '/admin',
+    Component: AdminShell,
+    children: [
+      { index: true,              Component: DashboardPage },
+      { path: 'content',          Component: ContentPage },
+      { path: 'media',            Component: MediaPage },
+      { path: 'instructors',      Component: InstructorsAdminPage },
+      { path: 'styles',           Component: StylesAdminPage },
+      { path: 'schedule',         Component: ScheduleAdminPage },
+      { path: 'special-classes',  Component: SpecialClassesPage },
+      { path: 'reviews',          Component: ReviewsAdminPage },
+      { path: 'packages',         Component: PackagesAdminPage },
+      { path: 'settings',         Component: SettingsPage },
+    ],
+  },
+
+  // ── Public site ── all pages share dark Layout (Header + Footer) ─────────────
   {
     path: '/',
     Component: Layout,
     children: [
-      { index: true, Component: HomePage },
-      { path: 'styles', Component: StylesPage },
-      { path: 'styles/:slug', Component: StyleDetailPage },
-      { path: 'schedule', Component: SchedulePage },
-      { path: 'packages', Component: PackagesPage },
-      { path: 'instructors', Component: InstructorsPage },
-      { path: 'about', Component: AboutPage },
-      { path: 'contact', Component: ContactPage },
-      { path: '*', Component: NotFoundPage },
+      { index: true,              Component: HomePage },
+      { path: 'styles',           Component: StylesPage },
+      { path: 'styles/:slug',     Component: StyleDetailPage },
+      { path: 'schedule',         Component: SchedulePage },
+      { path: 'packages',         Component: PackagesPage },
+      { path: 'instructors',      Component: InstructorsPage },
+      { path: 'about',            Component: AboutPage },
+      { path: 'contact',          Component: ContactPage },
+      { path: 'reserve/success',  Component: ReservationSuccessPage },
+      { path: '*',                Component: NotFoundPage },
     ],
   },
 ]);

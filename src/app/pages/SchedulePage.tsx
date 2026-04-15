@@ -1,13 +1,24 @@
 // SchedulePage — Chronological date-based scrolling timeline
+// Includes recurring weekly classes + Special Event classes from localStorage.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
+import { useLocation } from 'react-router';
 import { Clock, MapPin } from 'lucide-react';
 import { useI18n } from '../../lib/i18n';
 import { CTAButton } from '../components/ui/CTAButton';
 import { scaleIn, staggerFast, fadeInUp, clipRevealLTR } from '../../lib/animations';
+import { ReserveModal } from '../components/ui/ReserveModal';
+import type { SpecialClass } from '../../lib/specialClasses';
+import {
+  getUpcomingActiveSpecialClasses,
+  getActiveReservationCount,
+  formatPriceCents,
+  formatTimeOnly,
+} from '../../lib/specialClasses';
+import { getRecurringEntries } from '../../lib/adminData';
 
-// ─── Types ────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Category = 'kids' | 'salsa' | 'bachata' | 'street' | 'special' | 'ballet' | 'team';
 type FilterType = 'all' | 'kids' | 'salsa' | 'bachata' | 'street' | 'special';
@@ -24,11 +35,26 @@ interface WeeklyClass {
 interface DateGroup {
   date: Date;
   classes: WeeklyClass[];
+  specialClasses: SpecialClass[]; // one-off events from localStorage
 }
 
-// ─── Weekly Pattern ───────────────────────────────────────
+// ─── Helpers: convert adminData RecurringEntry → WeeklyClass ─────────────────
 
-const weeklyPattern: WeeklyClass[] = [
+const DAY_NAME_TO_NUM: Record<string, number> = {
+  sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+  thursday: 4, friday: 5, saturday: 6,
+};
+
+function to12h(time24: string): string {
+  const [h, m] = time24.split(':').map(Number);
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  const h12    = h > 12 ? h - 12 : h === 0 ? 12 : h;
+  return `${h12}:${m.toString().padStart(2, '0')} ${suffix}`;
+}
+
+// ─── Weekly Pattern (hardcoded fallback) ─────────────────────────────────────
+
+const FALLBACK_WEEKLY_PATTERN: WeeklyClass[] = [
   // MONDAY
   { dayOfWeek: 1, time: '6:00 PM', name: 'Kids Latin Rhythms',           detail: 'Intermediate | 5 Years Old and Up',                                        category: 'kids' },
   { dayOfWeek: 1, time: '7:00 PM', name: 'Salsa Foundamental',            detail: 'Totally Beginners',                                                         category: 'salsa' },
@@ -88,7 +114,7 @@ const filters: { id: FilterType; label: string }[] = [
   { id: 'special', label: 'SPECIAL' },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function matchesFilter(category: Category, filter: FilterType): boolean {
   if (filter === 'all') return true;
@@ -96,15 +122,26 @@ function matchesFilter(category: Category, filter: FilterType): boolean {
   return category === (filter as Category);
 }
 
-function generateSchedule(startDate: Date, totalDays: number): DateGroup[] {
+/** Whether a special event class should show for the given filter. */
+function showSpecialEvent(sc: SpecialClass, filter: FilterType): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'special') return true; // all special events shown under SPECIAL filter
+  return sc.category === (filter as string);
+}
+
+function generateSchedule(
+  pattern: WeeklyClass[],
+  startDate: Date,
+  totalDays: number,
+): DateGroup[] {
   const entries: DateGroup[] = [];
   for (let i = 0; i < totalDays; i++) {
     const date = new Date(startDate);
     date.setDate(startDate.getDate() + i);
-    const dow = date.getDay();
-    const dayClasses = weeklyPattern.filter(c => c.dayOfWeek === dow);
+    const dow       = date.getDay();
+    const dayClasses = pattern.filter((c) => c.dayOfWeek === dow);
     if (dayClasses.length > 0) {
-      entries.push({ date, classes: dayClasses });
+      entries.push({ date, classes: dayClasses, specialClasses: [] });
     }
   }
   return entries;
@@ -116,24 +153,59 @@ function isSameDay(a: Date, b: Date): boolean {
     && a.getDate() === b.getDate();
 }
 
-// ─── Animation variants ───────────────────────────────────
+/** Merge upcoming special classes into the recurring schedule groups. */
+function mergeSpecialClasses(
+  groups: DateGroup[],
+  specialClasses: SpecialClass[],
+  today: Date,
+  daysToShow: number,
+): DateGroup[] {
+  const endDate = new Date(today);
+  endDate.setDate(today.getDate() + daysToShow);
+
+  // Only consider special classes within the current window
+  const inWindow = specialClasses.filter(sc => {
+    const d = new Date(sc.date);
+    d.setHours(0, 0, 0, 0);
+    return d >= today && d <= endDate;
+  });
+
+  inWindow.forEach(sc => {
+    const scDate = new Date(sc.date);
+    scDate.setHours(0, 0, 0, 0);
+
+    const existing = groups.find(g => isSameDay(g.date, scDate));
+    if (existing) {
+      existing.specialClasses.push(sc);
+    } else {
+      // Day has no recurring classes (e.g. Sunday) — add a new group
+      groups.push({ date: scDate, classes: [], specialClasses: [sc] });
+    }
+  });
+
+  // Re-sort by date after inserting new groups
+  groups.sort((a, b) => a.date.getTime() - b.date.getTime());
+  return groups;
+}
+
+// ─── Animation variants ───────────────────────────────────────────────────────
 
 const groupVariants = {
-  hidden: { opacity: 0, y: 32 },
+  hidden:  { opacity: 0, y: 32 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
 const entryListVariants = {
-  hidden: {},
+  hidden:  {},
   visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
 };
 
 const entryVariants = {
-  hidden: { opacity: 0, x: -10 },
+  hidden:  { opacity: 0, x: -10 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.28, ease: 'easeOut' } },
 };
 
-// ─── Payment links ────────────────────────────────────────
+// ─── Payment links ────────────────────────────────────────────────────────────
 
 const paymentLinks: Record<string, string> = {
   kids:    'https://square.link/u/9GoE8ILA?src=sheet',
@@ -145,7 +217,7 @@ const paymentLinks: Record<string, string> = {
   team:    'https://square.link/u/eJjcA1AE?src=sheet',
 };
 
-// ─── Sub-components ───────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SaturdayEntry() {
   const color = categoryColors.special;
@@ -270,29 +342,140 @@ function ClassEntryRow({ cls, isLast }: { cls: WeeklyClass; isLast: boolean }) {
   );
 }
 
+// ─── Special Event Card ───────────────────────────────────────────────────────
+
+function SpecialEventCard({
+  sc,
+  onReserve,
+}: {
+  sc: SpecialClass;
+  onReserve: (sc: SpecialClass) => void;
+}) {
+  const reservedCount = getActiveReservationCount(sc.id);
+  const spotsLeft     = sc.maxCapacity - reservedCount;
+  const isSoldOut     = spotsLeft <= 0;
+  const priceLabel    = formatPriceCents(sc.price);
+  const timeLabel     = formatTimeOnly(sc.date);
+
+  return (
+    <motion.div variants={entryVariants} className="flex gap-4 pb-5">
+      {/* Gold dot connector */}
+      <div className="flex flex-col items-center flex-shrink-0" style={{ width: 14 }}>
+        <div
+          className="w-3 h-3 rounded-full flex-shrink-0 mt-[5px]"
+          style={{ background: 'var(--gold)' }}
+        />
+      </div>
+
+      {/* Card */}
+      <div
+        className="flex-1 rounded-xl p-4 relative"
+        style={{
+          background: 'rgba(246,176,0,0.05)',
+          border: '1px solid rgba(246,176,0,0.2)',
+        }}
+      >
+        {/* SPECIAL EVENT badge */}
+        <span
+          className="absolute top-3 right-3 font-body font-bold uppercase text-[10px] tracking-wide px-2 py-0.5 rounded-full"
+          style={{ background: 'var(--gold)', color: 'var(--ink)' }}
+        >
+          Special Event
+        </span>
+
+        {/* Class name */}
+        <p
+          className="font-body font-bold text-base leading-snug pr-28"
+          style={{ color: 'var(--white)' }}
+        >
+          {sc.name}
+        </p>
+
+        {/* Description */}
+        {sc.description && (
+          <p className="font-body text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            {sc.description}
+          </p>
+        )}
+
+        {/* Meta row */}
+        <p className="font-body text-xs mt-2 flex flex-wrap items-center gap-x-3 gap-y-0.5" style={{ color: 'var(--text-dim)' }}>
+          <span>⏰ {timeLabel}</span>
+          {sc.durationMin > 0 && <span>⏱ {sc.durationMin} min</span>}
+          <span>📍 {sc.location}</span>
+          {sc.instructor && <span>👤 {sc.instructor}</span>}
+        </p>
+
+        {/* Reserve row */}
+        <div className="flex items-center justify-between mt-3 gap-3">
+          <span className="font-body text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+            {isSoldOut
+              ? 'Sold out'
+              : spotsLeft <= 5
+                ? `⚡ ${spotsLeft} spot${spotsLeft === 1 ? '' : 's'} left`
+                : `${spotsLeft} spots left`}
+          </span>
+
+          {isSoldOut ? (
+            <span
+              className="font-body font-bold uppercase text-xs tracking-wide"
+              style={{ color: 'var(--error)' }}
+            >
+              Sold Out
+            </span>
+          ) : (
+            <button
+              onClick={() => onReserve(sc)}
+              className="font-body font-bold text-xs uppercase tracking-wide px-5 py-2 rounded-lg transition-all duration-200 flex-shrink-0"
+              style={{ background: 'var(--gold)', color: 'var(--ink)' }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'var(--gold-hover)';
+                e.currentTarget.style.boxShadow  = '0 0 16px rgba(246,176,0,0.25)';
+                e.currentTarget.style.transform  = 'translateY(-1px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'var(--gold)';
+                e.currentTarget.style.boxShadow  = '';
+                e.currentTarget.style.transform  = '';
+              }}
+            >
+              Reserve · {priceLabel}
+            </button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Date Group Row ───────────────────────────────────────────────────────────
+
 function DateGroupRow({
   group,
   isToday,
   filter,
+  onReserve,
 }: {
   group: DateGroup;
   isToday: boolean;
   filter: FilterType;
+  onReserve: (sc: SpecialClass) => void;
 }) {
   const d = group.date;
-  const month = MONTH_ABBR[d.getMonth()];
-  const dayNum = d.getDate();
+  const month   = MONTH_ABBR[d.getMonth()];
+  const dayNum  = d.getDate();
   const dayName = DAY_ABBR[d.getDay()];
-  const isSat = d.getDay() === 6;
+  const isSat   = d.getDay() === 6;
 
-  // For Saturday, only show if 'all' or 'special'
-  const satVisible = isSat && matchesFilter('special', filter);
-  const filtered = isSat
-    ? []
-    : group.classes.filter(c => matchesFilter(c.category, filter));
+  const satVisible          = isSat && matchesFilter('special', filter);
+  const filtered            = isSat ? [] : group.classes.filter(c => matchesFilter(c.category, filter));
+  const filteredSpecials    = group.specialClasses.filter(sc => showSpecialEvent(sc, filter));
 
-  if (isSat && !satVisible) return null;
-  if (!isSat && filtered.length === 0) return null;
+  // Hide this date row if it has nothing to show
+  if (isSat && !satVisible && filteredSpecials.length === 0) return null;
+  if (!isSat && filtered.length === 0 && filteredSpecials.length === 0) return null;
+
+  const totalEntries = (isSat ? 0 : filtered.length) + filteredSpecials.length;
 
   return (
     <motion.div
@@ -312,28 +495,24 @@ function DateGroupRow({
       {/* ── Date column ── */}
       <div className="flex-shrink-0 pt-0.5" style={{ width: 'clamp(72px, 15vw, 100px)' }}>
         <div className="sticky top-24 flex flex-col items-center text-center">
-          {/* Month badge */}
           <span
             className="font-body font-bold text-xs uppercase tracking-wide rounded-full px-3 py-0.5 mb-1"
             style={{ background: 'rgba(246,176,0,0.15)', color: 'var(--gold)' }}
           >
             {month}
           </span>
-          {/* Date number */}
           <span
             className="font-display uppercase leading-none"
             style={{ fontSize: 'clamp(2.5rem, 7vw, 3.5rem)', color: 'var(--white)' }}
           >
             {dayNum}
           </span>
-          {/* Day abbr */}
           <span
             className="font-body text-[11px] uppercase tracking-widest mt-0.5"
             style={{ color: 'var(--text-muted)' }}
           >
             {dayName}
           </span>
-          {/* TODAY badge */}
           {isToday && (
             <span
               className="font-body text-[11px] font-bold uppercase tracking-wide mt-1"
@@ -353,47 +532,132 @@ function DateGroupRow({
         viewport={{ once: true, amount: 0.05 }}
         variants={entryListVariants}
       >
-        {isSat ? (
-          <SaturdayEntry />
+        {isSat && satVisible ? (
+          <>
+            <SaturdayEntry />
+            {filteredSpecials.map(sc => (
+              <SpecialEventCard key={sc.id} sc={sc} onReserve={onReserve} />
+            ))}
+          </>
         ) : (
-          filtered.map((cls, idx) => (
-            <ClassEntryRow
-              key={`${cls.dayOfWeek}-${cls.time}-${idx}`}
-              cls={cls}
-              isLast={idx === filtered.length - 1}
-            />
-          ))
+          <>
+            {filtered.map((cls, idx) => (
+              <ClassEntryRow
+                key={`${cls.dayOfWeek}-${cls.time}-${idx}`}
+                cls={cls}
+                isLast={idx === filtered.length - 1 && filteredSpecials.length === 0}
+              />
+            ))}
+            {filteredSpecials.map((sc, idx) => (
+              <SpecialEventCard
+                key={sc.id}
+                sc={sc}
+                onReserve={onReserve}
+              />
+            ))}
+            {/* Suppress unused variable warning */}
+            {totalEntries > 0 && null}
+          </>
         )}
       </motion.div>
     </motion.div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 const DAYS_PER_CHUNK = 21;
 const MAX_DAYS = 63;
 
 export function SchedulePage() {
   const { language } = useI18n();
-  const [filter, setFilter] = useState<FilterType>('all');
+  const location = useLocation();
+
+  const [filter, setFilter]         = useState<FilterType>('all');
   const [daysToShow, setDaysToShow] = useState(DAYS_PER_CHUNK);
+  const [specialClasses, setSpecialClasses] = useState<SpecialClass[]>([]);
+  const [reserveTarget, setReserveTarget]   = useState<SpecialClass | null>(null);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  // Weekly pattern: try adminData recurring entries first, fall back to hardcoded
+  const [weeklyPattern, setWeeklyPattern] = useState<WeeklyClass[]>(FALLBACK_WEEKLY_PATTERN);
+
+  // Load special classes and recurring schedule from localStorage
+  const loadSpecialClasses = useCallback(() => {
+    setSpecialClasses(getUpcomingActiveSpecialClasses());
+  }, []);
+
+  useEffect(() => {
+    loadSpecialClasses();
+    document.title = 'Class Schedule | Estilo Latino Dance Company';
+
+    // Load recurring schedule from adminData (overrides hardcoded pattern if available)
+    const entries = getRecurringEntries().filter((e) => e.isActive);
+    if (entries.length > 0) {
+      setWeeklyPattern(
+        entries.map((e) => ({
+          dayOfWeek: DAY_NAME_TO_NUM[e.dayOfWeek] ?? 0,
+          time:      to12h(e.startTime),
+          name:      e.className,
+          detail:    e.detail,
+          category:  e.category as Category,
+          isPrivate: e.className.toLowerCase().includes('private'),
+        })),
+      );
+    }
+  }, [loadSpecialClasses]);
+
+  // Check for ?reserved=success query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('reserved') === 'success') {
+      setShowSuccessBanner(true);
+      // Clean the URL without a page reload
+      window.history.replaceState({}, '', '/schedule');
+    }
+  }, [location.search]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const allGroups = generateSchedule(today, daysToShow);
-  const visibleGroups = allGroups; // filtering is applied inside DateGroupRow
-
-  useEffect(() => {
-    document.title = 'Class Schedule | Estilo Latino Dance Company';
-  }, []);
+  // Build schedule: recurring classes + special events merged and sorted
+  const recurringGroups = generateSchedule(weeklyPattern, today, daysToShow);
+  const allGroups = mergeSpecialClasses(recurringGroups, specialClasses, today, daysToShow);
 
   const canLoadMore = daysToShow < MAX_DAYS;
+
+  function openReserveModal(sc: SpecialClass) {
+    setReserveTarget(sc);
+  }
+  function closeReserveModal() {
+    setReserveTarget(null);
+    // Refresh counts in case a reservation was just added
+    loadSpecialClasses();
+  }
 
   return (
     <div className="min-h-screen pt-28 pb-24" style={{ background: 'var(--bg)' }}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* ── Success banner (shown after reservation redirect) ── */}
+        {showSuccessBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex items-center justify-between gap-4 rounded-xl px-5 py-4"
+            style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)' }}
+          >
+            <p className="font-body font-semibold text-sm" style={{ color: 'var(--success)' }}>
+              ✓ Reserved! Check your email for confirmation, or call us at (201) 878-8977.
+            </p>
+            <button
+              onClick={() => setShowSuccessBanner(false)}
+              className="font-body text-xs shrink-0"
+              style={{ color: 'var(--success)' }}
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
 
         {/* ── Heading ── */}
         <motion.div
@@ -530,12 +794,13 @@ export function SchedulePage() {
 
         {/* ── Timeline ── */}
         <div>
-          {visibleGroups.map((group, idx) => (
+          {allGroups.map((group, idx) => (
             <DateGroupRow
               key={`${group.date.toISOString()}-${idx}`}
               group={group}
               isToday={isSameDay(group.date, today)}
               filter={filter}
+              onReserve={openReserveModal}
             />
           ))}
         </div>
@@ -609,6 +874,9 @@ export function SchedulePage() {
         </motion.div>
 
       </div>
+
+      {/* ── Reservation Modal ── */}
+      <ReserveModal specialClass={reserveTarget} onClose={closeReserveModal} />
     </div>
   );
 }

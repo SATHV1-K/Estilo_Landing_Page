@@ -1,9 +1,10 @@
-// StyleDetailPage - Individual dance style page
+// StyleDetailPage — reads the specific dance style from adminData (localStorage)
+// with hardcoded seed data as fallback.
 
 import { useParams, Navigate } from 'react-router';
 import { motion } from 'motion/react';
 import { useI18n } from '../../lib/i18n';
-import { danceStyles } from '../../lib/data';
+import { getStyles } from '../../lib/adminData';
 import { CTAButton } from '../components/ui/CTAButton';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 
@@ -11,7 +12,8 @@ export function StyleDetailPage() {
   const { slug } = useParams();
   const { language } = useI18n();
 
-  const style = danceStyles.find((s) => s.slug === slug);
+  const styles = getStyles();
+  const style  = styles.find((s) => s.slug === slug);
 
   if (!style) {
     return <Navigate to="/styles" replace />;
