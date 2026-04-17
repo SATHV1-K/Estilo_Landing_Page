@@ -12,6 +12,7 @@ import { InstructorsPage } from './pages/InstructorsPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { VideosPage } from './pages/VideosPage';
 import { SpecialClassesPage } from './pages/AdminPage';
 import { ReservationSuccessPage } from './pages/ReservationSuccessPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
@@ -24,6 +25,7 @@ import { ReviewsAdminPage } from './pages/admin/ReviewsAdminPage';
 import { PackagesAdminPage } from './pages/admin/PackagesAdminPage';
 import { SettingsPage } from './pages/admin/SettingsPage';
 import { AlertsAdminPage } from './pages/admin/AlertsAdminPage';
+import { VideosAdminPage } from './pages/admin/VideosAdminPage';
 
 export const router = createBrowserRouter([
   // ── Admin panel ── all routes share AdminShell (auth gate + sidebar) ────────
@@ -40,6 +42,7 @@ export const router = createBrowserRouter([
       { path: 'special-classes',  Component: SpecialClassesPage },
       { path: 'reviews',          Component: ReviewsAdminPage },
       { path: 'packages',         Component: PackagesAdminPage },
+      { path: 'videos',           Component: VideosAdminPage },
       { path: 'settings',         Component: SettingsPage },
       { path: 'alerts',           Component: AlertsAdminPage },
     ],
@@ -54,6 +57,7 @@ export const router = createBrowserRouter([
       { path: 'styles',           Component: StylesPage },
       { path: 'styles/:slug',     Component: StyleDetailPage },
       { path: 'schedule',         Component: SchedulePage },
+      { path: 'videos',            Component: VideosPage },
       { path: 'packages',         Component: PackagesPage },
       { path: 'instructors',      Component: InstructorsPage },
       { path: 'about',            Component: AboutPage },

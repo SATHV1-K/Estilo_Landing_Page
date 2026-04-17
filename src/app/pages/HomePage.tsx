@@ -7,6 +7,7 @@ import { StylesGrid } from '../components/sections/StylesGrid';
 import { InstructorGrid } from '../components/sections/InstructorGrid';
 import { CTABanner } from '../components/sections/CTABanner';
 import { TestimonialsCarousel } from '../components/sections/TestimonialsCarousel';
+import { FeaturedVideosSection } from '../components/sections/FeaturedVideosSection';
 import { getStyles, getInstructors } from '../../lib/adminData';
 import { useCmsContent } from '../../lib/hooks/useCmsContent';
 import { useI18n } from '../../lib/i18n';
@@ -73,6 +74,8 @@ export function HomePage() {
       <InstructorGrid instructors={instructors} />
 
       <TestimonialsCarousel />
+
+      <FeaturedVideosSection />
 
       <CTABanner
         title={isEs ? cms['home.cta_banner.heading_es'] : cms['home.cta_banner.heading']}

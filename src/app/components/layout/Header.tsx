@@ -18,6 +18,7 @@ export function Header() {
     { path: '/', label: translations.nav.home[language] },
     { path: '/schedule', label: translations.nav.schedule[language] },
     { path: '/styles', label: translations.nav.styles[language] },
+    { path: '/videos', label: translations.nav.videos[language] },
     { path: '/packages', label: translations.nav.packages[language] },
     { path: '/instructors', label: translations.nav.instructors[language] },
     { path: '/about', label: translations.nav.about[language] },

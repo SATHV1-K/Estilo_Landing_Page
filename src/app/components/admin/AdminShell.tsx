@@ -3,10 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
+import { getVideos } from '../../../lib/adminData';
 import {
   LayoutDashboard, Sparkles, FileText, Image, Users,
   Layers, Calendar, Star, LogOut, Menu, X, ChevronRight,
-  Package, Settings, Bell,
+  Package, Settings, Bell, Film,
 } from 'lucide-react';
 import { isAdminLoggedIn, adminLogin, adminLogout } from '../../../lib/specialClasses';
 
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { to: '/admin',                 label: 'Dashboard',       icon: LayoutDashboard, exact: true },
   { to: '/admin/content',         label: 'Content',         icon: FileText },
   { to: '/admin/media',           label: 'Media',           icon: Image },
+  { to: '/admin/videos',          label: 'Videos',          icon: Film },
   { to: '/admin/instructors',     label: 'Instructors',     icon: Users },
   { to: '/admin/styles',          label: 'Styles',          icon: Layers },
   { to: '/admin/schedule',        label: 'Schedule',        icon: Calendar },
@@ -100,6 +102,9 @@ function Sidebar({
   onLogout: () => void;
   onClose?: () => void;
 }) {
+  const [videoCount, setVideoCount] = useState(0);
+  useEffect(() => { setVideoCount(getVideos().length); }, []);
+
   return (
     <aside className="flex flex-col h-full bg-white border-r border-gray-200">
       {/* Logo */}
@@ -150,6 +155,18 @@ function Sidebar({
                     style={isActive ? { color: GOLD } : {}}
                   />
                   <span className="flex-1">{label}</span>
+                  {to === '/admin/videos' && videoCount > 0 && (
+                    <span
+                      className="text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
+                      style={
+                        isActive
+                          ? { background: `${GOLD}33`, color: GOLD }
+                          : { background: '#F3F4F6', color: '#6B7280' }
+                      }
+                    >
+                      {videoCount}
+                    </span>
+                  )}
                   {isActive && <ChevronRight size={14} style={{ color: GOLD }} />}
                 </>
               )}

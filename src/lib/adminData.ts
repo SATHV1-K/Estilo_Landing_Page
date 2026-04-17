@@ -778,3 +778,81 @@ export function reorderAlerts(ids: string[]): void {
   });
   write(KEYS.alerts, list);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VIDEOS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type VideoSource   = 'youtube' | 'instagram' | 'upload';
+export type VideoCategory = 'performance' | 'class' | 'student-showcase' | 'event' | 'general';
+
+export interface Video {
+  id: string;
+  title: string;
+  titleEs: string;
+  description: string;
+  descriptionEs: string;
+  source: VideoSource;
+  externalUrl: string;    // Full YouTube / Instagram URL
+  youtubeId: string;      // Parsed from externalUrl on save
+  thumbnailUrl: string;   // Custom thumbnail as base64 data URL (optional for YouTube, required for Instagram)
+  videoFileUrl: string;   // Base64 data URL — only for source="upload"
+  durationSec: number;    // Optional, for display like "2:34"
+  category: VideoCategory;
+  featured: boolean;      // Show on home page preview
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const VIDEO_KEY = 'estilo_videos';
+
+/** All videos sorted by sortOrder (including inactive — for admin). */
+export function getVideos(): Video[] {
+  return read<Video>(VIDEO_KEY).sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/** Active videos only — for public pages. */
+export function getActiveVideos(): Video[] {
+  return getVideos().filter(v => v.isActive);
+}
+
+export function saveVideo(
+  data: Omit<Video, 'id' | 'createdAt' | 'updatedAt'> & { id?: string; createdAt?: string }
+): Video {
+  const list = read<Video>(VIDEO_KEY);
+  const ts = now();
+  if (data.id) {
+    const idx = list.findIndex(v => v.id === data.id);
+    const updated: Video = { ...(data as Video), updatedAt: ts };
+    if (idx >= 0) list[idx] = updated;
+    else list.push(updated);
+    write(VIDEO_KEY, list);
+    return updated;
+  }
+  const maxOrder = list.reduce((m, v) => Math.max(m, v.sortOrder), 0);
+  const created: Video = {
+    ...(data as Omit<Video, 'id' | 'createdAt' | 'updatedAt'>),
+    id: genId(),
+    sortOrder: data.sortOrder ?? maxOrder + 1,
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  list.push(created);
+  write(VIDEO_KEY, list);
+  return created;
+}
+
+export function deleteVideo(id: string): void {
+  write(VIDEO_KEY, read<Video>(VIDEO_KEY).filter(v => v.id !== id));
+}
+
+export function reorderVideos(ids: string[]): void {
+  const list = read<Video>(VIDEO_KEY);
+  ids.forEach((id, idx) => {
+    const item = list.find(v => v.id === id);
+    if (item) item.sortOrder = idx + 1;
+  });
+  write(VIDEO_KEY, list);
+}
