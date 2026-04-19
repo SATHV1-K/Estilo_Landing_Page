@@ -13,6 +13,8 @@ import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { VideosPage } from './pages/VideosPage';
+import { GalleryPage } from './pages/GalleryPage';
+import { GalleryAdminPage } from './pages/admin/GalleryAdminPage';
 import { SpecialClassesPage } from './pages/AdminPage';
 import { ReservationSuccessPage } from './pages/ReservationSuccessPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
@@ -44,6 +46,7 @@ export const router = createBrowserRouter([
       { path: 'reviews',          Component: ReviewsAdminPage },
       { path: 'packages',         Component: PackagesAdminPage },
       { path: 'videos',           Component: VideosAdminPage },
+      { path: 'gallery',          Component: GalleryAdminPage },
       { path: 'settings',         Component: SettingsPage },
       { path: 'alerts',           Component: AlertsAdminPage },
     ],
@@ -59,6 +62,7 @@ export const router = createBrowserRouter([
       { path: 'styles/:slug',     Component: StyleDetailPage },
       { path: 'schedule',         Component: SchedulePage },
       { path: 'videos',            Component: VideosPage },
+      { path: 'gallery',           Component: GalleryPage },
       { path: 'packages',         Component: PackagesPage },
       { path: 'instructors',      Component: InstructorsPage },
       { path: 'about',            Component: AboutPage },

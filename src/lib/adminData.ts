@@ -862,6 +862,74 @@ export function reorderAlerts(ids: string[]): void {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// GALLERY PHOTOS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type PhotoCategory = 'performance' | 'class' | 'event' | 'studio' | 'general';
+
+export interface GalleryPhoto {
+  id: string;
+  title: string;
+  titleEs: string;
+  altText: string;
+  imageUrl: string;       // base64 data URL
+  category: PhotoCategory;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const PHOTO_KEY = 'estilo_gallery_photos';
+
+export function getGalleryPhotos(): GalleryPhoto[] {
+  return read<GalleryPhoto>(PHOTO_KEY).sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export function getActiveGalleryPhotos(): GalleryPhoto[] {
+  return getGalleryPhotos().filter(p => p.isActive);
+}
+
+export function saveGalleryPhoto(
+  data: Omit<GalleryPhoto, 'id' | 'createdAt' | 'updatedAt'> & { id?: string; createdAt?: string }
+): GalleryPhoto {
+  const list = read<GalleryPhoto>(PHOTO_KEY);
+  const ts = now();
+  if (data.id) {
+    const idx = list.findIndex(p => p.id === data.id);
+    const updated: GalleryPhoto = { ...(data as GalleryPhoto), updatedAt: ts };
+    if (idx >= 0) list[idx] = updated;
+    else list.push(updated);
+    write(PHOTO_KEY, list);
+    return updated;
+  }
+  const maxOrder = list.reduce((m, p) => Math.max(m, p.sortOrder), 0);
+  const created: GalleryPhoto = {
+    ...(data as Omit<GalleryPhoto, 'id' | 'createdAt' | 'updatedAt'>),
+    id: genId(),
+    sortOrder: data.sortOrder ?? maxOrder + 1,
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  list.push(created);
+  write(PHOTO_KEY, list);
+  return created;
+}
+
+export function deleteGalleryPhoto(id: string): void {
+  write(PHOTO_KEY, read<GalleryPhoto>(PHOTO_KEY).filter(p => p.id !== id));
+}
+
+export function reorderGalleryPhotos(ids: string[]): void {
+  const list = read<GalleryPhoto>(PHOTO_KEY);
+  ids.forEach((id, idx) => {
+    const item = list.find(p => p.id === id);
+    if (item) item.sortOrder = idx + 1;
+  });
+  write(PHOTO_KEY, list);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // VIDEOS
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@ import { getVideos } from '../../../lib/adminData';
 import {
   LayoutDashboard, Sparkles, FileText, Image, Users,
   Layers, Calendar, Star, LogOut, Menu, X, ChevronRight,
-  Package, Settings, Bell, Film,
+  Package, Settings, Bell, Film, Images,
 } from 'lucide-react';
 import { isAdminLoggedIn, adminLogin, adminLogout } from '../../../lib/specialClasses';
 
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { to: '/admin/content',         label: 'Content',         icon: FileText },
   { to: '/admin/media',           label: 'Media',           icon: Image },
   { to: '/admin/videos',          label: 'Videos',          icon: Film },
+  { to: '/admin/gallery',         label: 'Gallery Photos',  icon: Images },
   { to: '/admin/instructors',     label: 'Instructors',     icon: Users },
   { to: '/admin/styles',          label: 'Styles',          icon: Layers },
   { to: '/admin/schedule',        label: 'Schedule',        icon: Calendar },

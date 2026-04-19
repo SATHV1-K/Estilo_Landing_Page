@@ -329,8 +329,8 @@ export function FeaturedVideosSection() {
           viewport={{ once: true, amount: 0.2 }}
           className="flex justify-center mt-10"
         >
-          <CTAButton to="/videos" size="md">
-            {isEs ? 'VER TODOS LOS VIDEOS' : 'VIEW ALL VIDEOS'}
+          <CTAButton to="/gallery" size="md">
+            {isEs ? 'VER TODA LA GALERÍA' : 'VIEW FULL GALLERY'}
           </CTAButton>
         </motion.div>
       </div>

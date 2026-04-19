@@ -39,7 +39,7 @@ export const translations = {
     home: { en: 'Home', es: 'Inicio' },
     styles: { en: 'Styles', es: 'Estilos' },
     schedule: { en: 'Schedule', es: 'Horario' },
-    videos: { en: 'Videos', es: 'Videos' },
+    gallery: { en: 'Gallery', es: 'Galería' },
     packages: { en: 'Packages', es: 'Paquetes' },
     instructors: { en: 'Instructors', es: 'Instructores' },
     about: { en: 'About', es: 'Nosotros' },
