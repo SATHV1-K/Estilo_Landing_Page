@@ -4,10 +4,11 @@
 import { useState, useEffect } from 'react';
 import {
   Plus, Pencil, Trash2, X, Check, Calendar,
-  ChevronUp, ChevronDown,
+  ChevronUp, ChevronDown, RotateCcw,
 } from 'lucide-react';
 import {
-  getRecurringEntries, saveRecurringEntry, deleteRecurringEntry,
+  getRecurringEntries, saveRecurringEntry, deleteRecurringEntry, resetRecurringToDefault,
+  getOverviewEntries, saveOverviewEntry, deleteOverviewEntry, resetOverviewToDefault,
   type RecurringEntry, type RecurringDay, type RecurringCategory,
 } from '../../../lib/adminData';
 
@@ -79,10 +80,12 @@ function EntryFormPanel({
   entry,
   onSave,
   onClose,
+  saveEntry = saveRecurringEntry,
 }: {
   entry: RecurringEntry | null;
   onSave: () => void;
   onClose: () => void;
+  saveEntry?: (data: Omit<RecurringEntry, 'id' | 'updatedAt'> & { id?: string }) => RecurringEntry;
 }) {
   const isNew = !entry;
   const [form, setForm] = useState<Omit<RecurringEntry, 'id' | 'updatedAt'> & { id?: string }>(
@@ -107,7 +110,7 @@ function EntryFormPanel({
 
   function handleSubmit() {
     if (!validate()) return;
-    saveRecurringEntry(form);
+    saveEntry(form);
     onSave();
   }
 
@@ -283,98 +286,36 @@ function EntryRow({
   );
 }
 
-// ─── ScheduleAdminPage ────────────────────────────────────────────────────────
+// ─── Shared day entries list ──────────────────────────────────────────────────
 
-export function ScheduleAdminPage() {
-  const [entries, setEntries] = useState<RecurringEntry[]>([]);
-  const [editing, setEditing] = useState<RecurringEntry | null>(null);
-  const [panelOpen, setPanel] = useState(false);
-  const [filterDay, setFilterDay] = useState<RecurringDay | 'all'>('all');
-
-  function load() { setEntries(getRecurringEntries()); }
-  useEffect(load, []);
-
-  function openNew()               { setEditing(null); setPanel(true); }
-  function openEdit(e: RecurringEntry) { setEditing(e); setPanel(true); }
-  function closePanel()            { setPanel(false); setEditing(null); }
-  function afterSave()             { load(); closePanel(); }
-  function handleDelete(id: string) { deleteRecurringEntry(id); load(); }
-
-  function moveInGroup(id: string, dir: 1 | -1) {
-    const all = [...entries];
-    const idx = all.findIndex(e => e.id === id);
-    const entry = all[idx];
-    const groupItems = all
-      .filter(e => e.dayOfWeek === entry.dayOfWeek)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
-    const groupIdx = groupItems.findIndex(e => e.id === id);
-    const newGroupIdx = groupIdx + dir;
-    if (newGroupIdx < 0 || newGroupIdx >= groupItems.length) return;
-    // Swap sort orders
-    const other = groupItems[newGroupIdx];
-    const tmpOrder = entry.sortOrder;
-    saveRecurringEntry({ ...entry, sortOrder: other.sortOrder });
-    saveRecurringEntry({ ...other, sortOrder: tmpOrder });
-    load();
-  }
-
-  // Group by day
+function DayEntriesList({
+  entries,
+  filterDay,
+  onOpenNew,
+  onOpenEdit,
+  onDelete,
+  onMove,
+}: {
+  entries: RecurringEntry[];
+  filterDay: RecurringDay | 'all';
+  onOpenNew: (day?: RecurringDay) => void;
+  onOpenEdit: (e: RecurringEntry) => void;
+  onDelete: (id: string) => void;
+  onMove: (id: string, dir: 1 | -1) => void;
+}) {
   const grouped: Record<RecurringDay, RecurringEntry[]> = {} as any;
   DAYS.forEach(d => {
-    grouped[d] = entries
-      .filter(e => e.dayOfWeek === d)
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+    grouped[d] = entries.filter(e => e.dayOfWeek === d).sort((a, b) => a.sortOrder - b.sortOrder);
   });
-
   const visibleDays = filterDay === 'all' ? DAYS : [filterDay];
 
   return (
-    <div className={S.page}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-black text-gray-900">Schedule Manager</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Manage recurring weekly classes. These appear on the public schedule timeline.
-          </p>
-        </div>
-        <button onClick={openNew} className={S.btn.gold} style={{ background: GOLD, color: '#0A0A0A' }}>
-          <Plus size={16} /> Add Class
-        </button>
-      </div>
-
-      {/* Day filter */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        <button
-          onClick={() => setFilterDay('all')}
-          className="px-3 py-1.5 rounded-full text-xs font-bold border transition-colors"
-          style={filterDay === 'all'
-            ? { background: GOLD, color: '#0A0A0A', borderColor: GOLD }
-            : { borderColor: '#E5E7EB', color: '#6B7280' }}
-        >
-          All Days
-        </button>
-        {DAYS.map(d => (
-          <button
-            key={d}
-            onClick={() => setFilterDay(d)}
-            className="px-3 py-1.5 rounded-full text-xs font-bold border transition-colors"
-            style={filterDay === d
-              ? { background: GOLD, color: '#0A0A0A', borderColor: GOLD }
-              : { borderColor: '#E5E7EB', color: '#6B7280' }}
-          >
-            {DAY_LABELS[d]}
-          </button>
-        ))}
-      </div>
-
-      {/* Days */}
+    <>
       {visibleDays.map(day => {
         const dayEntries = grouped[day];
         if (dayEntries.length === 0 && filterDay !== 'all') return null;
         return (
           <div key={day} className={`${S.card} mb-4`}>
-            {/* Day header */}
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Calendar size={15} style={{ color: GOLD }} />
@@ -384,7 +325,7 @@ export function ScheduleAdminPage() {
                 <span className="text-xs text-gray-400">({dayEntries.length} classes)</span>
               </div>
               <button
-                onClick={() => { setEditing({ dayOfWeek: day } as any); setPanel(true); }}
+                onClick={() => onOpenNew(day)}
                 className="flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-gray-700 transition-colors"
               >
                 <Plus size={13} /> Add
@@ -394,8 +335,7 @@ export function ScheduleAdminPage() {
             {dayEntries.length === 0 ? (
               <div className="px-4 py-6 text-center text-sm text-gray-400">
                 No classes on {DAY_LABELS[day]}.{' '}
-                <button className="text-amber-600 hover:underline font-semibold"
-                  onClick={() => { setEditing({ dayOfWeek: day } as any); setPanel(true); }}>
+                <button className="text-amber-600 hover:underline font-semibold" onClick={() => onOpenNew(day)}>
                   Add one
                 </button>
               </div>
@@ -406,27 +346,255 @@ export function ScheduleAdminPage() {
                   entry={entry}
                   idx={idx}
                   groupTotal={dayEntries.length}
-                  onEdit={openEdit}
-                  onDelete={handleDelete}
-                  onMoveUp={id => moveInGroup(id, -1)}
-                  onMoveDown={id => moveInGroup(id, 1)}
+                  onEdit={onOpenEdit}
+                  onDelete={onDelete}
+                  onMoveUp={id => onMove(id, -1)}
+                  onMoveDown={id => onMove(id, 1)}
                 />
               ))
             )}
           </div>
         );
       })}
+    </>
+  );
+}
 
-      <p className="text-xs text-gray-400 mt-2">
-        These recurring classes feed into the public schedule timeline alongside special events.
-      </p>
+// ─── ScheduleAdminPage ────────────────────────────────────────────────────────
 
-      {panelOpen && (
-        <EntryFormPanel
-          entry={editing?.id ? editing : null}
-          onSave={afterSave}
-          onClose={closePanel}
-        />
+export function ScheduleAdminPage() {
+  const [activeTab, setActiveTab] = useState<'detailed' | 'overview'>('detailed');
+
+  // ── Detailed schedule state ──
+  const [entries, setEntries] = useState<RecurringEntry[]>([]);
+  const [detailEditing, setDetailEditing] = useState<RecurringEntry | null>(null);
+  const [detailPanelOpen, setDetailPanel] = useState(false);
+  const [detailFilterDay, setDetailFilterDay] = useState<RecurringDay | 'all'>('all');
+
+  function loadDetailed() { setEntries(getRecurringEntries()); }
+  useEffect(loadDetailed, []);
+
+  function detailOpenNew(day?: RecurringDay) {
+    setDetailEditing(day ? { dayOfWeek: day } as any : null);
+    setDetailPanel(true);
+  }
+  function detailOpenEdit(e: RecurringEntry) { setDetailEditing(e); setDetailPanel(true); }
+  function detailClosePanel() { setDetailPanel(false); setDetailEditing(null); }
+  function detailAfterSave() { loadDetailed(); detailClosePanel(); }
+  function detailHandleDelete(id: string) { deleteRecurringEntry(id); loadDetailed(); }
+  function detailMoveInGroup(id: string, dir: 1 | -1) {
+    const entry = entries.find(e => e.id === id)!;
+    const group = entries.filter(e => e.dayOfWeek === entry.dayOfWeek).sort((a, b) => a.sortOrder - b.sortOrder);
+    const gi = group.findIndex(e => e.id === id);
+    const ni = gi + dir;
+    if (ni < 0 || ni >= group.length) return;
+    const other = group[ni];
+    saveRecurringEntry({ ...entry, sortOrder: other.sortOrder });
+    saveRecurringEntry({ ...other, sortOrder: entry.sortOrder });
+    loadDetailed();
+  }
+
+  // ── Overview state ──
+  const [overviewEntries, setOverviewEntries] = useState<RecurringEntry[]>([]);
+  const [overviewEditing, setOverviewEditing] = useState<RecurringEntry | null>(null);
+  const [overviewPanelOpen, setOverviewPanel] = useState(false);
+  const [overviewFilterDay, setOverviewFilterDay] = useState<RecurringDay | 'all'>('all');
+
+  function loadOverview() { setOverviewEntries(getOverviewEntries()); }
+  useEffect(loadOverview, []);
+
+  function overviewOpenNew(day?: RecurringDay) {
+    setOverviewEditing(day ? { dayOfWeek: day } as any : null);
+    setOverviewPanel(true);
+  }
+  function overviewOpenEdit(e: RecurringEntry) { setOverviewEditing(e); setOverviewPanel(true); }
+  function overviewClosePanel() { setOverviewPanel(false); setOverviewEditing(null); }
+  function overviewAfterSave() { loadOverview(); overviewClosePanel(); }
+  function overviewHandleDelete(id: string) { deleteOverviewEntry(id); loadOverview(); }
+  function overviewMoveInGroup(id: string, dir: 1 | -1) {
+    const entry = overviewEntries.find(e => e.id === id)!;
+    const group = overviewEntries.filter(e => e.dayOfWeek === entry.dayOfWeek).sort((a, b) => a.sortOrder - b.sortOrder);
+    const gi = group.findIndex(e => e.id === id);
+    const ni = gi + dir;
+    if (ni < 0 || ni >= group.length) return;
+    const other = group[ni];
+    saveOverviewEntry({ ...entry, sortOrder: other.sortOrder });
+    saveOverviewEntry({ ...other, sortOrder: entry.sortOrder });
+    loadOverview();
+  }
+
+  // ── Day filter pills (shared component) ──
+  function DayFilter({ value, onChange }: { value: RecurringDay | 'all'; onChange: (v: RecurringDay | 'all') => void }) {
+    return (
+      <div className="flex flex-wrap gap-2 mb-6">
+        <button
+          onClick={() => onChange('all')}
+          className="px-3 py-1.5 rounded-full text-xs font-bold border transition-colors"
+          style={value === 'all' ? { background: GOLD, color: '#0A0A0A', borderColor: GOLD } : { borderColor: '#E5E7EB', color: '#6B7280' }}
+        >
+          All Days
+        </button>
+        {DAYS.map(d => (
+          <button
+            key={d}
+            onClick={() => onChange(d)}
+            className="px-3 py-1.5 rounded-full text-xs font-bold border transition-colors"
+            style={value === d ? { background: GOLD, color: '#0A0A0A', borderColor: GOLD } : { borderColor: '#E5E7EB', color: '#6B7280' }}
+          >
+            {DAY_LABELS[d]}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className={S.page}>
+      {/* Page header */}
+      <div className="mb-6">
+        <h1 className="text-xl font-black text-gray-900">Schedule Manager</h1>
+        <p className="text-sm text-gray-500 mt-0.5">
+          Manage the Detailed Schedule timeline and the Schedule Overview grid independently.
+        </p>
+      </div>
+
+      {/* Tab switcher */}
+      <div className="flex gap-1 mb-8 p-1 bg-gray-100 rounded-xl w-fit">
+        <button
+          onClick={() => setActiveTab('detailed')}
+          className="px-5 py-2 rounded-lg text-sm font-bold transition-all"
+          style={activeTab === 'detailed'
+            ? { background: '#ffffff', color: '#111827', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
+            : { color: '#6B7280' }}
+        >
+          Detailed Schedule
+        </button>
+        <button
+          onClick={() => setActiveTab('overview')}
+          className="px-5 py-2 rounded-lg text-sm font-bold transition-all"
+          style={activeTab === 'overview'
+            ? { background: '#ffffff', color: '#111827', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
+            : { color: '#6B7280' }}
+        >
+          Schedule Overview
+        </button>
+      </div>
+
+      {/* ── Detailed Schedule tab ── */}
+      {activeTab === 'detailed' && (
+        <>
+          <div className="flex items-center justify-between mb-4 gap-4">
+            <p className="text-sm text-gray-500">
+              These classes feed the date-by-date timeline on the public schedule page.
+            </p>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => {
+                  if (confirm('Reset all recurring classes to the default schedule? This will replace all current entries.')) {
+                    resetRecurringToDefault();
+                    loadDetailed();
+                  }
+                }}
+                className={S.btn.ghost}
+              >
+                <RotateCcw size={14} /> Reset to Default
+              </button>
+              <button onClick={() => detailOpenNew()} className={S.btn.gold} style={{ background: GOLD, color: '#0A0A0A' }}>
+                <Plus size={16} /> Add Class
+              </button>
+            </div>
+          </div>
+
+          <DayFilter value={detailFilterDay} onChange={setDetailFilterDay} />
+
+          <DayEntriesList
+            entries={entries}
+            filterDay={detailFilterDay}
+            onOpenNew={detailOpenNew}
+            onOpenEdit={detailOpenEdit}
+            onDelete={detailHandleDelete}
+            onMove={detailMoveInGroup}
+          />
+
+          <p className="text-xs text-gray-400 mt-2">
+            Changes here appear in the Detailed Schedule timeline alongside special events.
+          </p>
+
+          {detailPanelOpen && (
+            <EntryFormPanel
+              entry={detailEditing?.id ? detailEditing : null}
+              onSave={detailAfterSave}
+              onClose={detailClosePanel}
+              saveEntry={saveRecurringEntry}
+            />
+          )}
+        </>
+      )}
+
+      {/* ── Schedule Overview tab ── */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Info banner */}
+          <div
+            className="rounded-lg px-4 py-3 mb-6 flex items-start gap-3"
+            style={{ background: 'rgba(246,176,0,0.08)', border: '1px solid rgba(246,176,0,0.25)' }}
+          >
+            <span style={{ color: GOLD, fontSize: 18, lineHeight: 1.4 }}>⊞</span>
+            <div>
+              <p className="text-sm font-bold text-gray-800">Schedule Overview Grid</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                These entries control the visual grid at the top of the public Schedule page.
+                They are independent from the Detailed Schedule — changes here only affect the overview grid.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mb-4 gap-4">
+            <p className="text-sm text-gray-500">
+              {overviewEntries.filter(e => e.isActive).length} active entries displayed in the overview grid.
+            </p>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => {
+                  if (confirm('Reset the Schedule Overview to the default classes? This will replace all current overview entries.')) {
+                    resetOverviewToDefault();
+                    loadOverview();
+                  }
+                }}
+                className={S.btn.ghost}
+              >
+                <RotateCcw size={14} /> Reset to Default
+              </button>
+              <button onClick={() => overviewOpenNew()} className={S.btn.gold} style={{ background: GOLD, color: '#0A0A0A' }}>
+                <Plus size={16} /> Add Entry
+              </button>
+            </div>
+          </div>
+
+          <DayFilter value={overviewFilterDay} onChange={setOverviewFilterDay} />
+
+          <DayEntriesList
+            entries={overviewEntries}
+            filterDay={overviewFilterDay}
+            onOpenNew={overviewOpenNew}
+            onOpenEdit={overviewOpenEdit}
+            onDelete={overviewHandleDelete}
+            onMove={overviewMoveInGroup}
+          />
+
+          <p className="text-xs text-gray-400 mt-2">
+            Only active entries are shown in the public Schedule Overview grid. Inactive entries are hidden.
+          </p>
+
+          {overviewPanelOpen && (
+            <EntryFormPanel
+              entry={overviewEditing?.id ? overviewEditing : null}
+              onSave={overviewAfterSave}
+              onClose={overviewClosePanel}
+              saveEntry={saveOverviewEntry}
+            />
+          )}
+        </>
       )}
     </div>
   );

@@ -16,7 +16,7 @@ import {
   formatPriceCents,
   formatTimeOnly,
 } from '../../lib/specialClasses';
-import { getRecurringEntries } from '../../lib/adminData';
+import { getRecurringEntries, getOverviewEntries } from '../../lib/adminData';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -186,6 +186,136 @@ function mergeSpecialClasses(
   // Re-sort by date after inserting new groups
   groups.sort((a, b) => a.date.getTime() - b.date.getTime());
   return groups;
+}
+
+// ─── Schedule Overview Grid ───────────────────────────────────────────────────
+
+const WEEKDAYS = [
+  { dow: 1, label: 'MONDAY' },
+  { dow: 2, label: 'TUESDAY' },
+  { dow: 3, label: 'WEDNESDAY' },
+  { dow: 4, label: 'THURSDAY' },
+  { dow: 5, label: 'FRIDAY' },
+];
+
+const SAT_TIME_LABELS = ['10AM', '11AM', '12PM', '1PM', '2PM'];
+
+const CELL_H = 'h-[90px]';
+
+function parseTime12h(time: string): number {
+  const [timePart, meridiem] = time.split(' ');
+  const [h, m] = timePart.split(':').map(Number);
+  const hours = meridiem === 'PM' ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+  return hours * 60 + m;
+}
+
+function ScheduleOverviewGrid({ pattern }: { pattern: WeeklyClass[] }) {
+  const lookup: Record<number, Record<string, WeeklyClass>> = {};
+  pattern.forEach(cls => {
+    if (!lookup[cls.dayOfWeek]) lookup[cls.dayOfWeek] = {};
+    lookup[cls.dayOfWeek][cls.time] = cls;
+  });
+
+  // Derive unique times from Mon–Fri entries so the grid always reflects actual data
+  const gridTimes = Array.from(
+    new Set(pattern.filter(c => c.dayOfWeek >= 1 && c.dayOfWeek <= 5).map(c => c.time))
+  ).sort((a, b) => parseTime12h(a) - parseTime12h(b));
+
+  // 7 columns: time-label | mon | tue | wed | thu | fri | sat
+  const colTemplate = '64px repeat(5, minmax(0,1fr)) minmax(0,1fr)';
+
+  return (
+    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' as const }}>
+      <div style={{ minWidth: '860px' }}>
+
+        {/* ── Header ── */}
+        <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: colTemplate }}>
+          <div />
+          {WEEKDAYS.map(d => (
+            <div
+              key={d.dow}
+              className="font-body font-bold text-xs uppercase tracking-wide text-center py-2 rounded-full"
+              style={{ background: 'var(--gold)', color: 'var(--ink)' }}
+            >
+              {d.label}
+            </div>
+          ))}
+          <div
+            className="font-body font-bold text-xs uppercase tracking-wide text-center py-2 rounded-full"
+            style={{ background: 'var(--gold)', color: 'var(--ink)' }}
+          >
+            SATURDAY
+          </div>
+        </div>
+
+        {/* ── Rows ── */}
+        {gridTimes.map((time, rowIdx) => {
+          const satSlot = SAT_TIME_LABELS[rowIdx];
+          return (
+            <div key={time} className="grid gap-2 mb-2" style={{ gridTemplateColumns: colTemplate }}>
+
+              {/* Time label */}
+              <div className={`${CELL_H} flex items-center justify-center`}>
+                <span
+                  className="font-body font-bold text-xs uppercase w-full text-center px-2 py-1.5 rounded-lg"
+                  style={{ background: 'var(--surface-elevated)', color: 'var(--white)', border: '1px solid var(--border)' }}
+                >
+                  {time.replace(':00 ', '')}
+                </span>
+              </div>
+
+              {/* Mon–Fri cells */}
+              {WEEKDAYS.map(d => {
+                const cls = lookup[d.dow]?.[time];
+                if (!cls) {
+                  return <div key={d.dow} className={`${CELL_H} rounded-lg`} style={{ background: '#111111' }} />;
+                }
+                const color = categoryColors[cls.category];
+                return (
+                  <div
+                    key={d.dow}
+                    className={`${CELL_H} rounded-lg p-2.5 overflow-hidden`}
+                    style={{ background: 'var(--surface-card)', borderLeft: `4px solid ${color}` }}
+                  >
+                    <p className="font-body font-bold text-[11px] uppercase leading-tight" style={{ color: 'var(--white)' }}>
+                      {cls.name}
+                    </p>
+                    {cls.detail && (
+                      <p className="font-body text-[10px] mt-1 leading-tight" style={{ color: 'var(--text-muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' } as object}>
+                        {cls.detail}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Saturday: one slot per row (up to SAT_TIME_LABELS.length) */}
+              {satSlot ? (
+                <div
+                  className={`${CELL_H} rounded-lg p-2.5 flex flex-col justify-center gap-1`}
+                  style={{ background: 'var(--surface-card)', borderLeft: `4px solid ${categoryColors.special}` }}
+                >
+                  <span
+                    className="font-body font-bold self-start rounded-full px-2.5 py-0.5"
+                    style={{ background: 'var(--gold)', color: 'var(--ink)', fontSize: '11px' }}
+                  >
+                    {satSlot}
+                  </span>
+                  <p className="font-body text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                    Private
+                  </p>
+                </div>
+              ) : (
+                <div className={`${CELL_H} rounded-lg`} style={{ background: '#111111' }} />
+              )}
+
+            </div>
+          );
+        })}
+
+      </div>
+    </div>
+  );
 }
 
 // ─── Animation variants ───────────────────────────────────────────────────────
@@ -578,8 +708,38 @@ export function SchedulePage() {
   const [specialClasses, setSpecialClasses] = useState<SpecialClass[]>([]);
   const [reserveTarget, setReserveTarget]   = useState<SpecialClass | null>(null);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-  // Weekly pattern: try adminData recurring entries first, fall back to hardcoded
-  const [weeklyPattern, setWeeklyPattern] = useState<WeeklyClass[]>(FALLBACK_WEEKLY_PATTERN);
+  // Lazy initializer: reads from localStorage on first render so the overview
+  // grid is always correct on the very first paint (no fallback-data flash).
+  const [weeklyPattern, setWeeklyPattern] = useState<WeeklyClass[]>(() => {
+    const entries = getRecurringEntries().filter((e) => e.isActive);
+    if (entries.length > 0) {
+      return entries.map((e) => ({
+        dayOfWeek: DAY_NAME_TO_NUM[e.dayOfWeek] ?? 0,
+        time:      to12h(e.startTime),
+        name:      e.className,
+        detail:    e.detail,
+        category:  e.category as Category,
+        isPrivate: e.className.toLowerCase().includes('private'),
+      }));
+    }
+    return FALLBACK_WEEKLY_PATTERN;
+  });
+
+  // Overview grid uses its own independent data store
+  const [overviewPattern] = useState<WeeklyClass[]>(() => {
+    const entries = getOverviewEntries().filter((e) => e.isActive);
+    if (entries.length > 0) {
+      return entries.map((e) => ({
+        dayOfWeek: DAY_NAME_TO_NUM[e.dayOfWeek] ?? 0,
+        time:      to12h(e.startTime),
+        name:      e.className,
+        detail:    e.detail,
+        category:  e.category as Category,
+        isPrivate: e.className.toLowerCase().includes('private'),
+      }));
+    }
+    return FALLBACK_WEEKLY_PATTERN;
+  });
 
   // Load special classes and recurring schedule from localStorage
   const loadSpecialClasses = useCallback(() => {
@@ -589,21 +749,6 @@ export function SchedulePage() {
   useEffect(() => {
     loadSpecialClasses();
     document.title = 'Class Schedule | Estilo Latino Dance Company';
-
-    // Load recurring schedule from adminData (overrides hardcoded pattern if available)
-    const entries = getRecurringEntries().filter((e) => e.isActive);
-    if (entries.length > 0) {
-      setWeeklyPattern(
-        entries.map((e) => ({
-          dayOfWeek: DAY_NAME_TO_NUM[e.dayOfWeek] ?? 0,
-          time:      to12h(e.startTime),
-          name:      e.className,
-          detail:    e.detail,
-          category:  e.category as Category,
-          isPrivate: e.className.toLowerCase().includes('private'),
-        })),
-      );
-    }
   }, [loadSpecialClasses]);
 
   // Check for ?reserved=success query param
@@ -636,6 +781,8 @@ export function SchedulePage() {
 
   return (
     <div className="min-h-screen pt-28 pb-24" style={{ background: 'var(--bg)' }}>
+
+      {/* ── Narrow: top heading + success banner ── */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* ── Success banner (shown after reservation redirect) ── */}
@@ -661,7 +808,7 @@ export function SchedulePage() {
 
         {/* ── Heading ── */}
         <motion.div
-          className="text-center mb-8"
+          className="text-center mb-10"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
@@ -686,6 +833,49 @@ export function SchedulePage() {
               ? 'Clases de Lunes a Sábado · Elizabeth, NJ'
               : 'Classes Monday through Saturday · Elizabeth, NJ'}
           </motion.p>
+        </motion.div>
+
+      </div>{/* end narrow heading */}
+
+      {/* ── Wide: Schedule Overview (breaks out of max-w-3xl) ── */}
+      <motion.div
+        variants={fadeInUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.05 }}
+        className="px-4 sm:px-6 lg:px-10 mb-16"
+      >
+        <h2
+          className="font-display uppercase text-center mb-6"
+          style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', lineHeight: 0.95, color: 'var(--white)' }}
+        >
+          SCHEDULE <span style={{ color: 'var(--gold)' }}>OVERVIEW</span>
+        </h2>
+        <div className="max-w-7xl mx-auto">
+          <ScheduleOverviewGrid pattern={overviewPattern} />
+        </div>
+      </motion.div>
+
+      {/* ── Narrow: Detailed Schedule + rest ── */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* ── Detailed Schedule heading ── */}
+        <motion.div
+          variants={fadeInUp}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          className="text-center mb-8"
+        >
+          <h2
+            className="font-display uppercase"
+            style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', lineHeight: 0.95, color: 'var(--white)' }}
+          >
+            DETAILED <span style={{ color: 'var(--gold)' }}>SCHEDULE</span>
+          </h2>
+          <p className="font-body text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
+            Scroll by date — upcoming classes with reservation links
+          </p>
         </motion.div>
 
         {/* ── Notice banner ── */}

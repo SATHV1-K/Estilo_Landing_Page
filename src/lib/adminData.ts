@@ -78,6 +78,7 @@ const KEYS = {
   instructors: 'estilo_instructors',
   styles:      'estilo_styles',
   recurring:   'estilo_recurring',
+  overview:    'estilo_overview',
   reviews:     'estilo_reviews',
   content:     'estilo_content',
   media:       'estilo_media',
@@ -213,23 +214,36 @@ export function reorderStyles(ids: string[]): void {
 // RECURRING SCHEDULE
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SEED_RECURRING: Omit<RecurringEntry, 'id' | 'updatedAt'>[] = [
-  { dayOfWeek: 'monday',    startTime: '16:30', endTime: '17:30', className: 'Latin Rhythms Kids',  detail: 'Ages 5–12',            category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 1 },
-  { dayOfWeek: 'monday',    startTime: '18:00', endTime: '19:00', className: 'Salsa On1',           detail: 'Beginner',             category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 2 },
-  { dayOfWeek: 'monday',    startTime: '19:15', endTime: '20:15', className: 'Bachata',             detail: 'Beginner / Open',       category: 'bachata', location: 'Main Studio', isActive: true, sortOrder: 3 },
-  { dayOfWeek: 'tuesday',   startTime: '17:00', endTime: '18:00', className: 'Latin Rhythms Kids',  detail: 'Ages 5–12',            category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 4 },
-  { dayOfWeek: 'tuesday',   startTime: '18:30', endTime: '19:30', className: 'Street Dance',        detail: 'HipHop / Reggaeton',   category: 'street',  location: 'Main Studio', isActive: true, sortOrder: 5 },
-  { dayOfWeek: 'tuesday',   startTime: '19:45', endTime: '20:45', className: 'Salsa Caleña',        detail: 'Open Level',           category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 6 },
-  { dayOfWeek: 'wednesday', startTime: '16:30', endTime: '17:30', className: 'Latin Rhythms Kids',  detail: 'Ages 5–12',            category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 7 },
-  { dayOfWeek: 'wednesday', startTime: '18:00', endTime: '19:00', className: 'Salsa On1',           detail: 'Intermediate',         category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 8 },
-  { dayOfWeek: 'wednesday', startTime: '19:15', endTime: '20:15', className: 'Bachata',             detail: 'Intermediate',          category: 'bachata', location: 'Main Studio', isActive: true, sortOrder: 9 },
-  { dayOfWeek: 'thursday',  startTime: '17:00', endTime: '18:00', className: 'Ballet Folklorico',   detail: 'All Levels',           category: 'ballet',  location: 'Main Studio', isActive: true, sortOrder: 10 },
-  { dayOfWeek: 'thursday',  startTime: '18:30', endTime: '19:30', className: 'Street Dance',        detail: 'HipHop / Reggaeton',   category: 'street',  location: 'Main Studio', isActive: true, sortOrder: 11 },
-  { dayOfWeek: 'thursday',  startTime: '19:45', endTime: '20:45', className: 'Salsa Caleña',        detail: 'Advanced',             category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 12 },
-  { dayOfWeek: 'friday',    startTime: '16:30', endTime: '17:30', className: 'Latin Rhythms Kids',  detail: 'Ages 5–12',            category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 13 },
-  { dayOfWeek: 'friday',    startTime: '18:00', endTime: '19:00', className: 'Team Practice',       detail: 'Invite Only',          category: 'team',    location: 'Main Studio', isActive: true, sortOrder: 14 },
-  { dayOfWeek: 'friday',    startTime: '19:30', endTime: '21:00', className: 'Salsa Social',        detail: 'All Levels Welcome',   category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 15 },
-  { dayOfWeek: 'saturday',  startTime: '10:00', endTime: '12:00', className: 'Private Lessons',     detail: 'By Appointment',       category: 'special', location: 'Main Studio', isActive: true, sortOrder: 16 },
+export const SEED_RECURRING: Omit<RecurringEntry, 'id' | 'updatedAt'>[] = [
+  // MONDAY
+  { dayOfWeek: 'monday',    startTime: '18:00', endTime: '19:00', className: 'Kids Latin Rhythms',           detail: 'Intermediate | 5 Years Old and Up',                                       category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 1  },
+  { dayOfWeek: 'monday',    startTime: '19:00', endTime: '20:00', className: 'Salsa Foundamental',            detail: 'Totally Beginners',                                                        category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 2  },
+  { dayOfWeek: 'monday',    startTime: '20:00', endTime: '21:00', className: 'Salsa On 1',                   detail: 'Shines & Partnerwork — Intermediate',                                      category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 3  },
+  // TUESDAY
+  { dayOfWeek: 'tuesday',   startTime: '17:00', endTime: '18:00', className: 'Kids Latin Rhythms',           detail: 'Advanced | 5 Years Old and Up',                                            category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 4  },
+  { dayOfWeek: 'tuesday',   startTime: '18:00', endTime: '19:00', className: 'Kids Latin Rhythms',           detail: 'Beginners | 5 Years Old and Up',                                           category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 5  },
+  { dayOfWeek: 'tuesday',   startTime: '19:00', endTime: '20:00', className: 'Street Dance',                 detail: 'Urban | Hip Hop | Reggaeton | Dancehall — Beginners · 10 Yrs Old and Up',  category: 'street',  location: 'Main Studio', isActive: true, sortOrder: 6  },
+  { dayOfWeek: 'tuesday',   startTime: '20:00', endTime: '21:00', className: 'Salsa Caleña',                 detail: 'Beginners - Intermediate',                                                 category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 7  },
+  { dayOfWeek: 'tuesday',   startTime: '21:00', endTime: '22:00', className: 'Euphoria Dance Team',          detail: '',                                                                         category: 'team',    location: 'Main Studio', isActive: true, sortOrder: 8  },
+  // WEDNESDAY
+  { dayOfWeek: 'wednesday', startTime: '17:00', endTime: '18:00', className: 'Gymnastics Workshop',          detail: '',                                                                         category: 'special', location: 'Main Studio', isActive: true, sortOrder: 9  },
+  { dayOfWeek: 'wednesday', startTime: '18:00', endTime: '19:00', className: 'Kids Latin Rhythms',           detail: 'Intermediate | 5 Years Old and Up',                                       category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 10 },
+  { dayOfWeek: 'wednesday', startTime: '19:00', endTime: '20:00', className: 'Salsa Foundamental',            detail: 'Beginners - Intermediate',                                                 category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 11 },
+  { dayOfWeek: 'wednesday', startTime: '20:00', endTime: '21:00', className: 'Bachata',                      detail: 'Beginners - Social — Open Level',                                          category: 'bachata', location: 'Main Studio', isActive: true, sortOrder: 12 },
+  { dayOfWeek: 'wednesday', startTime: '21:00', endTime: '22:00', className: 'Bachata',                      detail: 'Intermediate Choreography',                                                category: 'bachata', location: 'Main Studio', isActive: true, sortOrder: 13 },
+  // THURSDAY
+  { dayOfWeek: 'thursday',  startTime: '17:00', endTime: '18:00', className: 'Kids Latin Rhythms',           detail: 'Advanced | 5 Years Old and Up',                                            category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 14 },
+  { dayOfWeek: 'thursday',  startTime: '18:00', endTime: '19:00', className: 'Kids Latin Rhythms',           detail: 'Beginners | 5 Years Old and Up',                                           category: 'kids',    location: 'Main Studio', isActive: true, sortOrder: 15 },
+  { dayOfWeek: 'thursday',  startTime: '19:00', endTime: '20:00', className: 'Salsa Caleña',                 detail: 'Beginners - Intermediate',                                                 category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 16 },
+  { dayOfWeek: 'thursday',  startTime: '20:00', endTime: '21:00', className: 'Salsa Caleña',                 detail: 'Intermediate Choreography',                                                category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 17 },
+  { dayOfWeek: 'thursday',  startTime: '21:00', endTime: '22:00', className: 'Euphoria Dance Team',          detail: '',                                                                         category: 'team',    location: 'Main Studio', isActive: true, sortOrder: 18 },
+  // FRIDAY
+  { dayOfWeek: 'friday',    startTime: '17:00', endTime: '18:00', className: 'Contemporary Ballet Workshop', detail: '',                                                                         category: 'ballet',  location: 'Main Studio', isActive: true, sortOrder: 19 },
+  { dayOfWeek: 'friday',    startTime: '18:00', endTime: '19:00', className: 'Street Dance Dance Team',      detail: '10 Yrs Old and Up',                                                        category: 'street',  location: 'Main Studio', isActive: true, sortOrder: 20 },
+  { dayOfWeek: 'friday',    startTime: '19:00', endTime: '20:00', className: 'Street Dance',                 detail: 'Urban | Hip Hop | Reggaeton | Dancehall — 10 Yrs Old and Up',              category: 'street',  location: 'Main Studio', isActive: true, sortOrder: 21 },
+  { dayOfWeek: 'friday',    startTime: '20:00', endTime: '21:00', className: 'Salsa On 1',                   detail: 'Shines & Partnerwork — Intermediate - Choreography',                       category: 'salsa',   location: 'Main Studio', isActive: true, sortOrder: 22 },
+  // SATURDAY
+  { dayOfWeek: 'saturday',  startTime: '10:00', endTime: '14:00', className: 'Private Lessons',              detail: 'By Appointment: 10AM, 11AM, 12PM, 1PM, 2PM',                               category: 'special', location: 'Main Studio', isActive: true, sortOrder: 23 },
 ];
 
 function seedRecurringIfEmpty(): void {
@@ -278,6 +292,74 @@ export function saveRecurringEntry(
 
 export function deleteRecurringEntry(id: string): void {
   write(KEYS.recurring, read<RecurringEntry>(KEYS.recurring).filter(e => e.id !== id));
+}
+
+export function resetRecurringToDefault(): void {
+  const seeded: RecurringEntry[] = SEED_RECURRING.map(e => ({
+    ...e,
+    id: genId(),
+    updatedAt: now(),
+  }));
+  write(KEYS.recurring, seeded);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCHEDULE OVERVIEW (independent from recurring — feeds the Overview grid only)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function seedOverviewIfEmpty(): void {
+  const raw = localStorage.getItem(KEYS.overview);
+  if (!raw) {
+    const seeded: RecurringEntry[] = SEED_RECURRING.map(e => ({
+      ...e,
+      id: genId(),
+      updatedAt: now(),
+    }));
+    write(KEYS.overview, seeded);
+  }
+}
+
+export function getOverviewEntries(): RecurringEntry[] {
+  seedOverviewIfEmpty();
+  return read<RecurringEntry>(KEYS.overview).sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+export function saveOverviewEntry(
+  data: Omit<RecurringEntry, 'id' | 'updatedAt'> & { id?: string }
+): RecurringEntry {
+  const list = read<RecurringEntry>(KEYS.overview);
+  const ts = now();
+  if (data.id) {
+    const idx = list.findIndex(e => e.id === data.id);
+    const updated: RecurringEntry = { ...(data as RecurringEntry), updatedAt: ts };
+    if (idx >= 0) list[idx] = updated;
+    else list.push(updated);
+    write(KEYS.overview, list);
+    return updated;
+  }
+  const maxOrder = list.reduce((m, e) => Math.max(m, e.sortOrder), 0);
+  const created: RecurringEntry = {
+    ...(data as Omit<RecurringEntry, 'id' | 'updatedAt'>),
+    id: genId(),
+    sortOrder: data.sortOrder ?? maxOrder + 1,
+    updatedAt: ts,
+  };
+  list.push(created);
+  write(KEYS.overview, list);
+  return created;
+}
+
+export function deleteOverviewEntry(id: string): void {
+  write(KEYS.overview, read<RecurringEntry>(KEYS.overview).filter(e => e.id !== id));
+}
+
+export function resetOverviewToDefault(): void {
+  const seeded: RecurringEntry[] = SEED_RECURRING.map(e => ({
+    ...e,
+    id: genId(),
+    updatedAt: now(),
+  }));
+  write(KEYS.overview, seeded);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
