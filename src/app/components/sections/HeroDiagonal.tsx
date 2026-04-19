@@ -11,6 +11,7 @@ import {
 import { CTAButton } from '../ui/CTAButton';
 import { LatinBadge } from '../ui/LatinBadge';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { EstiloKidsBee } from '../ui/EstiloKidsBee';
 
 interface HeroDiagonalProps {
   headline: string;
@@ -93,11 +94,17 @@ export function HeroDiagonal({
               variants={heroCTA}
               initial="hidden"
               animate="visible"
+              className="flex flex-wrap gap-4"
             >
-              <CTAButton to={ctaHref} size="lg">
+              <CTAButton href={ctaHref} size="lg">
                 {language === 'es' ? ctaLabelEs : ctaLabel}
               </CTAButton>
+              <CTAButton variant="outline" size="lg">
+                {language === 'es' ? 'Lecciones en Línea' : 'Online Lessons'}
+              </CTAButton>
             </motion.div>
+
+            <EstiloKidsBee />
           </div>
 
           {/* Right: Hero Image with Badge */}
@@ -112,11 +119,6 @@ export function HeroDiagonal({
               alt="Estilo Latino Dance"
               className="w-full h-[600px] object-cover rounded-2xl shadow-2xl"
             />
-            {showBadge && (
-              <div className="absolute top-8 -left-8 lg:-left-16">
-                <LatinBadge />
-              </div>
-            )}
           </motion.div>
         </div>
       </div>

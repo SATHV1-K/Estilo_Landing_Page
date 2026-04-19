@@ -26,6 +26,7 @@ import { PackagesAdminPage } from './pages/admin/PackagesAdminPage';
 import { SettingsPage } from './pages/admin/SettingsPage';
 import { AlertsAdminPage } from './pages/admin/AlertsAdminPage';
 import { VideosAdminPage } from './pages/admin/VideosAdminPage';
+import { KidsPage } from './pages/KidsPage';
 
 export const router = createBrowserRouter([
   // ── Admin panel ── all routes share AdminShell (auth gate + sidebar) ────────
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
       { path: 'instructors',      Component: InstructorsPage },
       { path: 'about',            Component: AboutPage },
       { path: 'contact',          Component: ContactPage },
+      { path: 'kids',             Component: KidsPage },
       { path: 'reserve/success',  Component: ReservationSuccessPage },
       { path: '*',                Component: NotFoundPage },
     ],
