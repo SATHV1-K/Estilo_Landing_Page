@@ -1,11 +1,11 @@
 // Admin — Gallery Photos manager.
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   getGalleryPhotos, saveGalleryPhoto, deleteGalleryPhoto,
   type GalleryPhoto, type PhotoCategory,
-} from '../../../lib/adminData';
-import { Image as ImageIcon, Plus, Trash2, Eye, EyeOff, X, Upload } from 'lucide-react';
+} from '../../../lib/galleryService';
+import { Image as ImageIcon, Plus, Trash2, Eye, EyeOff, X, Upload, Loader2 } from 'lucide-react';
 
 const GOLD = '#F6B000';
 
@@ -44,12 +44,13 @@ function PhotoForm({
   onCancel,
 }: {
   initial: Partial<GalleryPhoto>;
-  onSave: (data: Omit<GalleryPhoto, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) => void;
+  onSave: (data: Omit<GalleryPhoto, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }, file: File | null) => void;
   onCancel: () => void;
 }) {
-  const [form, setForm]       = useState({ ...BLANK, ...initial });
-  const [fileSize, setFileSize] = useState(0);
-  const [dragOver, setDragOver] = useState(false);
+  const [form, setForm]           = useState({ ...BLANK, ...initial });
+  const [fileSize, setFileSize]   = useState(0);
+  const [dragOver, setDragOver]   = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   function set(key: string, val: string | boolean | number) {
@@ -59,6 +60,7 @@ function PhotoForm({
   function readFile(file: File) {
     if (!file.type.startsWith('image/')) return;
     if (file.size > 10 * 1024 * 1024) { alert('Max file size is 10 MB'); return; }
+    setPendingFile(file);
     setFileSize(file.size);
     const reader = new FileReader();
     reader.onload = () => {
@@ -82,7 +84,7 @@ function PhotoForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.imageUrl) { alert('Please upload an image'); return; }
-    onSave({ ...(form as any), id: initial.id });
+    onSave({ ...(form as any), id: initial.id }, pendingFile);
   }
 
   return (
@@ -95,7 +97,7 @@ function PhotoForm({
             <img src={form.imageUrl} alt="preview" className="w-full h-48 object-cover rounded-lg border border-gray-200" />
             <button
               type="button"
-              onClick={() => { set('imageUrl', ''); setFileSize(0); }}
+              onClick={() => { set('imageUrl', ''); setFileSize(0); setPendingFile(null); }}
               className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow border border-gray-200 text-gray-500 hover:text-red-600"
             >
               <X size={14} />
@@ -163,27 +165,57 @@ function PhotoForm({
 // ─── GalleryAdminPage ─────────────────────────────────────────────────────────
 
 export function GalleryAdminPage() {
-  const [photos, setPhotos]   = useState<GalleryPhoto[]>(() => getGalleryPhotos());
-  const [editing, setEditing] = useState<Partial<GalleryPhoto> | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [photos, setPhotos]         = useState<GalleryPhoto[]>([]);
+  const [editing, setEditing]       = useState<Partial<GalleryPhoto> | null>(null);
+  const [deleteId, setDeleteId]     = useState<string | null>(null);
+  const [saving, setSaving]         = useState(false);
+  const [loading, setLoading]       = useState(true);
 
-  const refresh = useCallback(() => setPhotos(getGalleryPhotos()), []);
+  const refresh = useCallback(async () => {
+    try {
+      const data = await getGalleryPhotos();
+      setPhotos(data);
+    } catch (err) {
+      console.error('Failed to load photos:', err);
+    }
+  }, []);
 
-  function handleSave(data: any) {
-    saveGalleryPhoto(data);
-    refresh();
-    setEditing(null);
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
+
+  async function handleSave(data: any, file: File | null) {
+    setSaving(true);
+    try {
+      await saveGalleryPhoto(data, file);
+      await refresh();
+      setEditing(null);
+    } catch (err) {
+      console.error('Failed to save photo:', err);
+      alert('Failed to save photo. Please check your connection and try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleDelete(id: string) {
-    deleteGalleryPhoto(id);
-    refresh();
-    setDeleteId(null);
+  async function handleDelete(id: string) {
+    try {
+      await deleteGalleryPhoto(id);
+      await refresh();
+      setDeleteId(null);
+    } catch (err) {
+      console.error('Failed to delete photo:', err);
+      alert('Failed to delete photo. Please try again.');
+    }
   }
 
-  function toggleActive(photo: GalleryPhoto) {
-    saveGalleryPhoto({ ...photo, isActive: !photo.isActive });
-    refresh();
+  async function toggleActive(photo: GalleryPhoto) {
+    try {
+      await saveGalleryPhoto({ ...photo, isActive: !photo.isActive });
+      await refresh();
+    } catch (err) {
+      console.error('Failed to update photo:', err);
+    }
   }
 
   const activeCount = photos.filter(p => p.isActive).length;
@@ -206,7 +238,11 @@ export function GalleryAdminPage() {
       </div>
 
       {/* Photo grid */}
-      {photos.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-24">
+          <Loader2 size={32} className="animate-spin text-amber-400" />
+        </div>
+      ) : photos.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 border-2 border-dashed border-gray-200 rounded-xl text-center">
           <ImageIcon size={40} className="text-gray-300 mb-3" />
           <p className="text-gray-500 font-semibold mb-1">No photos yet</p>
@@ -271,7 +307,14 @@ export function GalleryAdminPage() {
                 <X size={18} />
               </button>
             </div>
-            <PhotoForm initial={editing} onSave={handleSave} onCancel={() => setEditing(null)} />
+            {saving ? (
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <Loader2 size={28} className="animate-spin text-amber-400" />
+                <p className="text-sm text-gray-500">Uploading photo…</p>
+              </div>
+            ) : (
+              <PhotoForm initial={editing} onSave={handleSave} onCancel={() => setEditing(null)} />
+            )}
           </div>
         </div>
       )}

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router';
-import { getVideos } from '../../../lib/adminData';
+import { getVideos } from '../../../lib/videosService';
 import {
   LayoutDashboard, Sparkles, FileText, Image, Users,
   Layers, Calendar, Star, LogOut, Menu, X, ChevronRight,
@@ -104,7 +104,7 @@ function Sidebar({
   onClose?: () => void;
 }) {
   const [videoCount, setVideoCount] = useState(0);
-  useEffect(() => { setVideoCount(getVideos().length); }, []);
+  useEffect(() => { getVideos().then(vs => setVideoCount(vs.length)).catch(() => {}); }, []);
 
   return (
     <aside className="flex flex-col h-full bg-white border-r border-gray-200">

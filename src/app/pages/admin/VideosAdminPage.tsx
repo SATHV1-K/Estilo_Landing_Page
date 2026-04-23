@@ -11,7 +11,7 @@ import {
 import {
   getVideos, saveVideo, deleteVideo, reorderVideos,
   type Video, type VideoSource, type VideoCategory,
-} from '../../../lib/adminData';
+} from '../../../lib/videosService';
 import { parseYouTubeId, getYouTubeThumbnail } from '../../../lib/youtube';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -334,16 +334,6 @@ function VideoFormPanel({
     if (!validate()) return;
     setSaving(true);
     try {
-      let thumbnailUrl  = form.thumbnailUrl;
-      let videoFileUrl  = form.videoFileUrl;
-
-      if (thumbFile) thumbnailUrl = await fileToDataUrl(thumbFile);
-      if (videoFile) {
-        setUploadProgress(0);
-        videoFileUrl = await fileToDataUrl(videoFile, pct => setUploadProgress(pct));
-        setUploadProgress(null);
-      }
-
       // Parse YouTube ID
       let youtubeId = form.youtubeId;
       if (form.source === 'youtube' && form.externalUrl) {
@@ -351,22 +341,33 @@ function VideoFormPanel({
       }
 
       // Clear source-irrelevant fields
-      const externalUrlFinal  = form.source !== 'upload'  ? form.externalUrl.trim() : '';
-      const videoFileUrlFinal = form.source === 'upload'  ? videoFileUrl : '';
-      const youtubeIdFinal    = form.source === 'youtube' ? youtubeId : '';
+      const externalUrlFinal = form.source !== 'upload'  ? form.externalUrl.trim() : '';
+      const youtubeIdFinal   = form.source === 'youtube' ? youtubeId : '';
 
-      saveVideo({
-        ...form,
-        externalUrl:  externalUrlFinal,
-        youtubeId:    youtubeIdFinal,
-        thumbnailUrl,
-        videoFileUrl: videoFileUrlFinal,
-        durationSec:  parseInt(form.durationSec) || 0,
-        createdAt:    form.createdAt,
-      });
+      if (videoFile) setUploadProgress(0);
+
+      await saveVideo(
+        {
+          ...form,
+          externalUrl:  externalUrlFinal,
+          youtubeId:    youtubeIdFinal,
+          thumbnailUrl: form.thumbnailUrl,
+          videoFileUrl: form.source === 'upload' ? form.videoFileUrl : '',
+          durationSec:  parseInt(form.durationSec) || 0,
+          createdAt:    form.createdAt,
+        },
+        {
+          thumbnailFile: thumbFile ?? undefined,
+          videoFile:     videoFile ?? undefined,
+          onProgress:    pct => setUploadProgress(pct),
+        },
+      );
+
+      setUploadProgress(null);
       onSave();
     } catch (err) {
       console.error('Failed to save video:', err);
+      alert('Failed to save video. Please check your connection and try again.');
     } finally {
       setSaving(false);
     }
@@ -866,8 +867,10 @@ export function VideosAdminPage() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [editing, setEditing]     = useState<VideoForm | null>(null);
 
-  function load() { setVideos(getVideos()); }
-  useEffect(load, []);
+  async function load() {
+    try { setVideos(await getVideos()); } catch (err) { console.error('Failed to load videos:', err); }
+  }
+  useEffect(() => { load(); }, []);
 
   // Filtered list for current tab
   const filteredVideos = activeTab === 'all'
@@ -879,47 +882,48 @@ export function VideosAdminPage() {
     return videos.filter(v => v.source === (tab as VideoSource)).length;
   }
 
-  function openNew()         { setEditing(null); setPanelOpen(true); }
-  function openEdit(v: Video){ setEditing(videoToForm(v)); setPanelOpen(true); }
-  function closePanel()      { setPanelOpen(false); setEditing(null); }
-  function afterSave()       { load(); closePanel(); }
+  function openNew()          { setEditing(null); setPanelOpen(true); }
+  function openEdit(v: Video) { setEditing(videoToForm(v)); setPanelOpen(true); }
+  function closePanel()       { setPanelOpen(false); setEditing(null); }
+  async function afterSave()  { await load(); closePanel(); }
 
-  function handleDelete(id: string, title: string) {
+  async function handleDelete(id: string, title: string) {
     if (!confirm(`Delete "${title || 'this video'}"? This cannot be undone.`)) return;
-    deleteVideo(id);
-    load();
+    try { await deleteVideo(id); await load(); } catch (err) { console.error(err); }
   }
 
-  function handleToggleFeatured(video: Video) {
-    saveVideo({ ...video, featured: !video.featured, createdAt: video.createdAt });
-    load();
+  async function handleToggleFeatured(video: Video) {
+    try {
+      await saveVideo({ ...video, featured: !video.featured, createdAt: video.createdAt });
+      await load();
+    } catch (err) { console.error(err); }
   }
 
-  function handleToggleActive(video: Video) {
-    saveVideo({ ...video, isActive: !video.isActive, createdAt: video.createdAt });
-    load();
+  async function handleToggleActive(video: Video) {
+    try {
+      await saveVideo({ ...video, isActive: !video.isActive, createdAt: video.createdAt });
+      await load();
+    } catch (err) { console.error(err); }
   }
 
-  function moveUp(id: string) {
+  async function moveUp(id: string) {
     const ids = filteredVideos.map(v => v.id);
     const idx = ids.indexOf(id);
     if (idx <= 0) return;
     [ids[idx - 1], ids[idx]] = [ids[idx], ids[idx - 1]];
     const filteredSet = new Set(ids);
     const otherIds = videos.filter(v => !filteredSet.has(v.id)).map(v => v.id);
-    reorderVideos([...otherIds, ...ids]);
-    load();
+    try { await reorderVideos([...otherIds, ...ids]); await load(); } catch (err) { console.error(err); }
   }
 
-  function moveDown(id: string) {
+  async function moveDown(id: string) {
     const ids = filteredVideos.map(v => v.id);
     const idx = ids.indexOf(id);
     if (idx >= ids.length - 1) return;
     [ids[idx], ids[idx + 1]] = [ids[idx + 1], ids[idx]];
     const filteredSet = new Set(ids);
     const otherIds = videos.filter(v => !filteredSet.has(v.id)).map(v => v.id);
-    reorderVideos([...otherIds, ...ids]);
-    load();
+    try { await reorderVideos([...otherIds, ...ids]); await load(); } catch (err) { console.error(err); }
   }
 
   return (

@@ -3,10 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Film, X, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import {
-  getActiveVideos, type Video, type VideoSource, type VideoCategory,
-  getActiveGalleryPhotos, type GalleryPhoto, type PhotoCategory,
-} from '../../lib/adminData';
+import { getActiveVideos, type Video, type VideoSource, type VideoCategory } from '../../lib/videosService';
+import { getActiveGalleryPhotos, type GalleryPhoto, type PhotoCategory } from '../../lib/galleryService';
 import { getYouTubeThumbnail } from '../../lib/youtube';
 import { useI18n } from '../../lib/i18n';
 import { fadeInUp } from '../../lib/animations';
@@ -325,8 +323,13 @@ function PhotoCard({ photo, language, onClick }: { photo: GalleryPhoto; language
 export function GalleryPage() {
   const { language } = useI18n();
   const [tab, setTab]                       = useState<Tab>('photos');
-  const [videos]                            = useState<Video[]>(() => getActiveVideos());
-  const [photos]                            = useState<GalleryPhoto[]>(() => getActiveGalleryPhotos());
+  const [videos, setVideos]                 = useState<Video[]>([]);
+  const [photos, setPhotos]                 = useState<GalleryPhoto[]>([]);
+
+  useEffect(() => {
+    getActiveGalleryPhotos().then(setPhotos).catch(console.error);
+    getActiveVideos().then(setVideos).catch(console.error);
+  }, []);
   const [sourceFilter, setSourceFilter]     = useState<SourceFilter>('all');
   const [videoCat, setVideoCat]             = useState<VideoCatFilter>('all');
   const [photoCat, setPhotoCat]             = useState<PhotoCatFilter>('all');

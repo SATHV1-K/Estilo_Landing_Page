@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Film, X } from 'lucide-react';
-import { getActiveVideos, type Video, type VideoSource, type VideoCategory } from '../../lib/adminData';
+import { getActiveVideos, type Video, type VideoSource, type VideoCategory } from '../../lib/videosService';
 import { getYouTubeThumbnail } from '../../lib/youtube';
 import { useI18n } from '../../lib/i18n';
 import { fadeInUp } from '../../lib/animations';
@@ -278,7 +278,11 @@ function VideoCard({
 
 export function VideosPage() {
   const { language } = useI18n();
-  const [videos]         = useState<Video[]>(() => getActiveVideos());
+  const [videos, setVideos] = useState<Video[]>([]);
+
+  useEffect(() => {
+    getActiveVideos().then(setVideos).catch(console.error);
+  }, []);
   const [sourceFilter,   setSourceFilter]   = useState<SourceFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [activeModal,    setActiveModal]    = useState<Video | null>(null);

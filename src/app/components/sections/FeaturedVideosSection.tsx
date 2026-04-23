@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Film, X } from 'lucide-react';
-import { getActiveVideos, type Video, type VideoSource } from '../../../lib/adminData';
+import { getActiveVideos, type Video, type VideoSource } from '../../../lib/videosService';
 import { getYouTubeThumbnail } from '../../../lib/youtube';
 import { useI18n } from '../../../lib/i18n';
 import { fadeInUp, staggerContainer } from '../../../lib/animations';
@@ -256,14 +256,23 @@ function FeaturedVideoCard({
 export function FeaturedVideosSection() {
   const { language } = useI18n();
   const [activeModal, setActiveModal] = useState<Video | null>(null);
+  const [featured, setFeatured]       = useState<Video[]>([]);
 
-  const featured = getActiveVideos()
-    .filter(v => v.featured)
-    .sort((a, b) => {
-      if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    })
-    .slice(0, 4);
+  useEffect(() => {
+    getActiveVideos()
+      .then(videos => {
+        setFeatured(
+          videos
+            .filter(v => v.featured)
+            .sort((a, b) => {
+              if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            })
+            .slice(0, 4),
+        );
+      })
+      .catch(console.error);
+  }, []);
 
   // Hide the entire section when there are no featured videos
   if (featured.length === 0) return null;
