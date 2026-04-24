@@ -1,14 +1,13 @@
 // InstructorsAdminPage — CRUD for instructor profiles with slide-out form panel.
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Plus, Pencil, Trash2, GripVertical, X, Check,
-  Upload, User, Link as LinkIcon, ChevronDown, ChevronUp,
+  Upload, User, Link as LinkIcon, ChevronDown, ChevronUp, Loader2,
 } from 'lucide-react';
 import {
   getInstructors, saveInstructor, deleteInstructor, reorderInstructors,
-  uploadMediaFile,
-} from '../../../lib/adminData';
+} from '../../../lib/instructorsService';
 import type { Instructor } from '../../../lib/types';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -48,35 +47,26 @@ function emptyInstructor(): Omit<Instructor, 'id'> {
 // ─── Photo Uploader ───────────────────────────────────────────────────────────
 
 function PhotoUploader({
-  value,
-  onChange,
-  instructorId,
+  previewUrl,
+  onFilePick,
+  onUrlChange,
 }: {
-  value: string;
-  onChange: (url: string) => void;
-  instructorId?: string;
+  previewUrl: string;
+  onFilePick: (file: File) => void;
+  onUrlChange: (url: string) => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
 
-  async function handleFile(file: File) {
-    setUploading(true);
-    try {
-      const slot = `instructor.${instructorId ?? 'new'}.photo`;
-      const record = await uploadMediaFile(file, slot);
-      onChange(record.url);
-    } catch {
-      alert('Upload failed');
-    } finally {
-      setUploading(false);
-    }
+  function handleFile(file: File) {
+    if (!file.type.startsWith('image/')) return;
+    onFilePick(file);
   }
 
   return (
     <div className="flex items-center gap-4">
       <div className="w-20 h-20 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
-        {value ? (
-          <img src={value} alt="Photo" className="w-full h-full object-cover" />
+        {previewUrl ? (
+          <img src={previewUrl} alt="Photo" className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <User size={28} className="text-gray-300" />
@@ -95,15 +85,14 @@ function PhotoUploader({
           type="button"
           onClick={() => ref.current?.click()}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-          disabled={uploading}
         >
           <Upload size={13} />
-          {uploading ? 'Uploading…' : 'Upload Photo'}
+          Choose Photo
         </button>
         <input
           type="text"
-          value={value}
-          onChange={e => onChange(e.target.value)}
+          value={previewUrl.startsWith('blob:') ? '' : previewUrl}
+          onChange={e => onUrlChange(e.target.value)}
           placeholder="or paste image URL…"
           className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-amber-400 w-48"
         />
@@ -176,21 +165,34 @@ function SocialLinksEditor({
 
 interface FormPanelProps {
   instructor: Instructor | null;
-  onSave: () => void;
+  saving: boolean;
+  onSave: (data: Omit<Instructor, 'id'> & { id?: string }, photoFile: File | null) => Promise<void>;
   onClose: () => void;
 }
 
-function InstructorFormPanel({ instructor, onSave, onClose }: FormPanelProps) {
+function InstructorFormPanel({ instructor, saving, onSave, onClose }: FormPanelProps) {
   const isNew = !instructor;
-  const [form, setForm] = useState<Omit<Instructor, 'id'> & { id?: string }>(
-    instructor ?? emptyInstructor()
-  );
-  const [langTab, setLangTab] = useState<'en' | 'es'>('en');
-  const [errors, setErrors]   = useState<Record<string, string>>({});
+  const [form, setForm]           = useState<Omit<Instructor, 'id'> & { id?: string }>(instructor ?? emptyInstructor());
+  const [langTab, setLangTab]     = useState<'en' | 'es'>('en');
+  const [errors, setErrors]       = useState<Record<string, string>>({});
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl]     = useState(instructor?.photo ?? '');
 
   function set<K extends keyof typeof form>(key: K, val: (typeof form)[K]) {
     setForm(prev => ({ ...prev, [key]: val }));
     setErrors(prev => ({ ...prev, [key]: '' }));
+  }
+
+  function handleFilePick(file: File) {
+    setPendingPhoto(file);
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+  }
+
+  function handleUrlChange(url: string) {
+    set('photo', url);
+    setPreviewUrl(url);
+    setPendingPhoto(null);
   }
 
   function validate(): boolean {
@@ -201,11 +203,10 @@ function InstructorFormPanel({ instructor, onSave, onClose }: FormPanelProps) {
     return Object.keys(e).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    saveInstructor(form);
-    onSave();
+    await onSave(form, pendingPhoto);
   }
 
   return (
@@ -226,14 +227,14 @@ function InstructorFormPanel({ instructor, onSave, onClose }: FormPanelProps) {
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5">
+        <form onSubmit={handleSubmit} id="instructor-form" className="flex-1 overflow-y-auto px-6 py-5">
           {/* Photo */}
           <div className="mb-5">
             <label className={S.label}>Photo</label>
             <PhotoUploader
-              value={form.photo}
-              onChange={url => set('photo', url)}
-              instructorId={form.id}
+              previewUrl={previewUrl}
+              onFilePick={handleFilePick}
+              onUrlChange={handleUrlChange}
             />
           </div>
 
@@ -321,17 +322,17 @@ function InstructorFormPanel({ instructor, onSave, onClose }: FormPanelProps) {
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <button type="button" onClick={onClose} className={S.btn.ghost}>
+          <button type="button" onClick={onClose} className={S.btn.ghost} disabled={saving}>
             Cancel
           </button>
           <button
             type="submit"
-            form=""
-            onClick={e => { e.preventDefault(); if (validate()) { saveInstructor(form); onSave(); } }}
+            form="instructor-form"
             className={S.btn.gold}
             style={{ background: GOLD, color: '#0A0A0A' }}
+            disabled={saving}
           >
-            <Check size={15} />
+            {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
             {isNew ? 'Add Instructor' : 'Save Changes'}
           </button>
         </div>
@@ -421,39 +422,65 @@ function InstructorRow({
 
 export function InstructorsAdminPage() {
   const [instructors, setInstructors] = useState<Instructor[]>([]);
-  const [editing, setEditing]         = useState<Instructor | null | 'new'>('hidden' as any);
+  const [editing, setEditing]         = useState<Instructor | null>(null);
   const [panelOpen, setPanelOpen]     = useState(false);
+  const [loading, setLoading]         = useState(true);
+  const [saving, setSaving]           = useState(false);
 
-  function load() { setInstructors(getInstructors()); }
-  useEffect(load, []);
+  const refresh = useCallback(async () => {
+    const data = await getInstructors();
+    setInstructors(data);
+  }, []);
 
-  function openNew() { setEditing(null); setPanelOpen(true); }
-  function openEdit(i: Instructor) { setEditing(i); setPanelOpen(true); }
-  function closePanel() { setPanelOpen(false); setEditing(null); }
-  function afterSave() { load(); closePanel(); }
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
 
-  function handleDelete(id: string) {
-    deleteInstructor(id);
-    load();
+  function openNew()              { setEditing(null); setPanelOpen(true); }
+  function openEdit(i: Instructor) { setEditing(i);  setPanelOpen(true); }
+  function closePanel()           { setPanelOpen(false); setEditing(null); }
+
+  async function handleSave(data: Omit<Instructor, 'id'> & { id?: string }, photoFile: File | null) {
+    setSaving(true);
+    try {
+      await saveInstructor(data, photoFile ?? undefined);
+      await refresh();
+      closePanel();
+    } catch (err) {
+      console.error('Failed to save instructor:', err);
+      alert('Failed to save. Please check your connection and try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
-  // Simple manual reorder via up/down buttons (drag-and-drop requires dnd-kit)
-  function moveUp(id: string) {
+  async function handleDelete(id: string) {
+    try {
+      await deleteInstructor(id);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to delete instructor:', err);
+      alert('Failed to delete. Please try again.');
+    }
+  }
+
+  async function moveUp(id: string) {
     const ids = instructors.map(i => i.id);
     const idx = ids.indexOf(id);
     if (idx > 0) {
       [ids[idx - 1], ids[idx]] = [ids[idx], ids[idx - 1]];
-      reorderInstructors(ids);
-      load();
+      await reorderInstructors(ids);
+      await refresh();
     }
   }
-  function moveDown(id: string) {
+
+  async function moveDown(id: string) {
     const ids = instructors.map(i => i.id);
     const idx = ids.indexOf(id);
     if (idx < ids.length - 1) {
       [ids[idx], ids[idx + 1]] = [ids[idx + 1], ids[idx]];
-      reorderInstructors(ids);
-      load();
+      await reorderInstructors(ids);
+      await refresh();
     }
   }
 
@@ -478,7 +505,12 @@ export function InstructorsAdminPage() {
 
       {/* List */}
       <div className={S.card}>
-        {instructors.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center">
+            <Loader2 size={24} className="mx-auto mb-3 text-gray-300 animate-spin" />
+            <p className="text-sm text-gray-400">Loading…</p>
+          </div>
+        ) : instructors.length === 0 ? (
           <div className="py-16 text-center">
             <User size={32} className="mx-auto mb-3 text-gray-200" />
             <p className="text-sm text-gray-500">No instructors yet.</p>
@@ -522,8 +554,9 @@ export function InstructorsAdminPage() {
       {/* Slide-out panel */}
       {panelOpen && (
         <InstructorFormPanel
-          instructor={editing as Instructor | null}
-          onSave={afterSave}
+          instructor={editing}
+          saving={saving}
+          onSave={handleSave}
           onClose={closePanel}
         />
       )}

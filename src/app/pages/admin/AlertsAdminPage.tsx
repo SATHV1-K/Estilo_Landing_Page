@@ -1,16 +1,16 @@
 // AlertsAdminPage — manage site-wide announcement alerts.
 // The active alert with the lowest sortOrder is shown in the AnnouncementBar.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Pencil, Trash2, X, Check,
   ChevronUp, ChevronDown, Bell, Info,
-  AlertTriangle, Sparkles,
+  AlertTriangle, Sparkles, Loader2,
 } from 'lucide-react';
 import {
   getAlerts, saveAlert, deleteAlert, reorderAlerts,
-  type Alert,
-} from '../../../lib/adminData';
+} from '../../../lib/alertsService';
+import type { Alert } from '../../../lib/adminData';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -58,11 +58,13 @@ type AlertForm = Omit<Alert, 'id' | 'createdAt' | 'updatedAt'> & { id?: string; 
 
 function AlertFormPanel({
   alert,
+  saving,
   onSave,
   onClose,
 }: {
   alert: Alert | null;
-  onSave: () => void;
+  saving: boolean;
+  onSave: (data: AlertForm) => Promise<void>;
   onClose: () => void;
 }) {
   const isNew = !alert;
@@ -86,11 +88,10 @@ function AlertFormPanel({
     return Object.keys(e).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    saveAlert(form);
-    onSave();
+    await onSave(form);
   }
 
   const typeConf = alertTypeConfig(form.type);
@@ -238,14 +239,15 @@ function AlertFormPanel({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <button type="button" onClick={onClose} className={S.btn.ghost}>Cancel</button>
+          <button type="button" onClick={onClose} className={S.btn.ghost} disabled={saving}>Cancel</button>
           <button
             form="alert-form"
             type="submit"
             className={S.btn.gold}
             style={{ background: GOLD, color: '#0A0A0A' }}
+            disabled={saving}
           >
-            <Check size={15} />
+            {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
             {isNew ? 'Add Alert' : 'Save Changes'}
           </button>
         </div>
@@ -332,41 +334,67 @@ function AlertRow({
 // ─── AlertsAdminPage ──────────────────────────────────────────────────────────
 
 export function AlertsAdminPage() {
-  const [alerts, setAlerts]     = useState<Alert[]>([]);
-  const [editing, setEditing]   = useState<Alert | null>(null);
+  const [alerts, setAlerts]       = useState<Alert[]>([]);
+  const [editing, setEditing]     = useState<Alert | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
 
-  function load() { setAlerts(getAlerts()); }
-  useEffect(load, []);
+  const refresh = useCallback(async () => {
+    const data = await getAlerts();
+    setAlerts(data);
+  }, []);
 
-  function openNew()         { setEditing(null); setPanelOpen(true); }
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
+
+  function openNew()          { setEditing(null); setPanelOpen(true); }
   function openEdit(a: Alert) { setEditing(a); setPanelOpen(true); }
-  function closePanel()      { setPanelOpen(false); setEditing(null); }
-  function afterSave()       { load(); closePanel(); }
+  function closePanel()       { setPanelOpen(false); setEditing(null); }
 
-  function handleDelete(id: string, title: string) {
-    if (!confirm(`Delete alert "${title}"?`)) return;
-    deleteAlert(id);
-    load();
+  async function handleSave(data: AlertForm) {
+    setSaving(true);
+    try {
+      await saveAlert(data);
+      await refresh();
+      closePanel();
+    } catch (err) {
+      console.error('Failed to save alert:', err);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function moveUp(id: string) {
+  async function handleDelete(id: string, title: string) {
+    if (!confirm(`Delete alert "${title}"?`)) return;
+    try {
+      await deleteAlert(id);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to delete alert:', err);
+      alert('Failed to delete. Please try again.');
+    }
+  }
+
+  async function moveUp(id: string) {
     const ids = alerts.map(a => a.id);
     const idx = ids.indexOf(id);
     if (idx > 0) {
       [ids[idx - 1], ids[idx]] = [ids[idx], ids[idx - 1]];
-      reorderAlerts(ids);
-      load();
+      await reorderAlerts(ids);
+      await refresh();
     }
   }
 
-  function moveDown(id: string) {
+  async function moveDown(id: string) {
     const ids = alerts.map(a => a.id);
     const idx = ids.indexOf(id);
     if (idx < ids.length - 1) {
       [ids[idx], ids[idx + 1]] = [ids[idx + 1], ids[idx]];
-      reorderAlerts(ids);
-      load();
+      await reorderAlerts(ids);
+      await refresh();
     }
   }
 
@@ -407,7 +435,12 @@ export function AlertsAdminPage() {
 
       {/* Alert list */}
       <div className={S.card}>
-        {alerts.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center">
+            <Loader2 size={24} className="mx-auto mb-3 text-gray-300 animate-spin" />
+            <p className="text-sm text-gray-400">Loading…</p>
+          </div>
+        ) : alerts.length === 0 ? (
           <div className="py-16 text-center">
             <Bell size={32} className="mx-auto mb-3 text-gray-200" />
             <p className="text-sm text-gray-500">No alerts yet.</p>
@@ -438,7 +471,8 @@ export function AlertsAdminPage() {
       {panelOpen && (
         <AlertFormPanel
           alert={editing}
-          onSave={afterSave}
+          saving={saving}
+          onSave={handleSave}
           onClose={closePanel}
         />
       )}

@@ -1,13 +1,13 @@
 // StylesAdminPage — CRUD for dance style cards with reorder and slide-out form.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Pencil, Trash2, X, Check,
-  Upload, Layers, ChevronUp, ChevronDown,
+  Upload, Layers, ChevronUp, ChevronDown, Loader2,
 } from 'lucide-react';
 import {
-  getStyles, saveStyle, deleteStyle, reorderStyles, uploadMediaFile,
-} from '../../../lib/adminData';
+  getStyles, saveStyle, deleteStyle, reorderStyles,
+} from '../../../lib/stylesService';
 import type { DanceStyle } from '../../../lib/types';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -55,52 +55,39 @@ function slugify(name: string): string {
 
 function ImageUploader({
   label,
-  value,
-  onChange,
-  slot,
+  previewUrl,
+  onFilePick,
+  onUrlChange,
 }: {
   label: string;
-  value: string;
-  onChange: (url: string) => void;
-  slot: string;
+  previewUrl: string;
+  onFilePick: (file: File) => void;
+  onUrlChange: (url: string) => void;
 }) {
-  const [uploading, setUploading] = useState(false);
-
-  async function handleFile(file: File) {
-    setUploading(true);
-    try {
-      const record = await uploadMediaFile(file, slot);
-      onChange(record.url);
-    } finally {
-      setUploading(false);
-    }
-  }
-
   return (
     <div>
       <label className={S.label}>{label}</label>
       <div className="flex gap-3 items-center">
-        {value && (
+        {previewUrl && (
           <div className="w-16 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
-            <img src={value} alt="" className="w-full h-full object-cover" />
+            <img src={previewUrl} alt="" className="w-full h-full object-cover" />
           </div>
         )}
         <div className="flex-1 flex gap-2">
           <label className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors flex-shrink-0">
             <Upload size={12} />
-            {uploading ? 'Uploading…' : 'Upload'}
+            Choose
             <input
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ''; }}
-              disabled={uploading}
+              onChange={e => { const f = e.target.files?.[0]; if (f) onFilePick(f); e.target.value = ''; }}
             />
           </label>
           <input
             type="text"
-            value={value}
-            onChange={e => onChange(e.target.value)}
+            value={previewUrl.startsWith('blob:') ? '' : previewUrl}
+            onChange={e => onUrlChange(e.target.value)}
             placeholder="or paste URL…"
             className="flex-1 px-2.5 py-2 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-amber-400 min-w-0"
           />
@@ -114,27 +101,32 @@ function ImageUploader({
 
 function StyleFormPanel({
   style,
+  saving,
   onSave,
   onClose,
 }: {
   style: DanceStyle | null;
-  onSave: () => void;
+  saving: boolean;
+  onSave: (
+    data: Omit<DanceStyle, 'id'> & { id?: string },
+    files: { heroFile: File | null; cardFile: File | null },
+  ) => Promise<void>;
   onClose: () => void;
 }) {
   const isNew = !style;
-  const [form, setForm] = useState<Omit<DanceStyle, 'id'> & { id?: string }>(
-    style ?? emptyStyle()
-  );
+  const [form, setForm]       = useState<Omit<DanceStyle, 'id'> & { id?: string }>(style ?? emptyStyle());
   const [langTab, setLangTab] = useState<'en' | 'es'>('en');
   const [errors, setErrors]   = useState<Record<string, string>>({});
+
+  const [heroFile, setHeroFile]         = useState<File | null>(null);
+  const [cardFile, setCardFile]         = useState<File | null>(null);
+  const [heroPreview, setHeroPreview]   = useState(style?.heroImage ?? '');
+  const [cardPreview, setCardPreview]   = useState(style?.cardImage ?? '');
 
   function set<K extends keyof typeof form>(key: K, val: (typeof form)[K]) {
     setForm(prev => {
       const next = { ...prev, [key]: val };
-      // Auto-generate slug from English name if new and slug is empty
-      if (key === 'name' && isNew) {
-        next.slug = slugify(val as string);
-      }
+      if (key === 'name' && isNew) next.slug = slugify(val as string);
       return next;
     });
     setErrors(prev => ({ ...prev, [key]: '' }));
@@ -149,10 +141,9 @@ function StyleFormPanel({
     return Object.keys(e).length === 0;
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!validate()) return;
-    saveStyle(form);
-    onSave();
+    await onSave(form, { heroFile, cardFile });
   }
 
   return (
@@ -250,15 +241,15 @@ function StyleFormPanel({
           {/* Images */}
           <ImageUploader
             label="Card Image"
-            value={form.cardImage}
-            onChange={url => set('cardImage', url)}
-            slot={`style.${form.slug || 'new'}.card`}
+            previewUrl={cardPreview}
+            onFilePick={f => { setCardFile(f); setCardPreview(URL.createObjectURL(f)); }}
+            onUrlChange={url => { set('cardImage', url); setCardPreview(url); setCardFile(null); }}
           />
           <ImageUploader
             label="Hero Image (detail page)"
-            value={form.heroImage}
-            onChange={url => set('heroImage', url)}
-            slot={`style.${form.slug || 'new'}.hero`}
+            previewUrl={heroPreview}
+            onFilePick={f => { setHeroFile(f); setHeroPreview(URL.createObjectURL(f)); }}
+            onUrlChange={url => { set('heroImage', url); setHeroPreview(url); setHeroFile(null); }}
           />
 
           {/* Toggles */}
@@ -284,9 +275,10 @@ function StyleFormPanel({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <button type="button" onClick={onClose} className={S.btn.ghost}>Cancel</button>
-          <button onClick={handleSubmit} className={S.btn.gold} style={{ background: GOLD, color: '#0A0A0A' }}>
-            <Check size={15} /> {isNew ? 'Add Style' : 'Save Changes'}
+          <button type="button" onClick={onClose} className={S.btn.ghost} disabled={saving}>Cancel</button>
+          <button onClick={handleSubmit} className={S.btn.gold} style={{ background: GOLD, color: '#0A0A0A' }} disabled={saving}>
+            {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+            {isNew ? 'Add Style' : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -315,7 +307,6 @@ function StyleRow({
 }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
-      {/* Reorder arrows */}
       <div className="flex flex-col flex-shrink-0">
         <button onClick={() => onMoveUp(style.id)} disabled={idx === 0}
           className="p-0.5 text-gray-300 hover:text-gray-600 disabled:opacity-20">
@@ -327,7 +318,6 @@ function StyleRow({
         </button>
       </div>
 
-      {/* Thumbnail */}
       <div className="w-12 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
         {style.cardImage ? (
           <img src={style.cardImage} alt={style.name} className="w-full h-full object-cover" />
@@ -338,7 +328,6 @@ function StyleRow({
         )}
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="text-sm font-bold text-gray-900 truncate">{style.name}</p>
@@ -356,12 +345,10 @@ function StyleRow({
         </div>
       </div>
 
-      {/* Status */}
       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${style.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
         {style.isActive ? 'Active' : 'Inactive'}
       </span>
 
-      {/* Actions */}
       <div className="flex items-center gap-1 flex-shrink-0">
         <button onClick={() => onEdit(style)} className={`${S.btn.icon} text-gray-400 hover:text-gray-700 hover:bg-gray-100`} title="Edit">
           <Pencil size={15} />
@@ -384,30 +371,61 @@ export function StylesAdminPage() {
   const [styles, setStyles]   = useState<DanceStyle[]>([]);
   const [editing, setEditing] = useState<DanceStyle | null>(null);
   const [panelOpen, setPanel] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving]   = useState(false);
 
-  function load() { setStyles(getStyles()); }
-  useEffect(load, []);
+  const refresh = useCallback(async () => {
+    const data = await getStyles();
+    setStyles(data);
+  }, []);
 
-  function openNew()           { setEditing(null); setPanel(true); }
-  function openEdit(s: DanceStyle) { setEditing(s); setPanel(true); }
-  function closePanel()        { setPanel(false); setEditing(null); }
-  function afterSave()         { load(); closePanel(); }
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
 
-  function handleDelete(id: string) { deleteStyle(id); load(); }
+  function openNew()              { setEditing(null); setPanel(true); }
+  function openEdit(s: DanceStyle) { setEditing(s);  setPanel(true); }
+  function closePanel()           { setPanel(false); setEditing(null); }
 
-  function move(id: string, dir: 1 | -1) {
+  async function handleSave(
+    data: Omit<DanceStyle, 'id'> & { id?: string },
+    files: { heroFile: File | null; cardFile: File | null },
+  ) {
+    setSaving(true);
+    try {
+      await saveStyle(data, { heroFile: files.heroFile, cardFile: files.cardFile });
+      await refresh();
+      closePanel();
+    } catch (err) {
+      console.error('Failed to save style:', err);
+      alert('Failed to save. Please check your connection and try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteStyle(id);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to delete style:', err);
+      alert('Failed to delete. Please try again.');
+    }
+  }
+
+  async function move(id: string, dir: 1 | -1) {
     const ids = styles.map(s => s.id);
     const idx = ids.indexOf(id);
     const newIdx = idx + dir;
     if (newIdx < 0 || newIdx >= ids.length) return;
     [ids[idx], ids[newIdx]] = [ids[newIdx], ids[idx]];
-    reorderStyles(ids);
-    load();
+    await reorderStyles(ids);
+    await refresh();
   }
 
   return (
     <div className={S.page}>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-black text-gray-900">Styles Manager</h1>
@@ -420,9 +438,13 @@ export function StylesAdminPage() {
         </button>
       </div>
 
-      {/* List */}
       <div className={S.card}>
-        {styles.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center">
+            <Loader2 size={24} className="mx-auto mb-3 text-gray-300 animate-spin" />
+            <p className="text-sm text-gray-400">Loading…</p>
+          </div>
+        ) : styles.length === 0 ? (
           <div className="py-16 text-center">
             <Layers size={32} className="mx-auto mb-3 text-gray-200" />
             <p className="text-sm text-gray-500">No styles yet.</p>
@@ -448,7 +470,7 @@ export function StylesAdminPage() {
       </p>
 
       {panelOpen && (
-        <StyleFormPanel style={editing} onSave={afterSave} onClose={closePanel} />
+        <StyleFormPanel style={editing} saving={saving} onSave={handleSave} onClose={closePanel} />
       )}
     </div>
   );

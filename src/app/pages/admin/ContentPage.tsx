@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Save, CheckCircle, Loader } from 'lucide-react';
-import { getAllContent, setPageContent } from '../../../lib/adminData';
+import { getAllContent, setPageContent } from '../../../lib/contentService';
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -179,18 +179,6 @@ const SCHEMA: PageSchema[] = [
 
 type SaveState = 'idle' | 'saving' | 'saved';
 
-function useSaveState(): [SaveState, () => void] {
-  const [state, setState] = useState<SaveState>('idle');
-  const trigger = useCallback(() => {
-    setState('saving');
-    setTimeout(() => {
-      setState('saved');
-      setTimeout(() => setState('idle'), 2000);
-    }, 400);
-  }, []);
-  return [state, trigger];
-}
-
 // ─── BilingualField ───────────────────────────────────────────────────────────
 
 interface BilingualFieldProps {
@@ -310,23 +298,33 @@ function SectionEditor({
 export function ContentPage() {
   const [activePage, setActivePage] = useState<string>(SCHEMA[0].id);
   const [values, setValues]         = useState<Record<string, string>>({});
-  const [saveState, triggerSave]    = useSaveState();
+  const [saveState, setSaveState]   = useState<SaveState>('idle');
 
-  // Load all content from localStorage on mount
   useEffect(() => {
-    const all = getAllContent();
-    const map: Record<string, string> = {};
-    for (const item of all) map[item.key] = item.value;
-    setValues(map);
+    getAllContent()
+      .then(all => {
+        const map: Record<string, string> = {};
+        for (const item of all) map[item.key] = item.value;
+        setValues(map);
+      })
+      .catch(err => console.error('Failed to load content:', err));
   }, []);
 
   function handleChange(key: string, val: string) {
     setValues(prev => ({ ...prev, [key]: val }));
   }
 
-  function handleSave() {
-    setPageContent(values);
-    triggerSave();
+  async function handleSave() {
+    setSaveState('saving');
+    try {
+      await setPageContent(values);
+      setSaveState('saved');
+      setTimeout(() => setSaveState('idle'), 2000);
+    } catch (err) {
+      console.error('Failed to save content:', err);
+      alert('Failed to save. Please try again.');
+      setSaveState('idle');
+    }
   }
 
   const currentSchema = SCHEMA.find(p => p.id === activePage)!;

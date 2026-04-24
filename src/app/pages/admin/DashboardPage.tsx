@@ -1,9 +1,13 @@
 // DashboardPage — Admin home. Shows a quick summary of key entity counts
 // so the admin can see the site state at a glance.
 
-import { LayoutDashboard, Users, Layers, Star, Calendar, Sparkles } from 'lucide-react';
-import { getInstructors, getStyles, getReviews, getRecurringEntries } from '../../../lib/adminData';
-import { getUpcomingActiveSpecialClasses } from '../../../lib/specialClasses';
+import { useState, useEffect } from 'react';
+import { LayoutDashboard, Users, Layers, Star, Calendar, Sparkles, Loader2 } from 'lucide-react';
+import { getInstructors } from '../../../lib/instructorsService';
+import { getStyles } from '../../../lib/stylesService';
+import { getReviews } from '../../../lib/reviewsService';
+import { getRecurringEntries } from '../../../lib/scheduleService';
+import { getUpcomingActiveSpecialClasses } from '../../../lib/specialClassesService';
 
 const GOLD = '#F6B000';
 
@@ -32,12 +36,41 @@ function StatCard({ icon: Icon, label, value, sub }: StatCardProps) {
   );
 }
 
+interface Stats {
+  instructorsActive: number; instructorsTotal: number;
+  stylesActive: number; stylesTotal: number;
+  reviewsActive: number; reviewsTotal: number;
+  recurringActive: number;
+  eventsCount: number;
+}
+
 export function DashboardPage() {
-  const instructors   = getInstructors();
-  const styles        = getStyles();
-  const reviews       = getReviews();
-  const recurring     = getRecurringEntries();
-  const specialEvents = getUpcomingActiveSpecialClasses();
+  const [stats, setStats]   = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      getInstructors(),
+      getStyles(),
+      getReviews(),
+      getRecurringEntries(),
+      getUpcomingActiveSpecialClasses(),
+    ])
+      .then(([instructors, styles, reviews, recurring, events]) => {
+        setStats({
+          instructorsActive: instructors.filter(i => i.isActive).length,
+          instructorsTotal:  instructors.length,
+          stylesActive:      styles.filter(s => s.isActive).length,
+          stylesTotal:       styles.length,
+          reviewsActive:     reviews.filter(r => r.isActive).length,
+          reviewsTotal:      reviews.length,
+          recurringActive:   recurring.filter(e => e.isActive).length,
+          eventsCount:       events.length,
+        });
+      })
+      .catch(err => console.error('Dashboard load error:', err))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="p-6 lg:p-10 max-w-5xl">
@@ -53,38 +86,45 @@ export function DashboardPage() {
       </div>
 
       {/* Stat grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-        <StatCard
-          icon={Users}
-          label="Instructors"
-          value={instructors.filter((i) => i.isActive).length}
-          sub={`${instructors.length} total`}
-        />
-        <StatCard
-          icon={Layers}
-          label="Dance Styles"
-          value={styles.filter((s) => s.isActive).length}
-          sub={`${styles.length} total`}
-        />
-        <StatCard
-          icon={Star}
-          label="Reviews"
-          value={reviews.filter((r) => r.isActive).length}
-          sub={`${reviews.length} total`}
-        />
-        <StatCard
-          icon={Calendar}
-          label="Recurring Classes"
-          value={recurring.filter((e) => e.isActive).length}
-          sub="weekly slots"
-        />
-        <StatCard
-          icon={Sparkles}
-          label="Upcoming Events"
-          value={specialEvents.length}
-          sub="special classes"
-        />
-      </div>
+      {loading ? (
+        <div className="flex items-center gap-2 text-sm text-gray-400 mb-10">
+          <Loader2 size={16} className="animate-spin" style={{ color: GOLD }} />
+          Loading stats…
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+          <StatCard
+            icon={Users}
+            label="Instructors"
+            value={stats?.instructorsActive ?? 0}
+            sub={`${stats?.instructorsTotal ?? 0} total`}
+          />
+          <StatCard
+            icon={Layers}
+            label="Dance Styles"
+            value={stats?.stylesActive ?? 0}
+            sub={`${stats?.stylesTotal ?? 0} total`}
+          />
+          <StatCard
+            icon={Star}
+            label="Reviews"
+            value={stats?.reviewsActive ?? 0}
+            sub={`${stats?.reviewsTotal ?? 0} total`}
+          />
+          <StatCard
+            icon={Calendar}
+            label="Recurring Classes"
+            value={stats?.recurringActive ?? 0}
+            sub="weekly slots"
+          />
+          <StatCard
+            icon={Sparkles}
+            label="Upcoming Events"
+            value={stats?.eventsCount ?? 0}
+            sub="special classes"
+          />
+        </div>
+      )}
 
       {/* Quick links */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">

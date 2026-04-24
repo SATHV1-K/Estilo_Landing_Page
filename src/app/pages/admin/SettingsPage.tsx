@@ -3,12 +3,10 @@
 import { useState, useEffect } from 'react';
 import {
   Settings, MapPin, Phone, Mail, Clock, Share2,
-  Search, AlignLeft, Plus, X, Check, Save,
+  Search, AlignLeft, Plus, X, Check, Save, Loader2,
 } from 'lucide-react';
-import {
-  getSiteSettings, saveSiteSettings,
-  type AdminSiteSettings,
-} from '../../../lib/adminData';
+import { getSiteSettings, saveSiteSettings } from '../../../lib/settingsService';
+import type { AdminSiteSettings } from '../../../lib/adminData';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -328,24 +326,47 @@ function FooterSection({
   );
 }
 
+// ─── Default settings (used while Supabase loads) ────────────────────────────
+
+const EMPTY_SETTINGS: AdminSiteSettings = {
+  studioName: '', studioNameShort: '', tagline: '',
+  address: '', addressLine2: '', city: '', state: '', zip: '',
+  phone: '', whatsapp: '', email: '', googleMapsEmbed: '',
+  socialLinks: [], businessHours: [],
+  metaTitle: '', metaDescription: '', footerText: '',
+};
+
 // ─── SettingsPage ─────────────────────────────────────────────────────────────
 
 export function SettingsPage() {
-  const [settings, setSettings] = useState<AdminSiteSettings>(() => getSiteSettings());
-  const [saved, setSaved]       = useState(false);
+  const [settings, setSettings] = useState<AdminSiteSettings>(EMPTY_SETTINGS);
+  const [loading, setLoading]   = useState(true);
+  const [saving,  setSaving]    = useState(false);
+  const [saved,   setSaved]     = useState(false);
 
   useEffect(() => {
-    setSettings(getSiteSettings());
+    getSiteSettings()
+      .then(data => { if (data) setSettings(data); })
+      .catch(err => console.error('Failed to load settings:', err))
+      .finally(() => setLoading(false));
   }, []);
 
   function patch(update: Partial<AdminSiteSettings>) {
     setSettings(prev => ({ ...prev, ...update }));
   }
 
-  function handleSave() {
-    saveSiteSettings(settings);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await saveSiteSettings(settings);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -379,6 +400,11 @@ export function SettingsPage() {
 
       {/* Save button */}
       <div className="flex items-center justify-end gap-3 pt-2 pb-10">
+        {loading && (
+          <span className="flex items-center gap-1.5 text-sm text-gray-400 font-semibold">
+            <Loader2 size={14} className="animate-spin" /> Loading…
+          </span>
+        )}
         {saved && (
           <span className="flex items-center gap-1.5 text-sm text-green-600 font-semibold">
             <Check size={14} /> Saved successfully
@@ -386,11 +412,12 @@ export function SettingsPage() {
         )}
         <button
           onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all hover:opacity-90"
+          disabled={saving || loading}
+          className="flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-bold transition-all hover:opacity-90 disabled:opacity-60"
           style={{ background: GOLD, color: '#0A0A0A' }}
         >
-          <Save size={16} />
-          Save Settings
+          {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+          {saving ? 'Saving…' : 'Save Settings'}
         </button>
       </div>
     </div>

@@ -1,14 +1,14 @@
 // ReviewsAdminPage — CRUD for testimonial/review cards with reorder.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Pencil, Trash2, X, Check, Star,
-  ChevronUp, ChevronDown,
+  ChevronUp, ChevronDown, Loader2,
 } from 'lucide-react';
 import {
   getReviews, saveReview, deleteReview, reorderReviews,
-  type Review,
-} from '../../../lib/adminData';
+} from '../../../lib/reviewsService';
+import type { Review } from '../../../lib/adminData';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -54,11 +54,13 @@ function StarsInput({ value, onChange }: { value: number; onChange: (n: number) 
 
 function ReviewFormPanel({
   review,
+  saving,
   onSave,
   onClose,
 }: {
   review: Review | null;
-  onSave: () => void;
+  saving: boolean;
+  onSave: (data: Omit<Review, 'id' | 'createdAt' | 'updatedAt'> & { id?: string; createdAt?: string }) => Promise<void>;
   onClose: () => void;
 }) {
   const isNew = !review;
@@ -86,10 +88,9 @@ function ReviewFormPanel({
     return Object.keys(e).length === 0;
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!validate()) return;
-    saveReview(form);
-    onSave();
+    await onSave(form);
   }
 
   return (
@@ -155,9 +156,10 @@ function ReviewFormPanel({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <button type="button" onClick={onClose} className={S.btn.ghost}>Cancel</button>
-          <button onClick={handleSubmit} className={S.btn.gold} style={{ background: GOLD, color: '#0A0A0A' }}>
-            <Check size={15} /> {isNew ? 'Add Review' : 'Save Changes'}
+          <button type="button" onClick={onClose} className={S.btn.ghost} disabled={saving}>Cancel</button>
+          <button onClick={handleSubmit} className={S.btn.gold} style={{ background: GOLD, color: '#0A0A0A' }} disabled={saving}>
+            {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+            {isNew ? 'Add Review' : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -254,29 +256,63 @@ export function ReviewsAdminPage() {
   const [editing, setEditing] = useState<Review | null>(null);
   const [panelOpen, setPanel] = useState(false);
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'hidden'>('all');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving]   = useState(false);
 
-  function load() { setReviews(getReviews()); }
-  useEffect(load, []);
+  const refresh = useCallback(async () => {
+    const data = await getReviews();
+    setReviews(data);
+  }, []);
 
-  function openNew()             { setEditing(null); setPanel(true); }
-  function openEdit(r: Review)   { setEditing(r); setPanel(true); }
-  function closePanel()          { setPanel(false); setEditing(null); }
-  function afterSave()           { load(); closePanel(); }
-  function handleDelete(id: string) { deleteReview(id); load(); }
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
 
-  function handleToggleActive(r: Review) {
-    saveReview({ ...r, isActive: !r.isActive });
-    load();
+  function openNew()           { setEditing(null); setPanel(true); }
+  function openEdit(r: Review) { setEditing(r); setPanel(true); }
+  function closePanel()        { setPanel(false); setEditing(null); }
+
+  async function handleSave(data: Omit<Review, 'id' | 'createdAt' | 'updatedAt'> & { id?: string; createdAt?: string }) {
+    setSaving(true);
+    try {
+      await saveReview(data);
+      await refresh();
+      closePanel();
+    } catch (err) {
+      console.error('Failed to save review:', err);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function move(id: string, dir: 1 | -1) {
+  async function handleDelete(id: string) {
+    try {
+      await deleteReview(id);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to delete review:', err);
+      alert('Failed to delete. Please try again.');
+    }
+  }
+
+  async function handleToggleActive(r: Review) {
+    try {
+      await saveReview({ ...r, isActive: !r.isActive });
+      await refresh();
+    } catch (err) {
+      console.error('Failed to update review:', err);
+    }
+  }
+
+  async function move(id: string, dir: 1 | -1) {
     const ids = reviews.map(r => r.id);
     const idx = ids.indexOf(id);
     const newIdx = idx + dir;
     if (newIdx < 0 || newIdx >= ids.length) return;
     [ids[idx], ids[newIdx]] = [ids[newIdx], ids[idx]];
-    reorderReviews(ids);
-    load();
+    await reorderReviews(ids);
+    await refresh();
   }
 
   const filtered = reviews.filter(r =>
@@ -339,7 +375,12 @@ export function ReviewsAdminPage() {
 
       {/* List */}
       <div className={S.card}>
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center">
+            <Loader2 size={24} className="mx-auto mb-3 text-gray-300 animate-spin" />
+            <p className="text-sm text-gray-400">Loading…</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="py-16 text-center">
             <Star size={32} className="mx-auto mb-3 text-gray-200" />
             <p className="text-sm text-gray-500">
@@ -368,7 +409,7 @@ export function ReviewsAdminPage() {
       </p>
 
       {panelOpen && (
-        <ReviewFormPanel review={editing} onSave={afterSave} onClose={closePanel} />
+        <ReviewFormPanel review={editing} saving={saving} onSave={handleSave} onClose={closePanel} />
       )}
     </div>
   );

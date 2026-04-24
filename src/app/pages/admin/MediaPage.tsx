@@ -9,7 +9,7 @@ import {
 import {
   getAllMedia, saveMedia, deleteMedia, uploadMediaFile,
   formatBytes, type MediaFile,
-} from '../../../lib/adminData';
+} from '../../../lib/mediaService';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -166,15 +166,24 @@ function MediaCard({
   onDelete: (id: string) => void;
   onUpdate: (file: MediaFile) => void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [altText, setAltText] = useState(file.altText);
-  const [slot, setSlot]       = useState(file.slot);
+  const [editing, setEditing]   = useState(false);
+  const [altText, setAltText]   = useState(file.altText);
+  const [slot, setSlot]         = useState(file.slot);
+  const [editSaving, setEditSaving] = useState(false);
   const isVideo = file.mimeType.startsWith('video/');
 
-  function saveEdits() {
-    const updated = saveMedia({ ...file, altText, slot });
-    onUpdate(updated);
-    setEditing(false);
+  async function saveEdits() {
+    setEditSaving(true);
+    try {
+      const updated = await saveMedia({ ...file, altText, slot });
+      onUpdate(updated);
+      setEditing(false);
+    } catch (err) {
+      console.error('Failed to save media:', err);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setEditSaving(false);
+    }
   }
 
   return (
@@ -249,14 +258,17 @@ function MediaCard({
           <div className="flex gap-2 mt-2">
             <button
               onClick={saveEdits}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors text-gray-900"
+              disabled={editSaving}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors text-gray-900 disabled:opacity-60"
               style={{ background: GOLD }}
             >
-              <Check size={13} /> Save
+              {editSaving ? <RefreshCw size={13} className="animate-spin" /> : <Check size={13} />}
+              {editSaving ? 'Saving…' : 'Save'}
             </button>
             <button
+              disabled={editSaving}
               onClick={() => { setEditing(false); setAltText(file.altText); setSlot(file.slot); }}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-40"
             >
               <X size={13} /> Cancel
             </button>
@@ -273,22 +285,26 @@ export function MediaPage() {
   const [files, setFiles]     = useState<MediaFile[]>([]);
   const [slot, setSlot]       = useState('home.hero.image');
   const [filter, setFilter]   = useState('');
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setFiles(getAllMedia());
+  const refreshFiles = useCallback(async () => {
+    const data = await getAllMedia();
+    setFiles(data);
   }, []);
 
-  function handleUploaded(file: MediaFile) {
-    setFiles(getAllMedia());
+  useEffect(() => { refreshFiles().finally(() => setLoading(false)); }, [refreshFiles]);
+
+  function handleUploaded(_file: MediaFile) {
+    refreshFiles().catch(console.error);
   }
 
-  function handleDelete(id: string) {
-    deleteMedia(id);
-    setFiles(getAllMedia());
+  async function handleDelete(id: string) {
+    try { await deleteMedia(id); await refreshFiles(); }
+    catch (err) { console.error('Failed to delete:', err); alert('Delete failed. Please try again.'); }
   }
 
   function handleUpdate(updated: MediaFile) {
-    setFiles(getAllMedia());
+    setFiles(prev => prev.map(f => f.id === updated.id ? updated : f));
   }
 
   const filtered = files.filter(f =>
@@ -303,7 +319,7 @@ export function MediaPage() {
       <div className="mb-6">
         <h1 className="text-xl font-black text-gray-900">Media Manager</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          Upload and manage images and videos. Files are stored in your browser's local storage.
+          Upload and manage images and videos. Files are stored in Supabase Storage.
         </p>
       </div>
 
@@ -317,7 +333,7 @@ export function MediaPage() {
         </div>
         <UploadZone slot={slot} onUploaded={handleUploaded} />
         <p className="text-xs text-gray-400 mt-3">
-          <span className="font-semibold">Note:</span> Files are stored as data URLs in localStorage (~5 MB total limit). For production, use a cloud storage service.
+          <span className="font-semibold">Note:</span> Images up to 10 MB and videos up to 50 MB are supported.
         </p>
       </div>
 
@@ -335,7 +351,12 @@ export function MediaPage() {
         />
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className={`${S.card} p-12 text-center`}>
+          <RefreshCw size={24} className="mx-auto mb-3 text-gray-300 animate-spin" />
+          <p className="text-sm text-gray-400">Loading media library…</p>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className={`${S.card} p-12 text-center`}>
           <ImageIcon size={32} className="mx-auto mb-3 text-gray-200" />
           <p className="text-sm font-semibold text-gray-500">No media uploaded yet</p>

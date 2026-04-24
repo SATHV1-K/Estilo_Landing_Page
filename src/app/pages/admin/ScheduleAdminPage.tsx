@@ -1,16 +1,16 @@
 // ScheduleAdminPage — CRUD for recurring weekly schedule entries.
 // Separate from Special Classes (handled by AdminPage → /admin/special-classes).
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Pencil, Trash2, X, Check, Calendar,
-  ChevronUp, ChevronDown, RotateCcw,
+  ChevronUp, ChevronDown, RotateCcw, Loader2,
 } from 'lucide-react';
 import {
   getRecurringEntries, saveRecurringEntry, deleteRecurringEntry, resetRecurringToDefault,
   getOverviewEntries, saveOverviewEntry, deleteOverviewEntry, resetOverviewToDefault,
-  type RecurringEntry, type RecurringDay, type RecurringCategory,
-} from '../../../lib/adminData';
+} from '../../../lib/scheduleService';
+import { SEED_RECURRING, type RecurringEntry, type RecurringDay, type RecurringCategory } from '../../../lib/adminData';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -78,14 +78,16 @@ function formatTime(t: string): string {
 
 function EntryFormPanel({
   entry,
+  saving,
   onSave,
   onClose,
   saveEntry = saveRecurringEntry,
 }: {
   entry: RecurringEntry | null;
+  saving: boolean;
   onSave: () => void;
   onClose: () => void;
-  saveEntry?: (data: Omit<RecurringEntry, 'id' | 'updatedAt'> & { id?: string }) => RecurringEntry;
+  saveEntry?: (data: Omit<RecurringEntry, 'id' | 'updatedAt'> & { id?: string }) => Promise<RecurringEntry>;
 }) {
   const isNew = !entry;
   const [form, setForm] = useState<Omit<RecurringEntry, 'id' | 'updatedAt'> & { id?: string }>(
@@ -108,9 +110,9 @@ function EntryFormPanel({
     return Object.keys(e).length === 0;
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!validate()) return;
-    saveEntry(form);
+    await saveEntry(form);
     onSave();
   }
 
@@ -201,9 +203,10 @@ function EntryFormPanel({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <button type="button" onClick={onClose} className={S.btn.ghost}>Cancel</button>
-          <button onClick={handleSubmit} className={S.btn.gold} style={{ background: GOLD, color: '#0A0A0A' }}>
-            <Check size={15} /> {isNew ? 'Add Class' : 'Save Changes'}
+          <button type="button" onClick={onClose} className={S.btn.ghost} disabled={saving}>Cancel</button>
+          <button onClick={handleSubmit} className={S.btn.gold} style={{ background: GOLD, color: '#0A0A0A' }} disabled={saving}>
+            {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+            {isNew ? 'Add Class' : 'Save Changes'}
           </button>
         </div>
       </div>
@@ -363,16 +366,23 @@ function DayEntriesList({
 // ─── ScheduleAdminPage ────────────────────────────────────────────────────────
 
 export function ScheduleAdminPage() {
-  const [activeTab, setActiveTab] = useState<'detailed' | 'overview'>('detailed');
+  const [activeTab, setActiveTab]   = useState<'detailed' | 'overview'>('detailed');
+  const [detailSaving, setDetailSaving]   = useState(false);
+  const [overviewSaving, setOverviewSaving] = useState(false);
 
   // ── Detailed schedule state ──
   const [entries, setEntries] = useState<RecurringEntry[]>([]);
   const [detailEditing, setDetailEditing] = useState<RecurringEntry | null>(null);
   const [detailPanelOpen, setDetailPanel] = useState(false);
   const [detailFilterDay, setDetailFilterDay] = useState<RecurringDay | 'all'>('all');
+  const [detailLoading, setDetailLoading] = useState(true);
 
-  function loadDetailed() { setEntries(getRecurringEntries()); }
-  useEffect(loadDetailed, []);
+  const loadDetailed = useCallback(async () => {
+    const data = await getRecurringEntries();
+    setEntries(data);
+  }, []);
+
+  useEffect(() => { loadDetailed().finally(() => setDetailLoading(false)); }, [loadDetailed]);
 
   function detailOpenNew(day?: RecurringDay) {
     setDetailEditing(day ? { dayOfWeek: day } as any : null);
@@ -380,18 +390,21 @@ export function ScheduleAdminPage() {
   }
   function detailOpenEdit(e: RecurringEntry) { setDetailEditing(e); setDetailPanel(true); }
   function detailClosePanel() { setDetailPanel(false); setDetailEditing(null); }
-  function detailAfterSave() { loadDetailed(); detailClosePanel(); }
-  function detailHandleDelete(id: string) { deleteRecurringEntry(id); loadDetailed(); }
-  function detailMoveInGroup(id: string, dir: 1 | -1) {
+  async function detailAfterSave() { await loadDetailed(); detailClosePanel(); }
+  async function detailHandleDelete(id: string) {
+    try { await deleteRecurringEntry(id); await loadDetailed(); }
+    catch (err) { console.error('Failed to delete entry:', err); alert('Failed to delete. Please try again.'); }
+  }
+  async function detailMoveInGroup(id: string, dir: 1 | -1) {
     const entry = entries.find(e => e.id === id)!;
     const group = entries.filter(e => e.dayOfWeek === entry.dayOfWeek).sort((a, b) => a.sortOrder - b.sortOrder);
     const gi = group.findIndex(e => e.id === id);
     const ni = gi + dir;
     if (ni < 0 || ni >= group.length) return;
     const other = group[ni];
-    saveRecurringEntry({ ...entry, sortOrder: other.sortOrder });
-    saveRecurringEntry({ ...other, sortOrder: entry.sortOrder });
-    loadDetailed();
+    await saveRecurringEntry({ ...entry, sortOrder: other.sortOrder });
+    await saveRecurringEntry({ ...other, sortOrder: entry.sortOrder });
+    await loadDetailed();
   }
 
   // ── Overview state ──
@@ -399,9 +412,14 @@ export function ScheduleAdminPage() {
   const [overviewEditing, setOverviewEditing] = useState<RecurringEntry | null>(null);
   const [overviewPanelOpen, setOverviewPanel] = useState(false);
   const [overviewFilterDay, setOverviewFilterDay] = useState<RecurringDay | 'all'>('all');
+  const [overviewLoading, setOverviewLoading] = useState(true);
 
-  function loadOverview() { setOverviewEntries(getOverviewEntries()); }
-  useEffect(loadOverview, []);
+  const loadOverview = useCallback(async () => {
+    const data = await getOverviewEntries();
+    setOverviewEntries(data);
+  }, []);
+
+  useEffect(() => { loadOverview().finally(() => setOverviewLoading(false)); }, [loadOverview]);
 
   function overviewOpenNew(day?: RecurringDay) {
     setOverviewEditing(day ? { dayOfWeek: day } as any : null);
@@ -409,18 +427,21 @@ export function ScheduleAdminPage() {
   }
   function overviewOpenEdit(e: RecurringEntry) { setOverviewEditing(e); setOverviewPanel(true); }
   function overviewClosePanel() { setOverviewPanel(false); setOverviewEditing(null); }
-  function overviewAfterSave() { loadOverview(); overviewClosePanel(); }
-  function overviewHandleDelete(id: string) { deleteOverviewEntry(id); loadOverview(); }
-  function overviewMoveInGroup(id: string, dir: 1 | -1) {
+  async function overviewAfterSave() { await loadOverview(); overviewClosePanel(); }
+  async function overviewHandleDelete(id: string) {
+    try { await deleteOverviewEntry(id); await loadOverview(); }
+    catch (err) { console.error('Failed to delete entry:', err); alert('Failed to delete. Please try again.'); }
+  }
+  async function overviewMoveInGroup(id: string, dir: 1 | -1) {
     const entry = overviewEntries.find(e => e.id === id)!;
     const group = overviewEntries.filter(e => e.dayOfWeek === entry.dayOfWeek).sort((a, b) => a.sortOrder - b.sortOrder);
     const gi = group.findIndex(e => e.id === id);
     const ni = gi + dir;
     if (ni < 0 || ni >= group.length) return;
     const other = group[ni];
-    saveOverviewEntry({ ...entry, sortOrder: other.sortOrder });
-    saveOverviewEntry({ ...other, sortOrder: entry.sortOrder });
-    loadOverview();
+    await saveOverviewEntry({ ...entry, sortOrder: other.sortOrder });
+    await saveOverviewEntry({ ...other, sortOrder: entry.sortOrder });
+    await loadOverview();
   }
 
   // ── Day filter pills (shared component) ──
@@ -489,10 +510,10 @@ export function ScheduleAdminPage() {
             </p>
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (confirm('Reset all recurring classes to the default schedule? This will replace all current entries.')) {
-                    resetRecurringToDefault();
-                    loadDetailed();
+                    try { await resetRecurringToDefault(SEED_RECURRING); await loadDetailed(); }
+                    catch (err) { console.error('Reset failed:', err); alert('Reset failed. Please try again.'); }
                   }
                 }}
                 className={S.btn.ghost}
@@ -507,14 +528,21 @@ export function ScheduleAdminPage() {
 
           <DayFilter value={detailFilterDay} onChange={setDetailFilterDay} />
 
-          <DayEntriesList
-            entries={entries}
-            filterDay={detailFilterDay}
-            onOpenNew={detailOpenNew}
-            onOpenEdit={detailOpenEdit}
-            onDelete={detailHandleDelete}
-            onMove={detailMoveInGroup}
-          />
+          {detailLoading ? (
+            <div className="py-16 text-center">
+              <Loader2 size={24} className="mx-auto mb-3 text-gray-300 animate-spin" />
+              <p className="text-sm text-gray-400">Loading schedule…</p>
+            </div>
+          ) : (
+            <DayEntriesList
+              entries={entries}
+              filterDay={detailFilterDay}
+              onOpenNew={detailOpenNew}
+              onOpenEdit={detailOpenEdit}
+              onDelete={detailHandleDelete}
+              onMove={detailMoveInGroup}
+            />
+          )}
 
           <p className="text-xs text-gray-400 mt-2">
             Changes here appear in the Detailed Schedule timeline alongside special events.
@@ -523,9 +551,14 @@ export function ScheduleAdminPage() {
           {detailPanelOpen && (
             <EntryFormPanel
               entry={detailEditing?.id ? detailEditing : null}
+              saving={detailSaving}
               onSave={detailAfterSave}
               onClose={detailClosePanel}
-              saveEntry={saveRecurringEntry}
+              saveEntry={async (data) => {
+                setDetailSaving(true);
+                try { return await saveRecurringEntry(data); }
+                finally { setDetailSaving(false); }
+              }}
             />
           )}
         </>
@@ -555,10 +588,10 @@ export function ScheduleAdminPage() {
             </p>
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (confirm('Reset the Schedule Overview to the default classes? This will replace all current overview entries.')) {
-                    resetOverviewToDefault();
-                    loadOverview();
+                    try { await resetOverviewToDefault(SEED_RECURRING); await loadOverview(); }
+                    catch (err) { console.error('Reset failed:', err); alert('Reset failed. Please try again.'); }
                   }
                 }}
                 className={S.btn.ghost}
@@ -573,14 +606,21 @@ export function ScheduleAdminPage() {
 
           <DayFilter value={overviewFilterDay} onChange={setOverviewFilterDay} />
 
-          <DayEntriesList
-            entries={overviewEntries}
-            filterDay={overviewFilterDay}
-            onOpenNew={overviewOpenNew}
-            onOpenEdit={overviewOpenEdit}
-            onDelete={overviewHandleDelete}
-            onMove={overviewMoveInGroup}
-          />
+          {overviewLoading ? (
+            <div className="py-16 text-center">
+              <Loader2 size={24} className="mx-auto mb-3 text-gray-300 animate-spin" />
+              <p className="text-sm text-gray-400">Loading schedule…</p>
+            </div>
+          ) : (
+            <DayEntriesList
+              entries={overviewEntries}
+              filterDay={overviewFilterDay}
+              onOpenNew={overviewOpenNew}
+              onOpenEdit={overviewOpenEdit}
+              onDelete={overviewHandleDelete}
+              onMove={overviewMoveInGroup}
+            />
+          )}
 
           <p className="text-xs text-gray-400 mt-2">
             Only active entries are shown in the public Schedule Overview grid. Inactive entries are hidden.
@@ -589,9 +629,14 @@ export function ScheduleAdminPage() {
           {overviewPanelOpen && (
             <EntryFormPanel
               entry={overviewEditing?.id ? overviewEditing : null}
+              saving={overviewSaving}
               onSave={overviewAfterSave}
               onClose={overviewClosePanel}
-              saveEntry={saveOverviewEntry}
+              saveEntry={async (data) => {
+                setOverviewSaving(true);
+                try { return await saveOverviewEntry(data); }
+                finally { setOverviewSaving(false); }
+              }}
             />
           )}
         </>

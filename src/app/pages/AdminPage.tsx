@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Plus, Pencil, Trash2, Eye, Download, ChevronLeft, X, Sparkles,
+  Plus, Pencil, Trash2, Eye, Download, ChevronLeft, X, Sparkles, Loader2,
 } from 'lucide-react';
 import type { SpecialClass, Reservation, SpecialCategory } from '../../lib/specialClasses';
 import {
@@ -18,7 +18,7 @@ import {
   formatDateTime,
   formatTimeOnly,
   calcDurationMin,
-} from '../../lib/specialClasses';
+} from '../../lib/specialClassesService';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -188,30 +188,35 @@ function ClassFormModal({ editing, onSave, onCancel }: ClassFormProps) {
     return Object.keys(e).length === 0;
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!validate()) return;
 
-    const startIso = toIsoString(form.dateInput, form.startTime);
-    const endIso   = toIsoString(form.dateInput, form.endTime);
+    const startIso   = toIsoString(form.dateInput, form.startTime);
+    const endIso     = toIsoString(form.dateInput, form.endTime);
     const priceCents = Math.round(parseFloat(form.priceInput) * 100);
-    const dur = calcDurationMin(startIso, endIso);
+    const dur        = calcDurationMin(startIso, endIso);
 
-    saveSpecialClass({
-      ...(editing?.id ? { id: editing.id } : {}),
-      name:        form.name.trim(),
-      description: form.description.trim(),
-      date:        startIso,
-      endTime:     endIso,
-      durationMin: dur,
-      location:    form.location.trim() || 'Main Studio',
-      instructor:  form.instructor.trim(),
-      category:    form.category,
-      price:       priceCents,
-      maxCapacity: parseInt(form.maxCapacity),
-      isActive:    form.isActive,
-      paymentLink: form.paymentLink.trim(),
-    });
-    onSave();
+    try {
+      await saveSpecialClass({
+        ...(editing?.id ? { id: editing.id } : {}),
+        name:        form.name.trim(),
+        description: form.description.trim(),
+        date:        startIso,
+        endTime:     endIso,
+        durationMin: dur,
+        location:    form.location.trim() || 'Main Studio',
+        instructor:  form.instructor.trim(),
+        category:    form.category,
+        price:       priceCents,
+        maxCapacity: parseInt(form.maxCapacity),
+        isActive:    form.isActive,
+        paymentLink: form.paymentLink.trim(),
+      });
+      onSave();
+    } catch (err) {
+      console.error('Failed to save class:', err);
+      alert('Failed to save. Please try again.');
+    }
   }
 
   const categories: { value: SpecialCategory; label: string }[] = [
@@ -441,17 +446,19 @@ function ReservationViewer({
   specialClass: SpecialClass;
   onBack: () => void;
 }) {
-  const [reservations, setReservations] = useState<Reservation[]>(() =>
-    getReservations(specialClass.id)
-  );
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  function refresh() {
-    setReservations(getReservations(specialClass.id));
-  }
+  const refresh = useCallback(async () => {
+    const data = await getReservations(specialClass.id);
+    setReservations(data);
+  }, [specialClass.id]);
 
-  function changeStatus(id: string, status: Reservation['paymentStatus']) {
-    updateReservationStatus(id, status);
-    refresh();
+  useEffect(() => { refresh().finally(() => setLoading(false)); }, [refresh]);
+
+  async function changeStatus(id: string, status: Reservation['paymentStatus']) {
+    try { await updateReservationStatus(id, status); await refresh(); }
+    catch (err) { console.error('Failed to update status:', err); alert('Update failed. Please try again.'); }
   }
 
   const reserved  = reservations.filter(r => r.paymentStatus !== 'refunded').length;
@@ -481,7 +488,7 @@ function ReservationViewer({
           </div>
           {reservations.length > 0 && (
             <button
-              onClick={() => exportReservationsCSV(reservations, specialClass.name)}
+              onClick={() => exportReservationsCSV(reservations)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <Download size={15} /> Download CSV
@@ -491,7 +498,12 @@ function ReservationViewer({
       </div>
 
       <div className={S.card}>
-        {reservations.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center">
+            <Loader2 size={24} className="mx-auto mb-3 text-gray-300 animate-spin" />
+            <p className="text-sm text-gray-400">Loading reservations…</p>
+          </div>
+        ) : reservations.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-gray-400 text-sm font-medium">No reservations yet.</p>
           </div>
@@ -557,11 +569,16 @@ function ClassesList({
   onViewReservations: (cls: SpecialClass) => void;
   refreshKey: number;
 }) {
-  const [classes, setClasses] = useState<SpecialClass[]>([]);
+  const [classes, setClasses]             = useState<SpecialClass[]>([]);
+  const [reservationCounts, setCounts]    = useState<Record<string, number>>({});
+  const [loading, setLoading]             = useState(true);
 
-  const loadClasses = useCallback(() => {
-    const all = getSpecialClasses().sort((a, b) => {
-      // Upcoming first, past at bottom
+  const loadClasses = useCallback(async () => {
+    const [all, allReservations] = await Promise.all([
+      getSpecialClasses(),
+      getReservations(),
+    ]);
+    const sorted = [...all].sort((a, b) => {
       const aFuture = new Date(a.date) >= new Date();
       const bFuture = new Date(b.date) >= new Date();
       if (aFuture && !bFuture) return -1;
@@ -569,19 +586,40 @@ function ClassesList({
       if (aFuture) return new Date(a.date).getTime() - new Date(b.date).getTime();
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
-    setClasses(all);
+    setClasses(sorted);
+    const counts: Record<string, number> = {};
+    for (const r of allReservations) {
+      if (r.paymentStatus !== 'refunded') {
+        counts[r.specialClassId] = (counts[r.specialClassId] ?? 0) + 1;
+      }
+    }
+    setCounts(counts);
   }, []);
 
-  useEffect(() => { loadClasses(); }, [loadClasses, refreshKey]);
+  useEffect(() => { loadClasses().finally(() => setLoading(false)); }, [loadClasses, refreshKey]);
 
-  function handleDelete(cls: SpecialClass) {
-    const reserved = getActiveReservationCount(cls.id);
+  async function handleDelete(cls: SpecialClass) {
+    const reserved = await getActiveReservationCount(cls.id);
     const msg = reserved > 0
       ? `Delete "${cls.name}"? This will also delete ${reserved} reservation(s). This cannot be undone.`
       : `Delete "${cls.name}"? This cannot be undone.`;
     if (!window.confirm(msg)) return;
-    deleteSpecialClass(cls.id);
-    loadClasses();
+    try {
+      await deleteSpecialClass(cls.id);
+      await loadClasses();
+    } catch (err) {
+      console.error('Failed to delete class:', err);
+      alert('Delete failed. Please try again.');
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className={S.card + ' py-20 text-center'}>
+        <Loader2 size={28} className="mx-auto mb-3 text-gray-300 animate-spin" />
+        <p className="text-gray-400 text-sm">Loading classes…</p>
+      </div>
+    );
   }
 
   if (classes.length === 0) {
@@ -610,7 +648,7 @@ function ClassesList({
           </thead>
           <tbody>
             {classes.map(cls => {
-              const reserved = getActiveReservationCount(cls.id);
+              const reserved = reservationCounts[cls.id] ?? 0;
               const status   = classStatus(cls);
               return (
                 <tr key={cls.id} className="hover:bg-gray-50 transition-colors">

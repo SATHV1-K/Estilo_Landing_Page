@@ -1,15 +1,15 @@
 // PackagesAdminPage — full CRUD for class packages, grouped by category.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Pencil, Trash2, X, Check, ChevronUp, ChevronDown,
-  ExternalLink, Phone, Package,
+  ExternalLink, Phone, Package, Loader2,
 } from 'lucide-react';
 import {
   getAllPackages, savePackage, deletePackage, reorderPackages,
-  getContent, setContent,
-} from '../../../lib/adminData';
-import type {} from '../../../lib/types';
+} from '../../../lib/packagesService';
+import { getContent, setPageContent } from '../../../lib/contentService';
+import type { Package as PkgType } from '../../../lib/types';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -117,12 +117,14 @@ function formToPkg(f: PkgForm) {
 function PackageFormPanel({
   pkg,
   defaultCategory,
+  saving,
   onSave,
   onClose,
 }: {
   pkg: PkgForm | null;
   defaultCategory: Category;
-  onSave: () => void;
+  saving: boolean;
+  onSave: (data: PkgType) => Promise<void>;
   onClose: () => void;
 }) {
   const isNew = !pkg?.id;
@@ -144,11 +146,10 @@ function PackageFormPanel({
     return Object.keys(e).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    savePackage(formToPkg(form));
-    onSave();
+    await onSave(formToPkg(form));
   }
 
   return (
@@ -297,14 +298,15 @@ function PackageFormPanel({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <button type="button" onClick={onClose} className={S.btn.ghost}>Cancel</button>
+          <button type="button" onClick={onClose} className={S.btn.ghost} disabled={saving}>Cancel</button>
           <button
             form="pkg-form"
             type="submit"
             className={S.btn.gold}
             style={{ background: GOLD, color: '#0A0A0A' }}
+            disabled={saving}
           >
-            <Check size={15} />
+            {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
             {isNew ? 'Add Package' : 'Save Changes'}
           </button>
         </div>
@@ -324,7 +326,7 @@ function PackageRow({
   onMoveUp,
   onMoveDown,
 }: {
-  pkg: ReturnType<typeof getAllPackages>[number];
+  pkg: PkgType;
   isFirst: boolean;
   isLast: boolean;
   onEdit: () => void;
@@ -404,60 +406,83 @@ function PackageRow({
 // ─── PackagesAdminPage ────────────────────────────────────────────────────────
 
 export function PackagesAdminPage() {
-  const [allPkgs, setAllPkgs]       = useState<ReturnType<typeof getAllPackages>>([]);
+  const [allPkgs, setAllPkgs]       = useState<PkgType[]>([]);
   const [activeTab, setActiveTab]   = useState<Category>('adults-salsa-bachata');
   const [editing, setEditing]       = useState<PkgForm | null>(null);
   const [panelOpen, setPanelOpen]   = useState(false);
   const [punchcard, setPunchcard]   = useState('');
   const [punchSaved, setPunchSaved] = useState(false);
+  const [loading, setLoading]       = useState(true);
+  const [saving, setSaving]         = useState(false);
 
-  function load() {
-    setAllPkgs(getAllPackages());
-    setPunchcard(getContent(PUNCHCARD_KEY, PUNCHCARD_DEFAULT));
-  }
-  useEffect(load, []);
+  const refresh = useCallback(async () => {
+    const [pkgs, punch] = await Promise.all([
+      getAllPackages(),
+      getContent(PUNCHCARD_KEY, PUNCHCARD_DEFAULT),
+    ]);
+    setAllPkgs(pkgs);
+    setPunchcard(punch);
+  }, []);
+
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
 
   const tabPkgs = allPkgs.filter(p => p.category === activeTab);
 
-  function openNew()  { setEditing(null); setPanelOpen(true); }
-  function openEdit(pkg: ReturnType<typeof getAllPackages>[number]) {
-    setEditing(pkgToForm(pkg));
-    setPanelOpen(true);
-  }
-  function closePanel() { setPanelOpen(false); setEditing(null); }
-  function afterSave()  { load(); closePanel(); }
+  function openNew()          { setEditing(null); setPanelOpen(true); }
+  function openEdit(pkg: PkgType) { setEditing(pkgToForm(pkg)); setPanelOpen(true); }
+  function closePanel()       { setPanelOpen(false); setEditing(null); }
 
-  function handleDelete(id: string, name: string) {
+  async function handleSave(data: PkgType) {
+    setSaving(true);
+    try {
+      await savePackage(data);
+      await refresh();
+      closePanel();
+    } catch (err) {
+      console.error('Failed to save package:', err);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string, name: string) {
     if (!confirm(`Delete package "${name}"? This cannot be undone.`)) return;
-    deletePackage(id);
-    load();
+    try {
+      await deletePackage(id);
+      await refresh();
+    } catch (err) {
+      console.error('Failed to delete package:', err);
+      alert('Failed to delete. Please try again.');
+    }
   }
 
-  function moveUp(id: string) {
+  async function moveUp(id: string) {
     const ids = tabPkgs.map(p => p.id);
     const idx = ids.indexOf(id);
     if (idx > 0) {
       [ids[idx - 1], ids[idx]] = [ids[idx], ids[idx - 1]];
-      // Apply reorder only within this category, keeping other categories unchanged
       const otherIds = allPkgs.filter(p => p.category !== activeTab).map(p => p.id);
-      reorderPackages([...otherIds, ...ids]);
-      load();
+      await reorderPackages([...otherIds, ...ids]);
+      await refresh();
     }
   }
 
-  function moveDown(id: string) {
+  async function moveDown(id: string) {
     const ids = tabPkgs.map(p => p.id);
     const idx = ids.indexOf(id);
     if (idx < ids.length - 1) {
       [ids[idx], ids[idx + 1]] = [ids[idx + 1], ids[idx]];
       const otherIds = allPkgs.filter(p => p.category !== activeTab).map(p => p.id);
-      reorderPackages([...otherIds, ...ids]);
-      load();
+      await reorderPackages([...otherIds, ...ids]);
+      await refresh();
     }
   }
 
-  function savePunchcard() {
-    setContent(PUNCHCARD_KEY, punchcard);
+  async function savePunchcard() {
+    await setPageContent({ [PUNCHCARD_KEY]: punchcard });
     setPunchSaved(true);
     setTimeout(() => setPunchSaved(false), 2000);
   }
@@ -524,7 +549,12 @@ export function PackagesAdminPage() {
 
       {/* Package list */}
       <div className={S.card}>
-        {tabPkgs.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center">
+            <Loader2 size={24} className="mx-auto mb-3 text-gray-300 animate-spin" />
+            <p className="text-sm text-gray-400">Loading…</p>
+          </div>
+        ) : tabPkgs.length === 0 ? (
           <div className="py-16 text-center">
             <Package size={32} className="mx-auto mb-3 text-gray-200" />
             <p className="text-sm text-gray-500">No packages in this category yet.</p>
@@ -560,7 +590,8 @@ export function PackagesAdminPage() {
         <PackageFormPanel
           pkg={editing}
           defaultCategory={activeTab}
-          onSave={afterSave}
+          saving={saving}
+          onSave={handleSave}
           onClose={closePanel}
         />
       )}
