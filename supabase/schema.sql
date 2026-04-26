@@ -244,6 +244,26 @@ CREATE TABLE IF NOT EXISTS special_classes (
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ─── Newsletter Subscribers ──────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id            TEXT        PRIMARY KEY,
+  email         TEXT        NOT NULL UNIQUE,
+  subscribed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ─── Contact Messages ────────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id         TEXT        PRIMARY KEY,
+  name       TEXT        NOT NULL DEFAULT '',
+  email      TEXT        NOT NULL DEFAULT '',
+  phone      TEXT        NOT NULL DEFAULT '',
+  message    TEXT        NOT NULL DEFAULT '',
+  is_read    BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ─── Reservations ─────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS reservations (
@@ -271,6 +291,8 @@ ALTER TABLE site_content       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE media_files        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE special_classes    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reservations       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contact_messages         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE newsletter_subscribers   ENABLE ROW LEVEL SECURITY;
 
 -- Public read (public site needs to fetch data)
 CREATE POLICY "public_read_instructors"        ON instructors        FOR SELECT USING (TRUE);
@@ -285,6 +307,8 @@ CREATE POLICY "public_read_site_content"       ON site_content       FOR SELECT 
 CREATE POLICY "public_read_media_files"        ON media_files        FOR SELECT USING (TRUE);
 CREATE POLICY "public_read_special_classes"    ON special_classes    FOR SELECT USING (TRUE);
 CREATE POLICY "public_read_reservations"       ON reservations       FOR SELECT USING (TRUE);
+CREATE POLICY "public_insert_contact_messages"      ON contact_messages        FOR INSERT WITH CHECK (TRUE);
+CREATE POLICY "public_insert_newsletter_subscribers" ON newsletter_subscribers  FOR INSERT WITH CHECK (TRUE);
 
 -- Anon full write (admin panel uses anon key from the browser)
 CREATE POLICY "anon_write_instructors"        ON instructors        FOR ALL USING (TRUE);
@@ -299,6 +323,8 @@ CREATE POLICY "anon_write_site_content"       ON site_content       FOR ALL USIN
 CREATE POLICY "anon_write_media_files"        ON media_files        FOR ALL USING (TRUE);
 CREATE POLICY "anon_write_special_classes"    ON special_classes    FOR ALL USING (TRUE);
 CREATE POLICY "anon_write_reservations"       ON reservations       FOR ALL USING (TRUE);
+CREATE POLICY "anon_write_contact_messages"        ON contact_messages        FOR ALL USING (TRUE);
+CREATE POLICY "anon_write_newsletter_subscribers"  ON newsletter_subscribers  FOR ALL USING (TRUE);
 
 -- ─── Storage Buckets ──────────────────────────────────────────────────────────
 -- Create these in: Dashboard → Storage → New bucket

@@ -5,11 +5,13 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Pencil, Trash2, X, Check,
   ChevronUp, ChevronDown, Bell, Info,
-  AlertTriangle, Sparkles, Loader2,
+  AlertTriangle, Sparkles, Loader2, Mail, Users,
 } from 'lucide-react';
 import {
   getAlerts, saveAlert, deleteAlert, reorderAlerts,
 } from '../../../lib/alertsService';
+import { getAllSubscribers } from '../../../lib/newsletterService';
+import { sendAlertToSubscribers } from '../../../lib/emailService';
 import type { Alert } from '../../../lib/adminData';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -64,7 +66,7 @@ function AlertFormPanel({
 }: {
   alert: Alert | null;
   saving: boolean;
-  onSave: (data: AlertForm) => Promise<void>;
+  onSave: (data: AlertForm, notifySubscribers: boolean) => Promise<void>;
   onClose: () => void;
 }) {
   const isNew = !alert;
@@ -73,8 +75,9 @@ function AlertFormPanel({
       ? { ...alert }
       : emptyAlert()
   );
-  const [langTab, setLangTab] = useState<'en' | 'es'>('en');
-  const [errors, setErrors]   = useState<Record<string, string>>({});
+  const [langTab,           setLangTab]           = useState<'en' | 'es'>('en');
+  const [errors,            setErrors]            = useState<Record<string, string>>({});
+  const [notifySubscribers, setNotifySubscribers] = useState(isNew);
 
   function set<K extends keyof AlertForm>(key: K, val: AlertForm[K]) {
     setForm(prev => ({ ...prev, [key]: val }));
@@ -91,7 +94,7 @@ function AlertFormPanel({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    await onSave(form);
+    await onSave(form, notifySubscribers);
   }
 
   const typeConf = alertTypeConfig(form.type);
@@ -235,6 +238,37 @@ function AlertFormPanel({
               {form.isActive ? 'Active — shown as popup & in announcement bar' : 'Inactive — hidden from site'}
             </span>
           </div>
+
+          {/* Notify subscribers toggle */}
+          <div className="border-t border-gray-100 pt-4">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setNotifySubscribers(n => !n)}
+                className="relative w-10 h-5 rounded-full transition-colors flex-shrink-0"
+                style={{ background: notifySubscribers ? '#3B82F6' : '#E5E7EB' }}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${notifySubscribers ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              </button>
+              <div>
+                <span className="text-sm text-gray-700 font-semibold flex items-center gap-1.5">
+                  <Mail size={13} className="text-blue-500" />
+                  {notifySubscribers ? 'Send email to newsletter subscribers' : 'Skip email notification'}
+                </span>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {notifySubscribers
+                    ? 'All subscribers will receive this alert by email when you save.'
+                    : 'No email will be sent to subscribers.'}
+                </p>
+              </div>
+            </div>
+            {notifySubscribers && !import.meta.env.VITE_RESEND_API_KEY && (
+              <div className="mt-2 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <AlertTriangle size={13} className="flex-shrink-0 mt-0.5" />
+                <span><strong>VITE_RESEND_API_KEY</strong> is not set in .env — emails will not be sent. Add your Resend API key to enable this feature.</span>
+              </div>
+            )}
+          </div>
         </form>
 
         {/* Footer */}
@@ -353,12 +387,33 @@ export function AlertsAdminPage() {
   function openEdit(a: Alert) { setEditing(a); setPanelOpen(true); }
   function closePanel()       { setPanelOpen(false); setEditing(null); }
 
-  async function handleSave(data: AlertForm) {
+  async function handleSave(data: AlertForm, notifySubscribers: boolean) {
     setSaving(true);
     try {
       await saveAlert(data);
       await refresh();
       closePanel();
+
+      if (notifySubscribers) {
+        const fromAddress = import.meta.env.VITE_RESEND_FROM_EMAIL as string | undefined
+          ?? 'Estilo Latino <noreply@estilolatinodance.com>';
+        try {
+          const subscribers = await getAllSubscribers();
+          if (subscribers.length === 0) {
+            alert('Alert saved. No newsletter subscribers found — no emails were sent.');
+            return;
+          }
+          const { sent, errors: errs } = await sendAlertToSubscribers(
+            subscribers.map(s => s.email),
+            { title: data.title, message: data.message, link: data.link ?? '', linkLabel: data.linkLabel ?? '', type: data.type },
+            fromAddress
+          );
+          alert(`Alert saved. Emails sent: ${sent}${errs > 0 ? `, failed: ${errs}` : ''}.`);
+        } catch (emailErr) {
+          console.error('Email send failed:', emailErr);
+          alert(`Alert saved, but email sending failed: ${(emailErr as Error).message}`);
+        }
+      }
     } catch (err) {
       console.error('Failed to save alert:', err);
       alert('Failed to save. Please try again.');

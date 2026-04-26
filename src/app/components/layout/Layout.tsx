@@ -6,6 +6,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { AnnouncementBar } from './AnnouncementBar';
 import { AlertPopup } from './AlertPopup';
+import { WhatsAppButton } from '../ui/WhatsAppButton';
 
 export function Layout() {
   const location = useLocation();
@@ -24,6 +25,7 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }

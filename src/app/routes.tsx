@@ -28,6 +28,7 @@ import { PackagesAdminPage } from './pages/admin/PackagesAdminPage';
 import { SettingsPage } from './pages/admin/SettingsPage';
 import { AlertsAdminPage } from './pages/admin/AlertsAdminPage';
 import { VideosAdminPage } from './pages/admin/VideosAdminPage';
+import { MessagesAdminPage } from './pages/admin/MessagesAdminPage';
 import { KidsPage } from './pages/KidsPage';
 
 export const router = createBrowserRouter([
@@ -49,6 +50,7 @@ export const router = createBrowserRouter([
       { path: 'gallery',          Component: GalleryAdminPage },
       { path: 'settings',         Component: SettingsPage },
       { path: 'alerts',           Component: AlertsAdminPage },
+      { path: 'messages',         Component: MessagesAdminPage },
     ],
   },
 

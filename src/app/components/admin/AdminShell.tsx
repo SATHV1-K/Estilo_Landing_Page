@@ -7,7 +7,7 @@ import { getVideos } from '../../../lib/videosService';
 import {
   LayoutDashboard, Sparkles, FileText, Image, Users,
   Layers, Calendar, Star, LogOut, Menu, X, ChevronRight,
-  Package, Settings, Bell, Film, Images,
+  Package, Settings, Bell, Film, Images, MessageSquare,
 } from 'lucide-react';
 import { isAdminLoggedIn, adminLogin, adminLogout } from '../../../lib/specialClasses';
 
@@ -35,6 +35,7 @@ const NAV_ITEMS = [
   { to: '/admin/reviews',         label: 'Reviews',         icon: Star },
   { to: '/admin/packages',        label: 'Packages',        icon: Package },
   { to: '/admin/alerts',          label: 'Alerts',          icon: Bell },
+  { to: '/admin/messages',        label: 'Messages',        icon: MessageSquare },
   { to: '/admin/settings',        label: 'Settings',        icon: Settings },
 ] as const;
 
