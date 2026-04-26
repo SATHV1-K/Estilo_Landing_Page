@@ -9,7 +9,6 @@ import {
   heroImage,
 } from '../../../lib/animations';
 import { CTAButton } from '../ui/CTAButton';
-import { LatinBadge } from '../ui/LatinBadge';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { EstiloKidsBee } from '../ui/EstiloKidsBee';
 
@@ -23,7 +22,8 @@ interface HeroDiagonalProps {
   ctaLabel: string;
   ctaLabelEs: string;
   ctaHref: string;
-  heroImageSrc: string;
+  heroImageSrc?: string;
+  heroVideoSrc?: string;
   showBadge?: boolean;
 }
 
@@ -38,26 +38,45 @@ export function HeroDiagonal({
   ctaLabelEs,
   ctaHref,
   heroImageSrc,
-  showBadge = true,
+  heroVideoSrc,
 }: HeroDiagonalProps) {
   const { language } = useI18n();
 
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-bg pt-20">
       <div className="absolute inset-0 z-0">
-        {/* Diagonal Split Background */}
+        {/* Left dark side */}
         <div
           className="absolute inset-0 bg-bg"
           style={{
             clipPath: 'polygon(0 0, 45% 0, 50% 100%, 0 100%)',
           }}
         />
-        <div
-          className="absolute inset-0 bg-photo-blue"
-          style={{
-            clipPath: 'polygon(45% 0, 100% 0, 100% 100%, 50% 100%)',
-          }}
-        />
+        {/* Right side — video loop or photo-blue fallback */}
+        {heroVideoSrc ? (
+          <div
+            className="absolute inset-0"
+            style={{
+              clipPath: 'polygon(45% 0, 100% 0, 100% 100%, 50% 100%)',
+            }}
+          >
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+              src={heroVideoSrc}
+            />
+          </div>
+        ) : (
+          <div
+            className="absolute inset-0 bg-photo-blue"
+            style={{
+              clipPath: 'polygon(45% 0, 100% 0, 100% 100%, 50% 100%)',
+            }}
+          />
+        )}
       </div>
 
       <div className="relative z-10 max-w-[1440px] mx-auto px-4 lg:px-16 w-full">
@@ -107,19 +126,21 @@ export function HeroDiagonal({
             <EstiloKidsBee />
           </div>
 
-          {/* Right: Hero Image with Badge */}
-          <motion.div
-            variants={heroImage}
-            initial="hidden"
-            animate="visible"
-            className="relative"
-          >
-            <ImageWithFallback
-              src={heroImageSrc}
-              alt="Estilo Latino Dance"
-              className="w-full h-[600px] object-cover rounded-2xl shadow-2xl"
-            />
-          </motion.div>
+          {/* Right: Hero Image — only shown when no video is uploaded */}
+          {!heroVideoSrc && heroImageSrc && (
+            <motion.div
+              variants={heroImage}
+              initial="hidden"
+              animate="visible"
+              className="relative"
+            >
+              <ImageWithFallback
+                src={heroImageSrc}
+                alt="Estilo Latino Dance"
+                className="w-full h-[600px] object-cover rounded-2xl shadow-2xl"
+              />
+            </motion.div>
+          )}
         </div>
       </div>
     </section>

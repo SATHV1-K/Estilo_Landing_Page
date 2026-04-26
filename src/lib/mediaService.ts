@@ -33,9 +33,10 @@ export async function getMedia(slot: string): Promise<MediaFile | undefined> {
     .from(TABLE)
     .select('*')
     .eq('slot', slot)
-    .maybeSingle();
+    .order('uploaded_at', { ascending: false })
+    .limit(1);
   if (error) throw error;
-  return data ? rowToMedia(data as Record<string, unknown>) : undefined;
+  return data && data.length > 0 ? rowToMedia(data[0] as Record<string, unknown>) : undefined;
 }
 
 export async function uploadMediaFile(

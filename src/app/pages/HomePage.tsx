@@ -8,6 +8,7 @@ import { TestimonialsCarousel } from '../components/sections/TestimonialsCarouse
 import { FeaturedVideosSection } from '../components/sections/FeaturedVideosSection';
 import { getActiveStyles } from '../../lib/stylesService';
 import { getActiveInstructors } from '../../lib/instructorsService';
+import { getMedia } from '../../lib/mediaService';
 import { useCmsContent } from '../../lib/hooks/useCmsContent';
 import { useI18n } from '../../lib/i18n';
 import type { DanceStyle, Instructor } from '../../lib/types';
@@ -16,10 +17,14 @@ export function HomePage() {
   const { language } = useI18n();
   const [styles, setStyles]           = useState<DanceStyle[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
+  const [heroVideoSrc, setHeroVideoSrc] = useState<string>('');
 
   useEffect(() => {
     getActiveStyles().then(setStyles).catch(console.error);
     getActiveInstructors().then(setInstructors).catch(console.error);
+    getMedia('home.hero.video').then(m => {
+      if (m?.url) setHeroVideoSrc(m.url);
+    }).catch(console.error);
   }, []);
 
   // Text content — async, renders with fallbacks immediately
@@ -55,6 +60,7 @@ export function HomePage() {
         ctaLabelEs={cms['home.hero.cta_label_es']}
         ctaHref={cms['home.hero.cta_link']}
         heroImageSrc="https://images.unsplash.com/photo-1545224144-b38cd309ef69?w=1200&q=80"
+        heroVideoSrc={heroVideoSrc || undefined}
         showBadge={true}
       />
 
