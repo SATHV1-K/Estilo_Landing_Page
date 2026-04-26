@@ -10,6 +10,7 @@ export interface DanceStyle {
   descriptionEs: string;
   heroImage: string;
   cardImage: string;
+  videoUrl: string;
   ageGroup: "kids" | "adults" | "all";
   sortOrder: number;
   isActive: boolean;

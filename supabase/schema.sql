@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS dance_styles (
   description_es TEXT        NOT NULL DEFAULT '',
   hero_image     TEXT        NOT NULL DEFAULT '',
   card_image     TEXT        NOT NULL DEFAULT '',
+  video_url      TEXT        NOT NULL DEFAULT '',
   age_group      TEXT        NOT NULL DEFAULT 'all',
   sort_order     INTEGER     NOT NULL DEFAULT 0,
   is_active      BOOLEAN     NOT NULL DEFAULT TRUE,
@@ -88,6 +89,9 @@ CREATE TABLE IF NOT EXISTS dance_styles (
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Migration: run this if the table already exists in your Supabase project
+-- ALTER TABLE dance_styles ADD COLUMN IF NOT EXISTS video_url TEXT NOT NULL DEFAULT '';
 
 -- ─── Recurring Schedule ───────────────────────────────────────────────────────
 

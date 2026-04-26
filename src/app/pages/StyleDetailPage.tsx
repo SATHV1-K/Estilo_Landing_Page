@@ -33,11 +33,22 @@ export function StyleDetailPage() {
     <div className="min-h-screen pt-20">
       {/* Hero */}
       <section className="relative h-[60vh] overflow-hidden">
-        <ImageWithFallback
-          src={style.heroImage}
-          alt={language === 'es' ? style.nameEs : style.name}
-          className="w-full h-full object-cover"
-        />
+        {style.videoUrl ? (
+          <video
+            src={style.videoUrl}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <ImageWithFallback
+            src={style.heroImage}
+            alt={language === 'es' ? style.nameEs : style.name}
+            className="w-full h-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-black/40" />
         <motion.div
           initial={{ opacity: 0, y: 40 }}

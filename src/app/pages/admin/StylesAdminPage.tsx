@@ -40,6 +40,7 @@ function emptyStyle(): Omit<DanceStyle, 'id'> {
     descriptionEs: '',
     heroImage: '',
     cardImage: '',
+    videoUrl: '',
     ageGroup: 'adults',
     sortOrder: 999,
     isActive: true,
@@ -97,6 +98,60 @@ function ImageUploader({
   );
 }
 
+// ─── Video Uploader ───────────────────────────────────────────────────────────
+
+function VideoUploader({
+  previewUrl,
+  onFilePick,
+  onUrlChange,
+}: {
+  previewUrl: string;
+  onFilePick: (file: File) => void;
+  onUrlChange: (url: string) => void;
+}) {
+  return (
+    <div>
+      <label className={S.label}>Style Video (plays on detail page)</label>
+      <div className="space-y-2">
+        {previewUrl && (
+          <div className="rounded-lg overflow-hidden bg-gray-900 border border-gray-200 aspect-video">
+            <video src={previewUrl} controls className="w-full h-full object-contain" />
+          </div>
+        )}
+        <div className="flex gap-2">
+          <label className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 cursor-pointer transition-colors flex-shrink-0">
+            <Upload size={12} />
+            Upload Video
+            <input
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) onFilePick(f); e.target.value = ''; }}
+            />
+          </label>
+          <input
+            type="text"
+            value={previewUrl.startsWith('blob:') ? '' : previewUrl}
+            onChange={e => onUrlChange(e.target.value)}
+            placeholder="or paste video URL…"
+            className="flex-1 px-2.5 py-2 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-amber-400 min-w-0"
+          />
+          {previewUrl && (
+            <button
+              type="button"
+              onClick={() => onUrlChange('')}
+              className="px-3 py-2 rounded-lg border border-gray-200 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        <p className="text-[10px] text-gray-400">MP4, WebM, MOV — shown as autoplay loop on the style detail page</p>
+      </div>
+    </div>
+  );
+}
+
 // ─── Style Form Panel ─────────────────────────────────────────────────────────
 
 function StyleFormPanel({
@@ -109,7 +164,7 @@ function StyleFormPanel({
   saving: boolean;
   onSave: (
     data: Omit<DanceStyle, 'id'> & { id?: string },
-    files: { heroFile: File | null; cardFile: File | null },
+    files: { heroFile: File | null; cardFile: File | null; videoFile: File | null },
   ) => Promise<void>;
   onClose: () => void;
 }) {
@@ -120,8 +175,10 @@ function StyleFormPanel({
 
   const [heroFile, setHeroFile]         = useState<File | null>(null);
   const [cardFile, setCardFile]         = useState<File | null>(null);
+  const [videoFile, setVideoFile]       = useState<File | null>(null);
   const [heroPreview, setHeroPreview]   = useState(style?.heroImage ?? '');
   const [cardPreview, setCardPreview]   = useState(style?.cardImage ?? '');
+  const [videoPreview, setVideoPreview] = useState(style?.videoUrl ?? '');
 
   function set<K extends keyof typeof form>(key: K, val: (typeof form)[K]) {
     setForm(prev => {
@@ -143,7 +200,7 @@ function StyleFormPanel({
 
   async function handleSubmit() {
     if (!validate()) return;
-    await onSave(form, { heroFile, cardFile });
+    await onSave(form, { heroFile, cardFile, videoFile });
   }
 
   return (
@@ -246,10 +303,15 @@ function StyleFormPanel({
             onUrlChange={url => { set('cardImage', url); setCardPreview(url); setCardFile(null); }}
           />
           <ImageUploader
-            label="Hero Image (detail page)"
+            label="Hero Image (detail page fallback)"
             previewUrl={heroPreview}
             onFilePick={f => { setHeroFile(f); setHeroPreview(URL.createObjectURL(f)); }}
             onUrlChange={url => { set('heroImage', url); setHeroPreview(url); setHeroFile(null); }}
+          />
+          <VideoUploader
+            previewUrl={videoPreview}
+            onFilePick={f => { setVideoFile(f); setVideoPreview(URL.createObjectURL(f)); }}
+            onUrlChange={url => { set('videoUrl', url); setVideoPreview(url); setVideoFile(null); }}
           />
 
           {/* Toggles */}
@@ -389,11 +451,11 @@ export function StylesAdminPage() {
 
   async function handleSave(
     data: Omit<DanceStyle, 'id'> & { id?: string },
-    files: { heroFile: File | null; cardFile: File | null },
+    files: { heroFile: File | null; cardFile: File | null; videoFile: File | null },
   ) {
     setSaving(true);
     try {
-      await saveStyle(data, { heroFile: files.heroFile, cardFile: files.cardFile });
+      await saveStyle(data, { heroFile: files.heroFile, cardFile: files.cardFile, videoFile: files.videoFile });
       await refresh();
       closePanel();
     } catch (err) {

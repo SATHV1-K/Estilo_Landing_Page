@@ -14,6 +14,7 @@ function rowToStyle(row: Record<string, unknown>): DanceStyle {
     descriptionEs: (row.description_es as string) ?? '',
     heroImage:     (row.hero_image    as string) ?? '',
     cardImage:     (row.card_image    as string) ?? '',
+    videoUrl:      (row.video_url     as string) ?? '',
     ageGroup:      (row.age_group     as DanceStyle['ageGroup']) ?? 'all',
     sortOrder:     (row.sort_order    as number)  ?? 0,
     isActive:      (row.is_active     as boolean) ?? true,
@@ -42,10 +43,11 @@ export async function getActiveStyles(): Promise<DanceStyle[]> {
 
 export async function saveStyle(
   data: Omit<DanceStyle, 'id'> & { id?: string },
-  files?: { heroFile?: File | null; cardFile?: File | null },
+  files?: { heroFile?: File | null; cardFile?: File | null; videoFile?: File | null },
 ): Promise<DanceStyle> {
   let heroImage = data.heroImage;
   let cardImage = data.cardImage;
+  let videoUrl  = data.videoUrl;
 
   if (files?.heroFile) {
     const ext  = files.heroFile.name.split('.').pop() ?? 'jpg';
@@ -56,6 +58,11 @@ export async function saveStyle(
     const ext  = files.cardFile.name.split('.').pop() ?? 'jpg';
     const path = `styles/${genId()}-card.${ext}`;
     cardImage  = await uploadFile('media', path, files.cardFile, files.cardFile.type);
+  }
+  if (files?.videoFile) {
+    const ext  = files.videoFile.name.split('.').pop() ?? 'mp4';
+    const path = `styles/${genId()}-video.${ext}`;
+    videoUrl   = await uploadFile('media', path, files.videoFile, files.videoFile.type);
   }
 
   const id    = data.id ?? genId();
@@ -72,6 +79,7 @@ export async function saveStyle(
     description_es: data.descriptionEs,
     hero_image:     heroImage,
     card_image:     cardImage,
+    video_url:      videoUrl,
     age_group:      data.ageGroup,
     sort_order:     data.sortOrder,
     is_active:      data.isActive,
