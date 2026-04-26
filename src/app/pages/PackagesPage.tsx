@@ -1,21 +1,32 @@
 // PackagesPage - Pricing packages
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { ExternalLink, Phone } from 'lucide-react';
 import { useI18n } from '../../lib/i18n';
-import { getPackages, getSiteSettings, getContent } from '../../lib/adminData';
+import { getPackages } from '../../lib/packagesService';
+import { getSiteSettings } from '../../lib/settingsService';
+import { useCmsContent } from '../../lib/hooks/useCmsContent';
 import { staggerContainer, fadeInUp } from '../../lib/animations';
+import type { Package } from '../../lib/types';
+import type { AdminSiteSettings } from '../../lib/adminData';
 
 const PUNCHCARD_DEFAULT = 'All class cards are valid only for adult Salsa & Bachata classes.';
-
-const packages     = getPackages();
-const siteSettings = getSiteSettings();
+const FALLBACK_PHONE    = '+1 (201) 878-8977';
 
 export function PackagesPage() {
   const { language } = useI18n();
   const [selectedCategory, setSelectedCategory] = useState<string>('adults-salsa-bachata');
+  const [packages, setPackages]         = useState<Package[]>([]);
+  const [siteSettings, setSiteSettings] = useState<AdminSiteSettings | null>(null);
+
+  useEffect(() => {
+    getPackages().then(setPackages).catch(console.error);
+    getSiteSettings().then(setSiteSettings).catch(console.error);
+  }, []);
+
+  const cms = useCmsContent({ 'packages.punchcard.notice': PUNCHCARD_DEFAULT });
 
   const categories = [
     { id: 'adults-salsa-bachata', label: language === 'es' ? 'Salsa y Bachata' : 'Salsa & Bachata' },
@@ -124,7 +135,7 @@ export function PackagesPage() {
                 </a>
               ) : (
                 <a
-                  href={`tel:${siteSettings.phone.replace(/\D/g, '')}`}
+                  href={`tel:${(siteSettings?.phone ?? FALLBACK_PHONE).replace(/\D/g, '')}`}
                   className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gold hover:bg-gold-hover text-ink font-bold uppercase tracking-wider rounded-lg transition-all group-hover:-translate-y-1"
                 >
                   <Phone size={16} />
@@ -148,7 +159,7 @@ export function PackagesPage() {
                 ? 'Todos los paquetes de esta categoría son personalizados. Contáctanos para obtener un presupuesto.'
                 : 'All packages in this category are custom. Contact us to get a quote.'}
             </p>
-            <p className="text-gold font-semibold">{siteSettings.phone}</p>
+            <p className="text-gold font-semibold">{siteSettings?.phone ?? FALLBACK_PHONE}</p>
             <Link
               to="/contact"
               className="mt-4 inline-block text-sm text-text-muted hover:text-gold underline underline-offset-4 transition-colors"
@@ -167,7 +178,7 @@ export function PackagesPage() {
             className="mt-12 p-6 bg-gold/10 rounded-lg text-center"
           >
             <p className="text-text-muted">
-              {getContent('packages.punchcard.notice', PUNCHCARD_DEFAULT)}
+              {cms['packages.punchcard.notice']}
             </p>
           </motion.div>
         )}

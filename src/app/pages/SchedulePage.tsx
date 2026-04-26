@@ -16,7 +16,7 @@ import {
   formatPriceCents,
   formatTimeOnly,
 } from '../../lib/specialClasses';
-import { getRecurringEntries, getOverviewEntries } from '../../lib/adminData';
+import { getRecurringEntries, getOverviewEntries } from '../../lib/scheduleService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -708,40 +708,9 @@ export function SchedulePage() {
   const [specialClasses, setSpecialClasses] = useState<SpecialClass[]>([]);
   const [reserveTarget, setReserveTarget]   = useState<SpecialClass | null>(null);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-  // Lazy initializer: reads from localStorage on first render so the overview
-  // grid is always correct on the very first paint (no fallback-data flash).
-  const [weeklyPattern, setWeeklyPattern] = useState<WeeklyClass[]>(() => {
-    const entries = getRecurringEntries().filter((e) => e.isActive);
-    if (entries.length > 0) {
-      return entries.map((e) => ({
-        dayOfWeek: DAY_NAME_TO_NUM[e.dayOfWeek] ?? 0,
-        time:      to12h(e.startTime),
-        name:      e.className,
-        detail:    e.detail,
-        category:  e.category as Category,
-        isPrivate: e.className.toLowerCase().includes('private'),
-      }));
-    }
-    return FALLBACK_WEEKLY_PATTERN;
-  });
+  const [weeklyPattern, setWeeklyPattern]   = useState<WeeklyClass[]>(FALLBACK_WEEKLY_PATTERN);
+  const [overviewPattern, setOverviewPattern] = useState<WeeklyClass[]>(FALLBACK_WEEKLY_PATTERN);
 
-  // Overview grid uses its own independent data store
-  const [overviewPattern] = useState<WeeklyClass[]>(() => {
-    const entries = getOverviewEntries().filter((e) => e.isActive);
-    if (entries.length > 0) {
-      return entries.map((e) => ({
-        dayOfWeek: DAY_NAME_TO_NUM[e.dayOfWeek] ?? 0,
-        time:      to12h(e.startTime),
-        name:      e.className,
-        detail:    e.detail,
-        category:  e.category as Category,
-        isPrivate: e.className.toLowerCase().includes('private'),
-      }));
-    }
-    return FALLBACK_WEEKLY_PATTERN;
-  });
-
-  // Load special classes and recurring schedule from localStorage
   const loadSpecialClasses = useCallback(() => {
     setSpecialClasses(getUpcomingActiveSpecialClasses());
   }, []);
@@ -749,6 +718,28 @@ export function SchedulePage() {
   useEffect(() => {
     loadSpecialClasses();
     document.title = 'Class Schedule | Estilo Latino Dance Company';
+
+    const toWeekly = (entries: { dayOfWeek: string; startTime: string; className: string; detail: string; category: string; isActive: boolean }[]): WeeklyClass[] =>
+      entries
+        .filter((e) => e.isActive)
+        .map((e) => ({
+          dayOfWeek: DAY_NAME_TO_NUM[e.dayOfWeek] ?? 0,
+          time:      to12h(e.startTime),
+          name:      e.className,
+          detail:    e.detail,
+          category:  e.category as Category,
+          isPrivate: e.className.toLowerCase().includes('private'),
+        }));
+
+    getRecurringEntries().then((entries) => {
+      const weekly = toWeekly(entries);
+      if (weekly.length > 0) setWeeklyPattern(weekly);
+    }).catch(console.error);
+
+    getOverviewEntries().then((entries) => {
+      const weekly = toWeekly(entries);
+      if (weekly.length > 0) setOverviewPattern(weekly);
+    }).catch(console.error);
   }, [loadSpecialClasses]);
 
   // Check for ?reserved=success query param

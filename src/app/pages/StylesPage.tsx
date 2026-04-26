@@ -1,17 +1,22 @@
 // StylesPage — reads dance styles from adminData (localStorage) with seed
 // data as fallback, so admin changes are reflected immediately.
 
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useI18n, translations } from '../../lib/i18n';
-import { getStyles } from '../../lib/adminData';
+import { getActiveStyles } from '../../lib/stylesService';
 import { useCmsContent } from '../../lib/hooks/useCmsContent';
 import { StyleCard } from '../components/ui/StyleCard';
 import { staggerContainer } from '../../lib/animations';
+import type { DanceStyle } from '../../lib/types';
 
 export function StylesPage() {
   const { language } = useI18n();
+  const [styles, setStyles] = useState<DanceStyle[]>([]);
 
-  const styles = getStyles().filter((s) => s.isActive);
+  useEffect(() => {
+    getActiveStyles().then(setStyles).catch(console.error);
+  }, []);
 
   const cms = useCmsContent({
     'styles.heading':      'DANCE STYLES',

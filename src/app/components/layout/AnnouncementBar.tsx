@@ -3,17 +3,20 @@
 
 import { Link } from 'react-router';
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useI18n } from '../../../lib/i18n';
-import { getActiveAlerts } from '../../../lib/adminData';
+import type { Alert } from '../../../lib/adminData';
+import { getActiveAlerts } from '../../../lib/alertsService';
 
 export function AnnouncementBar() {
   const [dismissed, setDismissed] = useState(false);
+  const [alert, setAlert] = useState<Alert | null>(null);
   const { language } = useI18n();
 
-  const alerts = getActiveAlerts();
-  const alert  = alerts[0];
+  useEffect(() => {
+    getActiveAlerts().then((alerts) => setAlert(alerts[0] ?? null)).catch(console.error);
+  }, []);
 
   if (!alert || dismissed) return null;
 

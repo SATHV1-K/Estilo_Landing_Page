@@ -6,7 +6,8 @@ import { useEffect, useState } from 'react';
 import { X, Info, AlertTriangle, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Link } from 'react-router';
-import { getActiveAlerts, type Alert } from '../../../lib/adminData';
+import type { Alert } from '../../../lib/adminData';
+import { getActiveAlerts } from '../../../lib/alertsService';
 import { useI18n } from '../../../lib/i18n';
 
 function typeConfig(type: Alert['type']): { Icon: React.ElementType; iconClass: string } {
@@ -23,15 +24,14 @@ export function AlertPopup() {
   const { language } = useI18n();
 
   useEffect(() => {
-    const alerts = getActiveAlerts();
-    const active  = alerts[0];
-    if (!active) return;
-
-    const key = `alertDismissed_${active.id}`;
-    if (sessionStorage.getItem(key)) return;
-
-    setAlert(active);
-    setVisible(true);
+    getActiveAlerts().then((alerts) => {
+      const active = alerts[0];
+      if (!active) return;
+      const key = `alertDismissed_${active.id}`;
+      if (sessionStorage.getItem(key)) return;
+      setAlert(active);
+      setVisible(true);
+    }).catch(console.error);
   }, []);
 
   function dismiss() {

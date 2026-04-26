@@ -2,9 +2,11 @@
 // Seed data includes all 15 real Google reviews so the carousel is
 // populated from the moment the page loads.
 
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { fadeInUp } from '../../../lib/animations';
-import { getReviews, type Review } from '../../../lib/adminData';
+import type { Review } from '../../../lib/adminData';
+import { getActiveReviews } from '../../../lib/reviewsService';
 
 function StarRating({ stars }: { stars: number }) {
   return (
@@ -54,7 +56,12 @@ function ReviewCard({ review }: { review: Review }) {
 }
 
 export function TestimonialsCarousel() {
-  const reviews = getReviews().filter((r) => r.isActive);
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  useEffect(() => {
+    getActiveReviews().then(setReviews).catch(console.error);
+  }, []);
+
   const doubled = [...reviews, ...reviews];
 
   return (

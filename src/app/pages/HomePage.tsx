@@ -1,6 +1,4 @@
-// HomePage — reads structured data from adminData (localStorage) and text
-// content from the CMS API, with hardcoded fallbacks for both.
-
+import { useState, useEffect } from 'react';
 import { HeroDiagonal } from '../components/sections/HeroDiagonal';
 import { MarqueeTicker } from '../components/sections/MarqueeTicker';
 import { StylesGrid } from '../components/sections/StylesGrid';
@@ -8,16 +6,21 @@ import { InstructorGrid } from '../components/sections/InstructorGrid';
 import { CTABanner } from '../components/sections/CTABanner';
 import { TestimonialsCarousel } from '../components/sections/TestimonialsCarousel';
 import { FeaturedVideosSection } from '../components/sections/FeaturedVideosSection';
-import { getStyles, getInstructors } from '../../lib/adminData';
+import { getActiveStyles } from '../../lib/stylesService';
+import { getActiveInstructors } from '../../lib/instructorsService';
 import { useCmsContent } from '../../lib/hooks/useCmsContent';
 import { useI18n } from '../../lib/i18n';
+import type { DanceStyle, Instructor } from '../../lib/types';
 
 export function HomePage() {
   const { language } = useI18n();
+  const [styles, setStyles]           = useState<DanceStyle[]>([]);
+  const [instructors, setInstructors] = useState<Instructor[]>([]);
 
-  // Structured data — synchronous, falls back to seed data automatically
-  const styles      = getStyles().filter((s) => s.isActive);
-  const instructors = getInstructors().filter((i) => i.isActive);
+  useEffect(() => {
+    getActiveStyles().then(setStyles).catch(console.error);
+    getActiveInstructors().then(setInstructors).catch(console.error);
+  }, []);
 
   // Text content — async, renders with fallbacks immediately
   const cms = useCmsContent({

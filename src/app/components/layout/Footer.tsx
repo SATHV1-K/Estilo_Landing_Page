@@ -1,18 +1,48 @@
 // Footer Component - 3-column layout
 
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { Facebook, Instagram, Youtube, Music } from 'lucide-react';
 import { useI18n, translations } from '../../../lib/i18n';
-import { getSiteSettings } from '../../../lib/adminData';
+import { getSiteSettings } from '../../../lib/settingsService';
 import { fadeInUp, staggerContainer } from '../../../lib/animations';
-
-const siteSettings = getSiteSettings();
 import { useScrollReveal } from '../../../lib/hooks/useScrollReveal';
+import type { AdminSiteSettings } from '../../../lib/adminData';
+
+const DEFAULT_SETTINGS: AdminSiteSettings = {
+  studioName:      'Estilo Latino Dance Company',
+  studioNameShort: 'Estilo Latino',
+  tagline:         'Dance Academy',
+  address:         '345 Morris Ave Ste 1B',
+  addressLine2:    '',
+  city:            'Elizabeth',
+  state:           'NJ',
+  zip:             '07208',
+  phone:           '+1 (201) 878-8977',
+  whatsapp:        '+12018788977',
+  email:           'info@EstiloLatinoDance.com',
+  googleMapsEmbed: '',
+  socialLinks: [
+    { platform: 'Facebook',  url: 'https://facebook.com/EstiloLatinoDC',      label: 'EstiloLatinoDC' },
+    { platform: 'Instagram', url: 'https://instagram.com/estilo.latino',        label: '@estilo.latino' },
+    { platform: 'TikTok',   url: 'https://tiktok.com/@estilolatino',           label: '@estilolatino' },
+    { platform: 'YouTube',  url: 'https://youtube.com/@estilolatino',          label: 'Estilo Latino' },
+  ],
+  businessHours:   [],
+  metaTitle:       '',
+  metaDescription: '',
+  footerText:      '',
+};
 
 export function Footer() {
   const { t, language } = useI18n();
   const { ref, isInView } = useScrollReveal({ amount: 0.2 });
+  const [siteSettings, setSiteSettings] = useState<AdminSiteSettings>(DEFAULT_SETTINGS);
+
+  useEffect(() => {
+    getSiteSettings().then((s) => { if (s) setSiteSettings(s); }).catch(console.error);
+  }, []);
 
   const currentYear = new Date().getFullYear();
 

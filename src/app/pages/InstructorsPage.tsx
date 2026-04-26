@@ -1,16 +1,21 @@
 // InstructorsPage — reads instructors from adminData (localStorage) with seed
 // data as fallback, and section headings from the CMS API.
 
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useI18n } from '../../lib/i18n';
-import { getInstructors } from '../../lib/adminData';
+import { getActiveInstructors } from '../../lib/instructorsService';
 import { useCmsContent } from '../../lib/hooks/useCmsContent';
 import { InstructorGrid } from '../components/sections/InstructorGrid';
+import type { Instructor } from '../../lib/types';
 
 export function InstructorsPage() {
   const { language } = useI18n();
+  const [instructors, setInstructors] = useState<Instructor[]>([]);
 
-  const instructors = getInstructors().filter((i) => i.isActive);
+  useEffect(() => {
+    getActiveInstructors().then(setInstructors).catch(console.error);
+  }, []);
 
   const cms = useCmsContent({
     'instructors.heading':      'OUR INSTRUCTORS',
