@@ -5,6 +5,7 @@ import { useI18n } from '../../lib/i18n';
 import { siteSettings } from '../../lib/data';
 import { fadeInUp } from '../../lib/animations';
 import { saveContactMessage } from '../../lib/contactService';
+import { sendContactNotification } from '../../lib/emailService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -88,7 +89,10 @@ export function ContactPage() {
 
     setStatus('loading');
     try {
-      await saveContactMessage(form);
+      await Promise.all([
+        saveContactMessage(form),
+        sendContactNotification(form),
+      ]);
       setStatus('success');
       setForm(EMPTY_FORM);
       setTouched({});
