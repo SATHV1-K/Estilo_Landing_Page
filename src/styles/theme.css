@@ -19,6 +19,18 @@
   --black:           #000000;
   --photo-blue:      #B8D4E3;
   --success:         #22C55E;
+
+  /* ─── Kids Theme ─── */
+  --kids-bg:         #4A6FA5;
+  --kids-bg-light:   #5B80B5;
+  --kids-cream:      #FFF8E7;
+  --kids-yellow:     #F6B000;
+  --kids-pink:       #E8637A;
+  --kids-pink-light: #F5A0B0;
+  --kids-green:      #7CB97A;
+  --kids-text:       #2D3D6B;
+  --kids-text-light: #FFFFFF;
+  --kids-text-muted: #7A8BBF;
   --error:           #EF4444;
   --warning:         #F59E0B;
   --info:            #3B82F6;
@@ -88,6 +100,17 @@
   --color-black:           var(--black);
   --color-photo-blue:      var(--photo-blue);
   --color-success:         var(--success);
+  /* kids */
+  --color-kids-bg:         var(--kids-bg);
+  --color-kids-bg-light:   var(--kids-bg-light);
+  --color-kids-cream:      var(--kids-cream);
+  --color-kids-yellow:     var(--kids-yellow);
+  --color-kids-pink:       var(--kids-pink);
+  --color-kids-pink-light: var(--kids-pink-light);
+  --color-kids-green:      var(--kids-green);
+  --color-kids-text:       var(--kids-text);
+  --color-kids-text-light: var(--kids-text-light);
+  --color-kids-text-muted: var(--kids-text-muted);
   --color-error:           var(--error);
   --color-warning:         var(--warning);
   --color-info:            var(--info);
@@ -221,6 +244,31 @@
 
 @utility animate-scroll-testimonials {
   animation: scroll-testimonials 60s linear infinite;
+}
+
+/* ─── Kids Animations ─── */
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33%       { transform: translateY(-12px) rotate(3deg); }
+  66%       { transform: translateY(-6px) rotate(-2deg); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  40%       { transform: translateY(-10px) rotate(-3deg); }
+  70%       { transform: translateY(-4px) rotate(2deg); }
+}
+
+@utility animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@utility animate-float-slow {
+  animation: float 6s ease-in-out infinite;
+}
+
+@utility animate-float-delayed {
+  animation: float-delayed 5s ease-in-out infinite;
 }
 
 /* Reduced-motion: stop carousel, show static grid */

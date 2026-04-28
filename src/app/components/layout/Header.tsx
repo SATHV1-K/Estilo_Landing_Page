@@ -25,6 +25,8 @@ export function Header() {
     { path: '/contact', label: translations.nav.contact[language] },
   ];
 
+  const isKidsActive = location.pathname.startsWith('/kids');
+
   return (
     <motion.header
       variants={fadeInDown}
@@ -60,6 +62,14 @@ export function Header() {
                 {item.label}
               </NavPill>
             ))}
+            <Link
+              to="/kids"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
+                isKidsActive ? 'bg-[#4A6FA5] text-white' : 'text-[#F6B000] border border-[#F6B000]/40 hover:bg-[#F6B000]/10'
+              }`}
+            >
+              🐝 Kids
+            </Link>
           </nav>
 
           {/* Language Toggle & Mobile Menu */}
@@ -99,6 +109,15 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                to="/kids"
+                className={`px-4 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-colors flex items-center gap-2 ${
+                  isKidsActive ? 'bg-[#4A6FA5] text-white' : 'bg-surface text-[#F6B000] hover:bg-surface-elevated'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                🐝 Estilo Kids
+              </Link>
             </div>
           </motion.nav>
         )}

@@ -8,6 +8,7 @@ import {
   LayoutDashboard, Sparkles, FileText, Image, Users,
   Layers, Calendar, Star, LogOut, Menu, X, ChevronRight,
   Package, Settings, Bell, Film, Images, MessageSquare,
+  BookOpen, Trophy, GalleryHorizontal,
 } from 'lucide-react';
 import { isAdminLoggedIn, adminLogin, adminLogout } from '../../../lib/specialClasses';
 
@@ -37,7 +38,14 @@ const NAV_ITEMS = [
   { to: '/admin/alerts',          label: 'Alerts',          icon: Bell },
   { to: '/admin/messages',        label: 'Messages',        icon: MessageSquare },
   { to: '/admin/settings',        label: 'Settings',        icon: Settings },
-] as const;
+];
+
+const KIDS_NAV_ITEMS = [
+  { to: '/admin/kids/content',      label: 'Content',      icon: BookOpen },
+  { to: '/admin/kids/programs',     label: 'Programs',     icon: Layers },
+  { to: '/admin/kids/gallery',      label: 'Gallery',      icon: GalleryHorizontal },
+  { to: '/admin/kids/achievements', label: 'Achievements', icon: Trophy },
+];
 
 // ─── Login Screen ─────────────────────────────────────────────────────────────
 
@@ -145,7 +153,7 @@ function Sidebar({
                   'flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors mb-0.5',
                   isActive
                     ? 'border-l-2 border-[#F6B000] bg-[#F6B000]/10 text-[#F6B000] rounded-r-lg'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5 rounded-lg',
+                    : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg',
                 ].join(' ')
               }
             >
@@ -175,6 +183,36 @@ function Sidebar({
             </NavLink>
           );
         })}
+
+        {/* Kids section */}
+        <div className="mt-3 mb-1 px-3 pt-3 border-t border-gray-100">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+            <span>🐝</span> Estilo Kids
+          </p>
+        </div>
+        {KIDS_NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onClose}
+            className={({ isActive }) =>
+              [
+                'flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors mb-0.5',
+                isActive
+                  ? 'border-l-2 border-[#4A6FA5] bg-[#4A6FA5]/10 text-[#4A6FA5] rounded-r-lg'
+                  : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg',
+              ].join(' ')
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Icon size={17} className={isActive ? '' : 'text-gray-500'} style={isActive ? { color: '#4A6FA5' } : {}} />
+                <span className="flex-1">{label}</span>
+                {isActive && <ChevronRight size={14} style={{ color: '#4A6FA5' }} />}
+              </>
+            )}
+          </NavLink>
+        ))}
       </nav>
 
       {/* Footer */}

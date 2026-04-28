@@ -98,3 +98,51 @@ export interface SiteSettings {
 }
 
 export type Language = "en" | "es";
+
+// ─── Kids Mini-Site ────────────────────────────────────────────────────────────
+
+export interface KidsProgram {
+  id: string;
+  name: string;
+  nameEs: string;
+  description: string;
+  descriptionEs: string;
+  ageRange: string;
+  imageUrl: string;
+  scheduleNote: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type KidsGalleryCategory = 'performance' | 'class' | 'event' | 'general';
+
+export interface KidsGalleryItem {
+  id: string;
+  title: string;
+  titleEs: string;
+  type: 'photo' | 'video';
+  url: string;
+  thumbnailUrl: string;
+  youtubeId: string;
+  category: KidsGalleryCategory;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KidsAchievement {
+  id: string;
+  title: string;
+  titleEs: string;
+  description: string;
+  descriptionEs: string;
+  imageUrl: string;
+  date: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
