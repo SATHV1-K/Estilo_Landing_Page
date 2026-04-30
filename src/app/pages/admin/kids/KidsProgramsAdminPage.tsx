@@ -18,7 +18,7 @@ const S = {
 
 const BLANK: Omit<KidsProgram, 'id' | 'createdAt' | 'updatedAt'> = {
   name: '', nameEs: '', description: '', descriptionEs: '',
-  ageRange: '5+', imageUrl: '', scheduleNote: '', sortOrder: 0, isActive: true,
+  ageRange: '5+', imageUrl: '', scheduleNote: '', enrollLink: '', sortOrder: 0, isActive: true,
 };
 
 // ─── Form ─────────────────────────────────────────────────────────────────────
@@ -100,6 +100,17 @@ function ProgramForm({
         <div>
           <label className={S.label}>Schedule Note</label>
           <input value={form.scheduleNote} onChange={e => set('scheduleNote', e.target.value)} className={S.input} placeholder="Mon & Wed 6–7 PM" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className={S.label}>Enroll Link (Square / Payment URL)</label>
+          <input
+            value={form.enrollLink}
+            onChange={e => set('enrollLink', e.target.value)}
+            className={S.input}
+            placeholder="https://square.link/u/..."
+            type="url"
+          />
+          <p className="text-xs text-gray-400 mt-1">Paste your Square payment link here. Families will be sent to this URL when they click "Enroll Now".</p>
         </div>
         <div className="sm:col-span-2">
           <label className={S.label}>Description (EN)</label>

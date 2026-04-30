@@ -108,6 +108,17 @@ DO $$ BEGIN
   END IF;
 END $$;
 
+-- ─── Add enroll_link column (safe to re-run) ──────────────────────────────────
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'kids_programs' AND column_name = 'enroll_link'
+  ) THEN
+    ALTER TABLE kids_programs ADD COLUMN enroll_link text NOT NULL DEFAULT '';
+  END IF;
+END $$;
+
 -- ─── Seed Data ────────────────────────────────────────────────────────────────
 
 INSERT INTO kids_programs (id, name, name_es, description, description_es, age_range, schedule_note, sort_order, is_active) VALUES

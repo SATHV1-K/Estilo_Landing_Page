@@ -110,6 +110,7 @@ export interface KidsProgram {
   ageRange: string;
   imageUrl: string;
   scheduleNote: string;
+  enrollLink: string;
   sortOrder: number;
   isActive: boolean;
   createdAt: string;

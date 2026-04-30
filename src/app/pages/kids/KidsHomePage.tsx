@@ -133,7 +133,7 @@ export function KidsHomePage() {
       </section>
 
       {/* ── Programs ─────────────────────────────────────────── */}
-      <section className="relative overflow-hidden py-20" style={{ backgroundColor: '#FFF8E7' }}>
+      <section className="relative overflow-hidden py-28" style={{ backgroundColor: '#FFF8E7' }}>
         <KidsDoodles variant="cream" />
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 lg:px-8">
@@ -142,13 +142,13 @@ export function KidsHomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={SPRING}
-            className="font-display uppercase text-center mb-12"
-            style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: '#2D3D6B' }}
+            className="font-display uppercase text-center mb-14"
+            style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', color: '#2D3D6B' }}
           >
             {cms['kids.programs.heading']}
           </motion.h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {programs.map((prog, i) => (
               <motion.div
                 key={prog.id}
@@ -156,48 +156,62 @@ export function KidsHomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ ...SPRING, delay: i * 0.1 }}
-                whileHover={{ y: -8, transition: { duration: 0.25 } }}
-                className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow cursor-pointer"
+                whileHover={{ y: -10, transition: { duration: 0.25 } }}
+                className="rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow"
                 style={{ backgroundColor: '#FFFFFF' }}
               >
-                {prog.imageUrl ? (
-                  <img
-                    src={prog.imageUrl}
-                    alt={prog.name}
-                    className="w-full h-44 object-cover"
-                  />
-                ) : (
-                  <div
-                    className="w-full h-44 flex items-center justify-center text-5xl"
-                    style={{ backgroundColor: '#4A6FA5' }}
-                  >
-                    🎵
-                  </div>
-                )}
-                <div className="p-4">
-                  <h3 className="font-body font-bold text-base mb-1 leading-snug" style={{ color: '#2D3D6B' }}>
-                    {prog.name}
-                  </h3>
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#7A8BBF' }}>
-                    Ages {prog.ageRange}
-                  </p>
-                  {prog.scheduleNote && (
-                    <p className="text-xs" style={{ color: '#7A8BBF' }}>{prog.scheduleNote}</p>
+                <Link to={`/kids/programs/${prog.id}`} className="block group">
+                  {prog.imageUrl ? (
+                    <div className="overflow-hidden" style={{ height: 220 }}>
+                      <img
+                        src={prog.imageUrl}
+                        alt={prog.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="w-full flex items-center justify-center text-6xl"
+                      style={{ backgroundColor: '#4A6FA5', height: 220 }}
+                    >
+                      🎵
+                    </div>
                   )}
-                </div>
+                  <div className="p-6">
+                    <span
+                      className="inline-block rounded-full px-3 py-1 font-body font-bold uppercase text-xs tracking-wider mb-3"
+                      style={{ backgroundColor: 'rgba(240,191,113,0.18)', color: '#c99a00' }}
+                    >
+                      Ages {prog.ageRange}
+                    </span>
+                    <h3 className="font-body font-bold text-lg mb-2 leading-snug" style={{ color: '#2D3D6B' }}>
+                      {prog.name}
+                    </h3>
+                    {prog.scheduleNote && (
+                      <p className="text-sm mb-4" style={{ color: '#7A8BBF' }}>{prog.scheduleNote}</p>
+                    )}
+                    <span
+                      className="inline-flex items-center gap-1 font-body font-semibold text-sm transition-colors group-hover:underline"
+                      style={{ color: '#4A6FA5' }}
+                    >
+                      Learn more →
+                    </span>
+                  </div>
+                </Link>
               </motion.div>
             ))}
 
-            {programs.length === 0 && Array.from({ length: 4 }).map((_, i) => (
+            {programs.length === 0 && Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-2xl overflow-hidden shadow-md animate-pulse"
+                className="rounded-3xl overflow-hidden shadow-md animate-pulse"
                 style={{ backgroundColor: '#FFFFFF' }}
               >
-                <div className="w-full h-44" style={{ backgroundColor: '#E2E8F0' }} />
-                <div className="p-4">
-                  <div className="h-4 rounded mb-2" style={{ backgroundColor: '#E2E8F0' }} />
-                  <div className="h-3 w-16 rounded" style={{ backgroundColor: '#E2E8F0' }} />
+                <div className="w-full" style={{ height: 220, backgroundColor: '#E2E8F0' }} />
+                <div className="p-6">
+                  <div className="h-3 w-20 rounded mb-3" style={{ backgroundColor: '#E2E8F0' }} />
+                  <div className="h-5 rounded mb-2" style={{ backgroundColor: '#E2E8F0' }} />
+                  <div className="h-3 w-24 rounded" style={{ backgroundColor: '#E2E8F0' }} />
                 </div>
               </div>
             ))}
