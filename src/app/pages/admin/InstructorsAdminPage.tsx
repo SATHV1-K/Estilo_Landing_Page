@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Plus, Pencil, Trash2, GripVertical, X, Check,
-  Upload, User, Link as LinkIcon, ChevronDown, ChevronUp, Loader2,
+  Upload, User, Link as LinkIcon, ChevronDown, ChevronUp, Loader2, Video, Play,
 } from 'lucide-react';
 import {
   getInstructors, saveInstructor, deleteInstructor, reorderInstructors,
@@ -38,6 +38,7 @@ function emptyInstructor(): Omit<Instructor, 'id'> {
     bio: '',
     bioEs: '',
     photo: '',
+    videoUrl: '',
     socialLinks: [],
     sortOrder: 999,
     isActive: true,
@@ -96,6 +97,88 @@ function PhotoUploader({
           placeholder="or paste image URL…"
           className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-amber-400 w-48"
         />
+      </div>
+    </div>
+  );
+}
+
+// ─── Video Uploader ───────────────────────────────────────────────────────────
+
+function VideoUploader({
+  previewUrl,
+  pendingFile,
+  onFilePick,
+  onClear,
+}: {
+  previewUrl: string;
+  pendingFile: File | null;
+  onFilePick: (file: File) => void;
+  onClear: () => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const hasVideo = !!previewUrl;
+
+  return (
+    <div className="space-y-3">
+      {/* Preview or empty state */}
+      {hasVideo ? (
+        <div className="relative rounded-lg overflow-hidden bg-black border border-gray-200" style={{ height: 100 }}>
+          <video
+            src={previewUrl}
+            muted
+            playsInline
+            className="w-full h-full object-cover opacity-70"
+          />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <Play size={22} className="text-white drop-shadow" />
+          </div>
+          <button
+            type="button"
+            onClick={onClear}
+            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+            title="Remove video"
+          >
+            <X size={12} />
+          </button>
+          {pendingFile && (
+            <span className="absolute bottom-2 left-2 text-[10px] text-white bg-black/60 rounded px-1.5 py-0.5 max-w-[90%] truncate">
+              {pendingFile.name}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div
+          className="rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-300 transition-colors"
+          style={{ height: 80 }}
+          onClick={() => ref.current?.click()}
+        >
+          <Video size={20} className="text-gray-300" />
+          <p className="text-xs text-gray-400">No video — click to upload</p>
+        </div>
+      )}
+
+      {/* Buttons */}
+      <div className="flex items-center gap-3">
+        <input
+          ref={ref}
+          type="file"
+          accept="video/*"
+          className="hidden"
+          onChange={e => {
+            const f = e.target.files?.[0];
+            if (f) onFilePick(f);
+            e.target.value = '';
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          <Upload size={13} />
+          {hasVideo ? 'Replace Video' : 'Choose Video'}
+        </button>
+        <p className="text-[11px] text-gray-400">MP4 or WebM recommended</p>
       </div>
     </div>
   );
@@ -166,7 +249,7 @@ function SocialLinksEditor({
 interface FormPanelProps {
   instructor: Instructor | null;
   saving: boolean;
-  onSave: (data: Omit<Instructor, 'id'> & { id?: string }, photoFile: File | null) => Promise<void>;
+  onSave: (data: Omit<Instructor, 'id'> & { id?: string }, photoFile: File | null, videoFile: File | null) => Promise<void>;
   onClose: () => void;
 }
 
@@ -177,6 +260,8 @@ function InstructorFormPanel({ instructor, saving, onSave, onClose }: FormPanelP
   const [errors, setErrors]       = useState<Record<string, string>>({});
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl]     = useState(instructor?.photo ?? '');
+  const [pendingVideo, setPendingVideo] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(instructor?.videoUrl ?? '');
 
   function set<K extends keyof typeof form>(key: K, val: (typeof form)[K]) {
     setForm(prev => ({ ...prev, [key]: val }));
@@ -195,6 +280,19 @@ function InstructorFormPanel({ instructor, saving, onSave, onClose }: FormPanelP
     setPendingPhoto(null);
   }
 
+  function handleVideoFilePick(file: File) {
+    if (videoPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(videoPreviewUrl);
+    setPendingVideo(file);
+    setVideoPreviewUrl(URL.createObjectURL(file));
+  }
+
+  function handleVideoClear() {
+    if (videoPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(videoPreviewUrl);
+    setPendingVideo(null);
+    setVideoPreviewUrl('');
+    set('videoUrl', '');
+  }
+
   function validate(): boolean {
     const e: Record<string, string> = {};
     if (!form.name.trim())      e.name      = 'Name is required';
@@ -206,7 +304,7 @@ function InstructorFormPanel({ instructor, saving, onSave, onClose }: FormPanelP
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    await onSave(form, pendingPhoto);
+    await onSave(form, pendingPhoto, pendingVideo);
   }
 
   return (
@@ -235,6 +333,22 @@ function InstructorFormPanel({ instructor, saving, onSave, onClose }: FormPanelP
               previewUrl={previewUrl}
               onFilePick={handleFilePick}
               onUrlChange={handleUrlChange}
+            />
+          </div>
+
+          {/* Preview Video */}
+          <div className="mb-5">
+            <label className={S.label}>
+              <span className="flex items-center gap-1.5">
+                <Video size={11} />
+                Preview Video
+              </span>
+            </label>
+            <VideoUploader
+              previewUrl={videoPreviewUrl}
+              pendingFile={pendingVideo}
+              onFilePick={handleVideoFilePick}
+              onClear={handleVideoClear}
             />
           </div>
 
@@ -388,6 +502,13 @@ function InstructorRow({
         {instructor.isActive ? 'Active' : 'Inactive'}
       </span>
 
+      {/* Video indicator */}
+      {instructor.videoUrl && (
+        <span className="flex items-center gap-1 text-[10px] text-gray-400 flex-shrink-0" title="Has preview video">
+          <Video size={11} />
+        </span>
+      )}
+
       {/* Social count */}
       {instructor.socialLinks.length > 0 && (
         <span className="flex items-center gap-1 text-[10px] text-gray-400 flex-shrink-0">
@@ -440,15 +561,16 @@ export function InstructorsAdminPage() {
   function openEdit(i: Instructor) { setEditing(i);  setPanelOpen(true); }
   function closePanel()           { setPanelOpen(false); setEditing(null); }
 
-  async function handleSave(data: Omit<Instructor, 'id'> & { id?: string }, photoFile: File | null) {
+  async function handleSave(data: Omit<Instructor, 'id'> & { id?: string }, photoFile: File | null, videoFile: File | null) {
     setSaving(true);
     try {
-      await saveInstructor(data, photoFile ?? undefined);
+      await saveInstructor(data, photoFile ?? undefined, videoFile ?? undefined);
       await refresh();
       closePanel();
     } catch (err) {
       console.error('Failed to save instructor:', err);
-      alert('Failed to save. Please check your connection and try again.');
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`Failed to save.\n\n${msg}`);
     } finally {
       setSaving(false);
     }

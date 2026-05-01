@@ -24,6 +24,7 @@ export interface Instructor {
   bio: string;
   bioEs: string;
   photo: string;
+  videoUrl: string;
   socialLinks: { platform: string; url: string }[];
   sortOrder: number;
   isActive: boolean;
