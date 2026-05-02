@@ -55,7 +55,7 @@ export function InstructorCard({ instructor }: InstructorCardProps) {
       onTouchCancel={handleTouchEnd}
     >
       {/* Photo */}
-      <div className="relative h-80 overflow-hidden bg-photo-blue">
+      <div className="relative aspect-[4/5] overflow-hidden bg-photo-blue">
         <motion.div
           whileHover={{ scale: videoActive ? 1 : 1.05, filter: videoActive ? 'none' : 'brightness(1.05)' }}
           transition={{ duration: 0.4 }}

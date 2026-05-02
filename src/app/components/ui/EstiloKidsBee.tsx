@@ -131,21 +131,13 @@ export function EstiloKidsBee() {
         </span>
       </motion.div>
 
-      {/* ── WAVY DOTTED ARROW ──
-          Full-container SVG (300×140).
-          Text sits at x:136–300, y:4–44.
-          Arrow lives entirely below y:52.
+      {/* ── LOOPING BEE FLIGHT PATH ──
+          Mimics a bee's looping flight trail: starts below the label text,
+          sweeps right into a big arc, crosses back over itself to form a
+          visible loop, then spirals inward and runs left into the bee hex.
 
-          Two chained cubic beziers — each bends in opposite directions
-          for a clear S-wave:
-            Seg 1: (185,52) → mid (158,80)
-              ctrl1 (230,52) pushes RIGHT (flat start, no text overlap)
-              ctrl2 (120,100) pulls hard DOWN-LEFT → big trough at y≈95
-            Seg 2: (158,80) → end (112,108)
-              ctrl1 (195,58) pulls UP-RIGHT → clear crest at y≈60
-              ctrl2 (142,118) pulls DOWN-LEFT → into bee
-
-          Arrowhead: open dotted < at (112,108), same dash pattern.
+          Free canvas: x:120–300, y:45–140 (below text, right of hex).
+          Loop centre ≈ (215, 90).  Crossing happens near (195, 58).
       ── */}
       <svg
         width="300" height="140" viewBox="0 0 300 140"
@@ -153,9 +145,8 @@ export function EstiloKidsBee() {
         className="absolute inset-0 pointer-events-none overflow-visible"
         aria-hidden="true"
       >
-        {/* Wave body */}
         <motion.path
-          d="M 185 52 C 230 52, 120 100, 158 80 C 192 62, 142 118, 112 108"
+          d="M 185 46 C 255 42, 288 92, 262 118 C 236 142, 164 142, 146 110 C 128 80, 170 48, 202 58 C 222 64, 208 94, 182 96 C 156 98, 122 88, 112 76"
           stroke="#F6B000"
           strokeWidth="2.6"
           strokeDasharray="7 5"
@@ -163,24 +154,7 @@ export function EstiloKidsBee() {
           fill="none"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 1.15, delay: 1.45, ease: 'easeOut' }}
-        />
-
-        {/*
-          Dotted open arrowhead at (112, 108).
-          Direction from last control (142,118)→end(112,108): vector (-30,-10).
-          Wings perpendicular: upper-right and lower-right of the tip.
-        */}
-        <motion.path
-          d="M 124 100 L 112 108 L 124 116"
-          stroke="#F6B000"
-          strokeWidth="2.6"
-          strokeDasharray="4 4"
-          strokeLinecap="round"
-          fill="none"
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 0.35, delay: 2.55, ease: 'easeOut' }}
+          transition={{ duration: 2.0, delay: 1.45, ease: 'easeOut' }}
         />
       </svg>
 

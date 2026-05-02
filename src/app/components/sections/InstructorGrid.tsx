@@ -68,14 +68,14 @@ export function InstructorGrid({ instructors }: InstructorGridProps) {
               <>
                 <button
                   onClick={prevCard}
-                  className="absolute left-0 top-40 -translate-y-1/2 -translate-x-3 z-10 w-10 h-10 rounded-full bg-gold text-ink flex items-center justify-center shadow-lg hover:bg-gold-hover transition-colors"
+                  className="absolute left-0 top-[240px] -translate-y-1/2 -translate-x-3 z-10 w-10 h-10 rounded-full bg-gold text-ink flex items-center justify-center shadow-lg hover:bg-gold-hover transition-colors"
                   aria-label="Previous instructor"
                 >
                   <ChevronLeft size={20} />
                 </button>
                 <button
                   onClick={nextCard}
-                  className="absolute right-0 top-40 -translate-y-1/2 translate-x-3 z-10 w-10 h-10 rounded-full bg-gold text-ink flex items-center justify-center shadow-lg hover:bg-gold-hover transition-colors"
+                  className="absolute right-0 top-[240px] -translate-y-1/2 translate-x-3 z-10 w-10 h-10 rounded-full bg-gold text-ink flex items-center justify-center shadow-lg hover:bg-gold-hover transition-colors"
                   aria-label="Next instructor"
                 >
                   <ChevronRight size={20} />
