@@ -10,7 +10,7 @@ import {
 } from '../../../lib/animations';
 import { CTAButton } from '../ui/CTAButton';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
-import { EstiloKidsBee } from '../ui/EstiloKidsBee';
+import { SubBrands } from '../ui/SubBrands';
 
 interface HeroDiagonalProps {
   headline: string;
@@ -43,46 +43,42 @@ export function HeroDiagonal({
   const { language } = useI18n();
 
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-bg pt-20">
+    <section className="relative min-h-[100svh] lg:min-h-[90vh] flex items-center overflow-hidden bg-bg pt-20">
       <div className="absolute inset-0 z-0">
-        {/* Left dark side */}
-        <div
-          className="absolute inset-0 bg-bg"
-          style={{
-            clipPath: 'polygon(0 0, 45% 0, 50% 100%, 0 100%)',
-          }}
-        />
-        {/* Right side — video loop or photo-blue fallback */}
         {heroVideoSrc ? (
-          <div
-            className="absolute inset-0"
-            style={{
-              clipPath: 'polygon(45% 0, 100% 0, 100% 100%, 50% 100%)',
-            }}
-          >
+          <>
+            {/* Video always full-bleed — clip only on desktop */}
             <video
               autoPlay
               muted
               loop
               playsInline
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
               src={heroVideoSrc}
             />
-          </div>
+            {/* Mobile: gradient overlay so text stays readable over the video */}
+            <div className="absolute inset-0 bg-gradient-to-br from-bg/95 via-bg/85 to-bg/50 lg:hidden" />
+            {/* Desktop: solid dark panel on the left half (diagonal cut) */}
+            <div
+              className="absolute inset-0 bg-bg hidden lg:block"
+              style={{ clipPath: 'polygon(0 0, 45% 0, 50% 100%, 0 100%)' }}
+            />
+          </>
         ) : (
-          <div
-            className="absolute inset-0 bg-photo-blue"
-            style={{
-              clipPath: 'polygon(45% 0, 100% 0, 100% 100%, 50% 100%)',
-            }}
-          />
+          <>
+            <div className="absolute inset-0 bg-bg" />
+            <div
+              className="absolute inset-0 bg-photo-blue hidden lg:block"
+              style={{ clipPath: 'polygon(45% 0, 100% 0, 100% 100%, 50% 100%)' }}
+            />
+          </>
         )}
       </div>
 
-      <div className="relative z-10 max-w-[1440px] mx-auto px-4 lg:px-16 w-full">
+      <div className="relative z-10 max-w-[1440px] mx-auto px-5 lg:px-16 w-full py-10 lg:py-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Left: Text Content */}
-          <div className="space-y-8">
+          <div className="space-y-6 lg:space-y-8">
             <motion.h1
               variants={heroHeadline}
               initial="hidden"
@@ -123,7 +119,7 @@ export function HeroDiagonal({
               </CTAButton>
             </motion.div>
 
-            <EstiloKidsBee />
+            <SubBrands />
           </div>
 
           {/* Right: Hero Image — only shown when no video is uploaded */}

@@ -42,6 +42,7 @@ import { KidsContentAdminPage } from './pages/admin/kids/KidsContentAdminPage';
 import { KidsProgramsAdminPage } from './pages/admin/kids/KidsProgramsAdminPage';
 import { KidsGalleryAdminPage } from './pages/admin/kids/KidsGalleryAdminPage';
 import { KidsAchievementsAdminPage } from './pages/admin/kids/KidsAchievementsAdminPage';
+import { EuphoriaLadiesPage } from './pages/EuphoriaLadiesPage';
 
 export const router = createBrowserRouter([
   // ── Admin panel ── all routes share AdminShell (auth gate + sidebar) ─────────
@@ -101,6 +102,7 @@ export const router = createBrowserRouter([
       { path: 'about',            Component: AboutPage },
       { path: 'contact',          Component: ContactPage },
       { path: 'reserve/success',  Component: ReservationSuccessPage },
+      { path: 'euphoria-ladies',  Component: EuphoriaLadiesPage },
       { path: '*',                Component: NotFoundPage },
     ],
   },
