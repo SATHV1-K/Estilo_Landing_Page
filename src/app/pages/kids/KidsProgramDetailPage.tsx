@@ -122,8 +122,8 @@ export function KidsProgramDetailPage() {
   }, [id]);
 
   function handleEnroll() {
-    if (!program?.enrollLink) return;
-    window.open(program.enrollLink, '_blank', 'noopener,noreferrer');
+    const url = program?.enrollLink || 'https://payments.estilolatinodance.com';
+    window.open(url, '_blank', 'noopener,noreferrer');
     setShowModal(true);
   }
 
@@ -253,8 +253,7 @@ export function KidsProgramDetailPage() {
 
             <button
               onClick={handleEnroll}
-              disabled={!program.enrollLink}
-              className="inline-flex items-center gap-2 font-body font-bold uppercase tracking-wider text-sm rounded-full px-7 py-3.5 transition-all hover:-translate-y-1 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="inline-flex items-center gap-2 font-body font-bold uppercase tracking-wider text-sm rounded-full px-7 py-3.5 transition-all hover:-translate-y-1 hover:opacity-90"
               style={{ backgroundColor: '#f0bf71', color: '#2D3D6B', boxShadow: '0 8px 24px rgba(240,191,113,0.4)' }}
             >
               <ExternalLink size={16} />
@@ -334,8 +333,7 @@ export function KidsProgramDetailPage() {
                 <div className="border-t pt-4" style={{ borderColor: '#E2E8F0' }}>
                   <button
                     onClick={handleEnroll}
-                    disabled={!program.enrollLink}
-                    className="w-full py-3 rounded-full font-body font-bold uppercase tracking-wider text-sm transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                    className="w-full py-3 rounded-full font-body font-bold uppercase tracking-wider text-sm transition-all hover:-translate-y-0.5"
                     style={{ backgroundColor: '#f0bf71', color: '#2D3D6B', boxShadow: '0 6px 18px rgba(240,191,113,0.3)' }}
                   >
                     Enroll Now ✦

@@ -14,6 +14,7 @@ const KIDS_CREAM = '#FFF8E7';
 const NAV = [
   { to: '/kids',              label: 'Home',         end: true },
   { to: '/kids/about',        label: 'About',        end: false },
+  { to: '/kids/schedule',     label: 'Schedule',     end: false },
   { to: '/kids/achievements', label: 'Achievements', end: false },
   { to: '/kids/gallery',      label: 'Gallery',      end: false },
 ];
@@ -29,13 +30,13 @@ function KidsHeader() {
       style={{ backgroundColor: KIDS_BG, boxShadow: '0 2px 12px rgba(0,0,0,0.2)' }}
     >
       <div className="max-w-6xl mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between h-18 py-3">
+        <div className="flex items-center justify-between h-24 py-4">
           {/* Logo */}
           <Link to="/kids" className="flex items-center flex-shrink-0 group">
             <img
               src="/estilo_bee.png"
               alt="Estilo Kids"
-              className="h-16 w-auto object-contain group-hover:scale-105 transition-transform"
+              className="h-20 w-auto object-contain group-hover:scale-105 transition-transform"
             />
           </Link>
 
@@ -147,7 +148,7 @@ function KidsFooter() {
           {/* Brand */}
           <div>
             <div className="flex items-center mb-3">
-              <img src="/estilo_bee.png" alt="Estilo Kids" className="h-10 w-auto object-contain" />
+              <img src="/estilo_bee.png" alt="Estilo Kids" className="h-28 w-auto object-contain" />
             </div>
             <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
               Part of Estilo Latino Dance Company. Nurturing young dancers with joy, rhythm, and passion.
@@ -244,7 +245,7 @@ export function KidsLayout() {
     <div className="min-h-screen flex flex-col relative" style={{ backgroundColor: KIDS_BG, isolation: 'isolate' }}>
       <KidsPageBackground />
       <KidsHeader />
-      <main className="flex-1 pt-[72px]">
+      <main className="flex-1 pt-24">
         <Outlet />
       </main>
       <KidsFooter />

@@ -45,7 +45,7 @@ export function KidsHomePage() {
     'kids.achievements.stat3':    '200+',
     'kids.achievements.stat3label': 'Happy Families',
     'kids.cta.heading':           'READY TO JOIN THE HIVE?',
-    'kids.cta.subtitle':          'Book a free trial class for your child',
+    'kids.cta.subtitle':          'Enroll your child today and discover the joy of dance',
     'kids.cta.phone':             '+1 (201) 878-8977',
   });
 
@@ -84,8 +84,10 @@ export function KidsHomePage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ ...SPRING, delay: 0.5 }}
               >
-                <Link
-                  to={cms['kids.hero.cta.link'] || '/contact'}
+                <a
+                  href="https://payments.estilolatinodance.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 font-body font-bold uppercase tracking-wider rounded-full px-8 py-4 text-lg shadow-lg transition-all hover:-translate-y-1"
                   style={{
                     backgroundColor: '#f0bf71',
@@ -94,7 +96,7 @@ export function KidsHomePage() {
                   }}
                 >
                   {cms['kids.hero.cta.label']}
-                </Link>
+                </a>
               </motion.div>
             </div>
 
@@ -227,22 +229,22 @@ export function KidsHomePage() {
       </section>
 
       {/* ── Why Dance ─────────────────────────────────────────── */}
-      <section className="relative overflow-hidden py-24">
+      <section className="relative overflow-hidden py-36">
         <KidsDoodles variant="blue" />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 lg:px-8">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 lg:px-8">
           <motion.h2
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={SPRING}
-            className="font-display uppercase text-center mb-14"
-            style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: '#FFFFFF' }}
+            className="font-display uppercase text-center mb-16"
+            style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', color: '#FFFFFF' }}
           >
             {cms['kids.benefits.heading']}
           </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {BENEFITS.map(({ icon: Icon, title, desc }, i) => (
               <motion.div
                 key={title}
@@ -250,17 +252,17 @@ export function KidsHomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ ...SPRING, delay: i * 0.12 }}
-                className="rounded-2xl p-7 text-center"
+                className="rounded-2xl p-10 text-center"
                 style={{ backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)' }}
               >
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+                  className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
                   style={{ backgroundColor: 'rgba(240,191,113,0.2)' }}
                 >
-                  <Icon size={26} style={{ color: '#f0bf71' }} />
+                  <Icon size={38} style={{ color: '#f0bf71' }} />
                 </div>
-                <h3 className="font-body font-bold text-lg mb-2" style={{ color: '#FFFFFF' }}>{title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>{desc}</p>
+                <h3 className="font-body font-bold text-2xl mb-3" style={{ color: '#FFFFFF' }}>{title}</h3>
+                <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>{desc}</p>
               </motion.div>
             ))}
           </div>
@@ -389,13 +391,15 @@ export function KidsHomePage() {
             transition={{ ...SPRING, delay: 0.25 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <Link
-              to="/contact"
+            <a
+              href="https://payments.estilolatinodance.com"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 font-body font-bold uppercase tracking-wider rounded-full px-8 py-4 text-lg shadow-lg transition-all hover:-translate-y-1"
               style={{ backgroundColor: '#f0bf71', color: '#2D3D6B', boxShadow: '0 8px 24px rgba(240,191,113,0.35)' }}
             >
-              Book a Free Trial Class
-            </Link>
+              Enroll Now
+            </a>
             <a
               href={`tel:${cms['kids.cta.phone']}`}
               className="font-body font-semibold text-lg transition-colors"

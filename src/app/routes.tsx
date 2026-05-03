@@ -36,6 +36,7 @@ import { KidsAboutPage } from './pages/kids/KidsAboutPage';
 import { KidsGalleryPage } from './pages/kids/KidsGalleryPage';
 import { KidsAchievementsPage } from './pages/kids/KidsAchievementsPage';
 import { KidsProgramDetailPage } from './pages/kids/KidsProgramDetailPage';
+import { KidsSchedulePage } from './pages/kids/KidsSchedulePage';
 // Kids admin pages
 import { KidsContentAdminPage } from './pages/admin/kids/KidsContentAdminPage';
 import { KidsProgramsAdminPage } from './pages/admin/kids/KidsProgramsAdminPage';
@@ -77,6 +78,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true,              Component: KidsHomePage },
       { path: 'about',           Component: KidsAboutPage },
+      { path: 'schedule',        Component: KidsSchedulePage },
       { path: 'gallery',         Component: KidsGalleryPage },
       { path: 'achievements',    Component: KidsAchievementsPage },
       { path: 'programs/:id',    Component: KidsProgramDetailPage },

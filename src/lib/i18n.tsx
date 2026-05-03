@@ -50,7 +50,7 @@ export const translations = {
     getStarted: { en: 'Get Started', es: 'Comenzar' },
     contactUs: { en: 'Contact Us', es: 'Contáctanos' },
     bookNow: { en: 'Book Now', es: 'Reservar Ahora' },
-    freeClass: { en: 'Free Class', es: 'Clase Gratis' },
+    enrollNow: { en: 'Enroll Now', es: 'Inscríbete' },
     viewAll: { en: 'View All', es: 'Ver Todo' },
     readMore: { en: 'Read More', es: 'Leer Más' },
   },

@@ -451,9 +451,9 @@ const SEED_CONTENT: Omit<SiteContent, 'updatedAt'>[] = [
   { key: 'home.hero.headline_es',  value: 'ESTILO LATINO' },
   { key: 'home.hero.subheadline',  value: 'LIVE & ON-DEMAND DANCE CLASSES FOR ALL LEVELS' },
   { key: 'home.hero.subheadline_es', value: 'CLASES DE BAILE EN VIVO Y BAJO DEMANDA PARA TODOS LOS NIVELES' },
-  { key: 'home.hero.cta_label',    value: 'FREE CLASS' },
-  { key: 'home.hero.cta_label_es', value: 'CLASE GRATIS' },
-  { key: 'home.hero.cta_link',     value: '/contact' },
+  { key: 'home.hero.cta_label',    value: 'ENROLL NOW' },
+  { key: 'home.hero.cta_label_es', value: 'INSCRÍBETE' },
+  { key: 'home.hero.cta_link',     value: '/packages' },
   // HOME — Marquee
   { key: 'home.marquee.text',      value: 'BAILA ★ DANCE ★ SALSA ★ BACHATA ★ KIDS ★ URBAN ★' },
   // HOME — Styles section
@@ -467,11 +467,11 @@ const SEED_CONTENT: Omit<SiteContent, 'updatedAt'>[] = [
   // HOME — CTA Banner
   { key: 'home.cta_banner.heading',    value: 'READY TO DANCE?' },
   { key: 'home.cta_banner.heading_es', value: '¿LISTO PARA BAILAR?' },
-  { key: 'home.cta_banner.body',       value: 'Join us for a free trial class. No experience needed.' },
-  { key: 'home.cta_banner.body_es',    value: 'Únete a nosotros para una clase de prueba gratis. No se necesita experiencia.' },
-  { key: 'home.cta_banner.cta_label',  value: 'CLAIM YOUR FREE CLASS' },
-  { key: 'home.cta_banner.cta_label_es', value: 'RECLAMAR MI CLASE GRATIS' },
-  { key: 'home.cta_banner.cta_link',   value: '/contact' },
+  { key: 'home.cta_banner.body',       value: 'Join our classes and start your dance journey today. No experience needed.' },
+  { key: 'home.cta_banner.body_es',    value: 'Únete a nuestras clases y comienza tu viaje de baile hoy. No se necesita experiencia.' },
+  { key: 'home.cta_banner.cta_label',  value: 'ENROLL NOW' },
+  { key: 'home.cta_banner.cta_label_es', value: 'INSCRÍBETE AHORA' },
+  { key: 'home.cta_banner.cta_link',   value: '/packages' },
   // ABOUT
   { key: 'about.heading',    value: 'OUR STORY' },
   { key: 'about.heading_es', value: 'NUESTRA HISTORIA' },
@@ -780,10 +780,10 @@ export interface Alert {
 
 const SEED_ALERTS: Omit<Alert, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
-    title:     'First Class FREE for New Students!',
-    titleEs:   '¡Primera Clase GRATIS para Nuevos Estudiantes!',
-    message:   'New classes are starting soon. Come try salsa, bachata, or cumbia — your first class is completely free. No experience needed.',
-    messageEs: 'Las nuevas clases están comenzando pronto. Ven a probar salsa, bachata o cumbia — tu primera clase es completamente gratis. No se necesita experiencia.',
+    title:     'New Classes Starting Soon!',
+    titleEs:   '¡Nuevas Clases Comenzando Pronto!',
+    message:   'New classes are starting soon. Come try salsa, bachata, or cumbia — no experience needed. Enroll today!',
+    messageEs: 'Las nuevas clases están comenzando pronto. Ven a probar salsa, bachata o cumbia — no se necesita experiencia. ¡Inscríbete hoy!',
     type:      'promo',
     link:      '/packages',
     linkLabel: 'See Packages',

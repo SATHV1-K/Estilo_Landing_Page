@@ -13,7 +13,7 @@ import { resolveContent } from '../cms';
  * @example
  * const c = useCmsContent({
  *   'home.hero.headline':   'ESTILO LATINO',
- *   'home.hero.cta_label':  'FREE CLASS',
+ *   'home.hero.cta_label':  'ENROLL NOW',
  * });
  * // c['home.hero.headline'] → DB value or 'ESTILO LATINO'
  */
