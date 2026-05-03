@@ -50,6 +50,19 @@ export function PackagesPage() {
 
   const isContactCategory = selectedCategory === 'private' || selectedCategory === 'event';
 
+  const whatsappMessages: Record<string, string> = {
+    'adults-salsa-bachata': 'Hi%2C+I%27m+interested+in+Salsa+%26+Bachata+classes',
+    'adults-street':        'Hi%2C+I%27m+interested+in+Urban+%2F+HipHop+Dance+classes',
+    'kids':                 'Hi%2C+I%27m+interested+in+Kids+dance+classes',
+    'private':              'Hi%2C+I%27m+interested+in+Private+Lessons',
+    'event':                'Hi%2C+I%27m+interested+in+Special+Events+%2F+choreography',
+  };
+
+  function whatsappHref(category: string) {
+    const msg = whatsappMessages[category] ?? 'Hi%2C+I%27m+interested+in+your+dance+classes';
+    return `https://wa.me/12018788977?text=${msg}`;
+  }
+
   return (
     <div className="min-h-screen pt-32 pb-24 bg-bg">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
@@ -146,7 +159,7 @@ export function PackagesPage() {
                     {language === 'es' ? 'Llámanos' : 'Call Us'}
                   </a>
                   <a
-                    href="https://wa.me/12018788977?text=Hi%2C+I%27m+interested+in+Private+Lessons"
+                    href={whatsappHref(pkg.category)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-gold text-gold font-bold uppercase tracking-wider rounded-lg transition-all hover:bg-gold/10"
