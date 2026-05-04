@@ -146,11 +146,16 @@ export function ContactPage() {
                   <MapPin className="text-gold flex-shrink-0" size={24} />
                   <div>
                     <p className="font-semibold mb-1">{es ? 'Dirección' : 'Address'}</p>
-                    <p className="text-text-muted">
+                    <a
+                      href={`https://maps.google.com/?q=${encodeURIComponent(`${siteSettings.address}, ${siteSettings.city}, ${siteSettings.state} ${siteSettings.zip}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-text-muted hover:text-gold transition-colors"
+                    >
                       {siteSettings.address}
                       <br />
                       {siteSettings.city}, {siteSettings.state} {siteSettings.zip}
-                    </p>
+                    </a>
                   </div>
                 </div>
 
@@ -203,6 +208,20 @@ export function ContactPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Map Embed */}
+            <div className="rounded-xl overflow-hidden border border-border shadow-[var(--shadow-card)]">
+              <iframe
+                title={es ? 'Mapa de ubicación' : 'Location map'}
+                src={siteSettings.googleMapsEmbed}
+                width="100%"
+                height="300"
+                style={{ border: 0, display: 'block' }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           </motion.div>
 

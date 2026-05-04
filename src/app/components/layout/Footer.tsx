@@ -135,11 +135,16 @@ export function Footer() {
               {translations.nav.contact[language]}
             </h3>
             <div className="space-y-3 text-text-muted">
-              <p>
+              <a
+                href={`https://maps.google.com/?q=${encodeURIComponent(`${siteSettings.address}, ${siteSettings.city}, ${siteSettings.state} ${siteSettings.zip}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block hover:text-gold transition-colors"
+              >
                 {siteSettings.address}
                 <br />
                 {siteSettings.city}, {siteSettings.state} {siteSettings.zip}
-              </p>
+              </a>
               <p>
                 <a
                   href={`tel:${siteSettings.phone}`}
