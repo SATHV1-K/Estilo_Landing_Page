@@ -23,7 +23,10 @@ export function StyleCard({ style }: StyleCardProps) {
         transition={{ duration: 0.3 }}
       >
         {/* Image Container */}
-        <div className="relative h-64 overflow-hidden">
+        <div
+          className="relative h-64 overflow-hidden"
+          style={{ background: 'linear-gradient(160deg, #0F0F0F 0%, #1F1A08 25%, #2D2410 100%)' }}
+        >
           <motion.div
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.4 }}
@@ -32,7 +35,7 @@ export function StyleCard({ style }: StyleCardProps) {
             <ImageWithFallback
               src={style.cardImage}
               alt={language === 'es' ? style.nameEs : style.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
           </motion.div>
 

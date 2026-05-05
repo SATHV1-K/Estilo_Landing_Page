@@ -81,12 +81,12 @@ export function SubBrands() {
           {/* Pink left accent bar */}
           <div className="absolute left-0 inset-y-0 w-[3px] bg-[#E91E8C] opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
 
-          {/* Logo — screen blend removes the dark built-in background */}
-          <div className="ml-1 flex-1 min-w-0">
+          {/* Logo */}
+          <div className="ml-1 flex-1 min-w-0 overflow-hidden h-[80px]">
             <img
-              src="/euphoria_ladies.png"
+              src="/eupLadies.png"
               alt="Euphoria Ladies by Estilo Latino Dance Company"
-              className="h-14 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+              className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.03]"
               style={{ mixBlendMode: 'screen' }}
             />
           </div>
