@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Instagram } from 'lucide-react';
 import { cardReveal } from '../../../lib/animations';
@@ -10,15 +10,29 @@ import { Instructor } from '../../../lib/types';
 
 interface InstructorCardProps {
   instructor: Instructor;
+  autoPlay?: boolean;
 }
 
-export function InstructorCard({ instructor }: InstructorCardProps) {
+export function InstructorCard({ instructor, autoPlay = false }: InstructorCardProps) {
   const { language } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoActive, setVideoActive] = useState(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const description = language === 'es' && instructor.bioEs ? instructor.bioEs : instructor.bio;
+
+  useEffect(() => {
+    if (autoPlay && instructor.videoUrl) {
+      setVideoActive(true);
+      videoRef.current?.play().catch(() => {});
+    } else if (!autoPlay) {
+      setVideoActive(false);
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+      }
+    }
+  }, [autoPlay, instructor.videoUrl]);
 
   function startVideo() {
     if (!instructor.videoUrl) return;
@@ -35,12 +49,13 @@ export function InstructorCard({ instructor }: InstructorCardProps) {
   }
 
   function handleTouchStart() {
+    if (autoPlay) return;
     holdTimer.current = setTimeout(startVideo, 350);
   }
 
   function handleTouchEnd() {
     if (holdTimer.current) clearTimeout(holdTimer.current);
-    stopVideo();
+    if (!autoPlay) stopVideo();
   }
 
   return (

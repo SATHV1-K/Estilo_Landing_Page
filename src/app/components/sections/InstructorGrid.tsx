@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type RefObject } from 'react';
+import { useState, useRef, type RefObject } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useI18n, translations } from '../../../lib/i18n';
@@ -18,6 +18,8 @@ export function InstructorGrid({ instructors }: InstructorGridProps) {
   const { language } = useI18n();
   const { ref, isInView } = useScrollReveal({ amount: 0.2 });
   const [activeIndex, setActiveIndex] = useState(0);
+  const touchStartX = useRef<number>(0);
+  const touchStartY = useRef<number>(0);
 
   const activeInstructors = instructors.filter((i) => i.isActive);
 
@@ -27,6 +29,20 @@ export function InstructorGrid({ instructors }: InstructorGridProps) {
 
   function nextCard() {
     setActiveIndex(i => (i < activeInstructors.length - 1 ? i + 1 : 0));
+  }
+
+  function handleSwipeStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleSwipeEnd(e: React.TouchEvent) {
+    const dx = touchStartX.current - e.changedTouches[0].clientX;
+    const dy = Math.abs(touchStartY.current - e.changedTouches[0].clientY);
+    if (Math.abs(dx) > 50 && Math.abs(dx) > dy) {
+      if (dx > 0) nextCard();
+      else prevCard();
+    }
   }
 
   return (
@@ -50,52 +66,40 @@ export function InstructorGrid({ instructors }: InstructorGridProps) {
         {/* Content — ref on wrapper so isInView works for both layouts */}
         <div ref={ref as RefObject<HTMLDivElement>}>
           {/* Mobile Carousel (< sm) */}
-          <div className="sm:hidden relative">
-            <div className="overflow-hidden">
+          <div className="sm:hidden">
+            <div
+              className="overflow-hidden"
+              onTouchStart={handleSwipeStart}
+              onTouchEnd={handleSwipeEnd}
+            >
               <div
                 className="flex transition-transform duration-300 ease-out"
                 style={{ transform: `translateX(-${activeIndex * 100}%)` }}
               >
-                {activeInstructors.map((instructor) => (
+                {activeInstructors.map((instructor, i) => (
                   <div key={instructor.id} className="w-full flex-shrink-0">
-                    <InstructorCard instructor={instructor} />
+                    <InstructorCard instructor={instructor} autoPlay={i === activeIndex} />
                   </div>
                 ))}
               </div>
             </div>
 
+            {/* Swipe hint */}
             {activeInstructors.length > 1 && (
-              <>
-                <button
-                  onClick={prevCard}
-                  className="absolute left-0 top-[240px] -translate-y-1/2 -translate-x-3 z-10 w-10 h-10 rounded-full bg-gold text-ink flex items-center justify-center shadow-lg hover:bg-gold-hover transition-colors"
-                  aria-label="Previous instructor"
+              <div className="flex items-center justify-center gap-2 mt-5">
+                <motion.div
+                  animate={{ x: [-3, 0] }}
+                  transition={{ repeat: Infinity, repeatType: 'reverse', duration: 0.9, ease: 'easeInOut' }}
                 >
-                  <ChevronLeft size={20} />
-                </button>
-                <button
-                  onClick={nextCard}
-                  className="absolute right-0 top-[240px] -translate-y-1/2 translate-x-3 z-10 w-10 h-10 rounded-full bg-gold text-ink flex items-center justify-center shadow-lg hover:bg-gold-hover transition-colors"
-                  aria-label="Next instructor"
+                  <ChevronLeft size={14} className="text-gold/50" />
+                </motion.div>
+                <span className="font-body text-xs uppercase tracking-[0.2em] text-text-muted/70">swipe</span>
+                <motion.div
+                  animate={{ x: [3, 0] }}
+                  transition={{ repeat: Infinity, repeatType: 'reverse', duration: 0.9, ease: 'easeInOut' }}
                 >
-                  <ChevronRight size={20} />
-                </button>
-              </>
-            )}
-
-            {/* Dot indicators */}
-            {activeInstructors.length > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
-                {activeInstructors.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveIndex(i)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      i === activeIndex ? 'bg-gold' : 'bg-border-strong'
-                    }`}
-                    aria-label={`Go to instructor ${i + 1}`}
-                  />
-                ))}
+                  <ChevronRight size={14} className="text-gold/50" />
+                </motion.div>
               </div>
             )}
           </div>

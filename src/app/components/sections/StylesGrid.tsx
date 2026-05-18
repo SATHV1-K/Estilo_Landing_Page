@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect, type RefObject } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 import { useI18n, translations } from '../../../lib/i18n';
 import { useScrollReveal } from '../../../lib/hooks/useScrollReveal';
 import { StyleCard } from '../ui/StyleCard';
@@ -76,15 +77,17 @@ export function StylesGrid({ styles }: StylesGridProps) {
           ref={carouselRef as RefObject<HTMLDivElement>}
           className="flex items-center gap-3 lg:gap-5"
         >
-          {/* Left Arrow */}
-          <button
-            onClick={() => scrollByCard('left')}
-            disabled={!canScrollLeft}
-            className={`${arrowBase} ${canScrollLeft ? arrowActive : arrowDisabled}`}
-            aria-label="Previous styles"
-          >
-            <ChevronLeft size={20} />
-          </button>
+          {/* Left Arrow — desktop only */}
+          <div className="hidden sm:block flex-shrink-0">
+            <button
+              onClick={() => scrollByCard('left')}
+              disabled={!canScrollLeft}
+              className={`${arrowBase} ${canScrollLeft ? arrowActive : arrowDisabled}`}
+              aria-label="Previous styles"
+            >
+              <ChevronLeft size={20} />
+            </button>
+          </div>
 
           {/* Scrollable Track — scroll-snap + touch swipe built-in */}
           <div
@@ -102,15 +105,34 @@ export function StylesGrid({ styles }: StylesGridProps) {
             ))}
           </div>
 
-          {/* Right Arrow */}
-          <button
-            onClick={() => scrollByCard('right')}
-            disabled={!canScrollRight}
-            className={`${arrowBase} ${canScrollRight ? arrowActive : arrowDisabled}`}
-            aria-label="Next styles"
+          {/* Right Arrow — desktop only */}
+          <div className="hidden sm:block flex-shrink-0">
+            <button
+              onClick={() => scrollByCard('right')}
+              disabled={!canScrollRight}
+              className={`${arrowBase} ${canScrollRight ? arrowActive : arrowDisabled}`}
+              aria-label="Next styles"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Swipe hint — mobile only */}
+        <div className="sm:hidden flex items-center justify-center gap-2 mt-5">
+          <motion.div
+            animate={{ x: [-3, 0] }}
+            transition={{ repeat: Infinity, repeatType: 'reverse', duration: 0.9, ease: 'easeInOut' }}
           >
-            <ChevronRight size={20} />
-          </button>
+            <ChevronLeft size={14} className="text-gold/50" />
+          </motion.div>
+          <span className="font-body text-xs uppercase tracking-[0.2em] text-text-muted/70">swipe</span>
+          <motion.div
+            animate={{ x: [3, 0] }}
+            transition={{ repeat: Infinity, repeatType: 'reverse', duration: 0.9, ease: 'easeInOut' }}
+          >
+            <ChevronRight size={14} className="text-gold/50" />
+          </motion.div>
         </div>
       </div>
     </section>
