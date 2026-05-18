@@ -1,8 +1,7 @@
-// StylesGrid - 3-column grid of dance styles with gradient background
-
+import { useState, useRef, useCallback, useEffect, type RefObject } from 'react';
 import { motion } from 'motion/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useI18n, translations } from '../../../lib/i18n';
-import { staggerContainer } from '../../../lib/animations';
 import { useScrollReveal } from '../../../lib/hooks/useScrollReveal';
 import { StyleCard } from '../ui/StyleCard';
 import { DanceStyle } from '../../../lib/types';
@@ -13,14 +12,51 @@ interface StylesGridProps {
   maxVisible?: number;
 }
 
-export function StylesGrid({ styles, maxVisible = 6 }: StylesGridProps) {
+export function StylesGrid({ styles }: StylesGridProps) {
   const { language } = useI18n();
-  const { ref, isInView } = useScrollReveal({ amount: 0.2 });
+  const { ref: carouselRef, isInView } = useScrollReveal({ amount: 0.15 });
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft]   = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
-  const visibleStyles = styles.filter((s) => s.isActive).slice(0, maxVisible);
+  const activeStyles = styles.filter((s) => s.isActive);
+
+  const syncScrollState = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', syncScrollState, { passive: true });
+    // run after layout settles
+    const raf = requestAnimationFrame(syncScrollState);
+    return () => {
+      el.removeEventListener('scroll', syncScrollState);
+      cancelAnimationFrame(raf);
+    };
+  }, [syncScrollState, activeStyles.length]);
+
+  function scrollByCard(dir: 'left' | 'right') {
+    const el = trackRef.current;
+    if (!el) return;
+    const firstCard = el.querySelector('[data-card]') as HTMLElement | null;
+    const amount = firstCard ? firstCard.offsetWidth + 24 : 300; // 24px = gap-6
+    el.scrollBy({ left: dir === 'right' ? amount : -amount, behavior: 'smooth' });
+  }
+
+  const arrowBase =
+    'flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center transition-all duration-200 focus-visible:outline-2 focus-visible:outline-gold focus-visible:outline-offset-2';
+  const arrowActive =
+    'bg-gold text-ink shadow-[0_4px_16px_rgba(246,176,0,0.30)] hover:bg-gold-hover hover:-translate-y-0.5 active:translate-y-0 cursor-pointer';
+  const arrowDisabled =
+    'bg-surface-elevated text-border-strong opacity-25 pointer-events-none cursor-default';
 
   return (
-    <section className="py-24 relative overflow-hidden bg-surface">
+    <section className="py-24 relative bg-bg">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         {/* Section Heading */}
         <div className="text-center mb-16">
@@ -35,18 +71,47 @@ export function StylesGrid({ styles, maxVisible = 6 }: StylesGridProps) {
           </motion.p>
         </div>
 
-        {/* Grid */}
-        <motion.div
-          ref={ref as any}
-          variants={staggerContainer}
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        {/* [← arrow] [scrollable track] [→ arrow] */}
+        <div
+          ref={carouselRef as RefObject<HTMLDivElement>}
+          className="flex items-center gap-3 lg:gap-5"
         >
-          {visibleStyles.map((style) => (
-            <StyleCard key={style.id} style={style} />
-          ))}
-        </motion.div>
+          {/* Left Arrow */}
+          <button
+            onClick={() => scrollByCard('left')}
+            disabled={!canScrollLeft}
+            className={`${arrowBase} ${canScrollLeft ? arrowActive : arrowDisabled}`}
+            aria-label="Previous styles"
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          {/* Scrollable Track — scroll-snap + touch swipe built-in */}
+          <div
+            ref={trackRef}
+            className="flex-1 flex gap-6 overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+          >
+            {activeStyles.map((style) => (
+              <div
+                key={style.id}
+                data-card=""
+                className="snap-start flex-shrink-0 w-[78vw] sm:w-[44vw] lg:w-[30vw] xl:w-[23vw]"
+              >
+                <StyleCard style={style} />
+              </div>
+            ))}
+          </div>
+
+          {/* Right Arrow */}
+          <button
+            onClick={() => scrollByCard('right')}
+            disabled={!canScrollRight}
+            className={`${arrowBase} ${canScrollRight ? arrowActive : arrowDisabled}`}
+            aria-label="Next styles"
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
       </div>
     </section>
   );

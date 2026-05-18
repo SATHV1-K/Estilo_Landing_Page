@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
-import { Facebook, Instagram, Youtube, Music, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Facebook, Instagram, Youtube, Music, CheckCircle, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 import { useI18n, translations } from '../../../lib/i18n';
 import { getSiteSettings } from '../../../lib/settingsService';
 import { subscribeEmail } from '../../../lib/newsletterService';
@@ -12,35 +12,35 @@ import { useScrollReveal } from '../../../lib/hooks/useScrollReveal';
 import type { AdminSiteSettings } from '../../../lib/adminData';
 
 const DEFAULT_SETTINGS: AdminSiteSettings = {
-  studioName:      'Estilo Latino Dance Company',
+  studioName: 'Estilo Latino Dance Company',
   studioNameShort: 'Estilo Latino',
-  tagline:         'Dance Academy',
-  address:         '345 Morris Ave Ste 1B',
-  addressLine2:    '',
-  city:            'Elizabeth',
-  state:           'NJ',
-  zip:             '07208',
-  phone:           '+1 (201) 878-8977',
-  whatsapp:        '+12018788977',
-  email:           'info@EstiloLatinoDance.com',
+  tagline: 'Dance Academy',
+  address: '345 Morris Ave Ste 1B',
+  addressLine2: '',
+  city: 'Elizabeth',
+  state: 'NJ',
+  zip: '07208',
+  phone: '+1 (201) 878-8977',
+  whatsapp: '+12018788977',
+  email: 'info@EstiloLatinoDance.com',
   googleMapsEmbed: '',
   socialLinks: [
-    { platform: 'Facebook',  url: 'https://facebook.com/EstiloLatinoDC',      label: 'EstiloLatinoDC' },
-    { platform: 'Instagram', url: 'https://instagram.com/estilo.latino',        label: '@estilo.latino' },
-    { platform: 'TikTok',   url: 'https://tiktok.com/@estilolatino',           label: '@estilolatino' },
-    { platform: 'YouTube',  url: 'https://youtube.com/@estilolatino',          label: 'Estilo Latino' },
+    { platform: 'Facebook', url: 'https://facebook.com/EstiloLatinoDC', label: 'EstiloLatinoDC' },
+    { platform: 'Instagram', url: 'https://instagram.com/estilo.latino', label: '@estilo.latino' },
+    { platform: 'TikTok', url: 'https://tiktok.com/@estilolatino', label: '@estilolatino' },
+    { platform: 'YouTube', url: 'https://youtube.com/@estilolatino', label: 'Estilo Latino' },
   ],
-  businessHours:   [],
-  metaTitle:       '',
+  businessHours: [],
+  metaTitle: '',
   metaDescription: '',
-  footerText:      '',
+  footerText: '',
 };
 
 export function Footer() {
   const { t, language } = useI18n();
   const { ref, isInView } = useScrollReveal({ amount: 0.2 });
   const [siteSettings, setSiteSettings] = useState<AdminSiteSettings>(DEFAULT_SETTINGS);
-  const [email,  setEmail]  = useState('');
+  const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error' | 'invalid'>('idle');
 
   const es = language === 'es';
@@ -73,9 +73,20 @@ export function Footer() {
       variants={staggerContainer}
       initial="hidden"
       animate={isInView ? 'visible' : 'hidden'}
-      className="bg-surface border-t border-border text-text py-16"
+      className="relative overflow-hidden bg-surface border-t border-border text-text py-16"
     >
-      <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
+      {/* Map background — zoomed/cropped to fill, centered, non-interactive */}
+      <div className="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+        <img
+          src="/map.png"
+          alt=""
+          className="w-full h-full object-cover object-[center_50%] opacity-[0.45]"
+          draggable={false}
+        />
+        <div className="absolute inset-0 bg-surface/60" />
+      </div>
+
+      <div className="relative z-10 max-w-[1440px] mx-auto px-4 lg:px-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Column 1: Community */}
           <motion.div variants={fadeInUp}>
@@ -139,26 +150,30 @@ export function Footer() {
                 href={`https://maps.google.com/?q=${encodeURIComponent(`${siteSettings.address}, ${siteSettings.city}, ${siteSettings.state} ${siteSettings.zip}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block hover:text-gold transition-colors"
+                className="inline-flex items-start gap-1 hover:text-gold transition-colors"
               >
-                {siteSettings.address}
-                <br />
-                {siteSettings.city}, {siteSettings.state} {siteSettings.zip}
+                <span>
+                  {siteSettings.address}<br />
+                  {siteSettings.city}, {siteSettings.state} {siteSettings.zip}
+                </span>
+                <ExternalLink size={12} className="flex-shrink-0 mt-0.5 opacity-60" />
               </a>
               <p>
                 <a
                   href={`tel:${siteSettings.phone}`}
-                  className="hover:text-gold transition-colors"
+                  className="inline-flex items-center gap-1 hover:text-gold transition-colors"
                 >
                   {siteSettings.phone}
+                  <ExternalLink size={12} className="opacity-60" />
                 </a>
               </p>
               <p>
                 <a
                   href={`mailto:${siteSettings.email}`}
-                  className="hover:text-gold transition-colors"
+                  className="inline-flex items-center gap-1 hover:text-gold transition-colors"
                 >
                   {siteSettings.email}
+                  <ExternalLink size={12} className="opacity-60" />
                 </a>
               </p>
             </div>

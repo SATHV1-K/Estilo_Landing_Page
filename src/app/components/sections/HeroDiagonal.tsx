@@ -114,7 +114,7 @@ export function HeroDiagonal({
               <CTAButton href={ctaHref} size="lg">
                 {language === 'es' ? ctaLabelEs : ctaLabel}
               </CTAButton>
-              <CTAButton variant="outline" size="lg">
+              <CTAButton variant="outline" size="lg" to="/online-lessons">
                 {language === 'es' ? 'Lecciones en Línea' : 'Online Lessons'}
               </CTAButton>
             </motion.div>

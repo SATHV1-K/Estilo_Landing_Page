@@ -43,6 +43,7 @@ import { KidsProgramsAdminPage } from './pages/admin/kids/KidsProgramsAdminPage'
 import { KidsGalleryAdminPage } from './pages/admin/kids/KidsGalleryAdminPage';
 import { KidsAchievementsAdminPage } from './pages/admin/kids/KidsAchievementsAdminPage';
 import { EuphoriaLadiesPage } from './pages/EuphoriaLadiesPage';
+import { OnlineLessonsPage } from './pages/OnlineLessonsPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
 
@@ -105,6 +106,7 @@ export const router = createBrowserRouter([
       { path: 'contact',          Component: ContactPage },
       { path: 'reserve/success',  Component: ReservationSuccessPage },
       { path: 'euphoria-ladies',  Component: EuphoriaLadiesPage },
+      { path: 'online-lessons',   Component: OnlineLessonsPage },
       { path: 'privacy',          Component: PrivacyPolicyPage },
       { path: 'terms',            Component: TermsOfServicePage },
       { path: '*',                Component: NotFoundPage },

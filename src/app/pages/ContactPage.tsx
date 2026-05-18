@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Phone, Mail, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, CheckCircle, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 import { useI18n } from '../../lib/i18n';
 import { siteSettings } from '../../lib/data';
 import { fadeInUp } from '../../lib/animations';
@@ -19,6 +19,7 @@ interface FormState {
 interface FormErrors {
   name?:    string;
   email?:   string;
+  phone?:   string;
   message?: string;
 }
 
@@ -40,6 +41,13 @@ function validate(form: FormState, lang: string): FormErrors {
     errors.email = es ? 'El correo es obligatorio.' : 'Email is required.';
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
     errors.email = es ? 'Ingresa un correo válido.' : 'Enter a valid email address.';
+  }
+
+  const digits = form.phone.replace(/\D/g, '');
+  if (!form.phone.trim()) {
+    errors.phone = es ? 'El teléfono es obligatorio.' : 'Phone is required.';
+  } else if (digits.length !== 10) {
+    errors.phone = es ? 'Ingresa un número de 10 dígitos.' : 'Enter a 10-digit phone number.';
   }
 
   if (!form.message.trim()) {
@@ -105,7 +113,7 @@ export function ContactPage() {
   const inputClass = (field: keyof FormErrors) =>
     [
       'w-full px-4 py-3 border rounded-lg bg-surface focus:outline-none text-text transition-colors',
-      errors[field] && touched[field as keyof FormState]
+      errors[field] && touched[field]
         ? 'border-error focus:border-error'
         : 'border-border focus:border-gold',
     ].join(' ');
@@ -150,11 +158,13 @@ export function ContactPage() {
                       href={`https://maps.google.com/?q=${encodeURIComponent(`${siteSettings.address}, ${siteSettings.city}, ${siteSettings.state} ${siteSettings.zip}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-text-muted hover:text-gold transition-colors"
+                      className="text-text-muted hover:text-gold transition-colors inline-flex items-start gap-1"
                     >
-                      {siteSettings.address}
-                      <br />
-                      {siteSettings.city}, {siteSettings.state} {siteSettings.zip}
+                      <span>
+                        {siteSettings.address}<br />
+                        {siteSettings.city}, {siteSettings.state} {siteSettings.zip}
+                      </span>
+                      <ExternalLink size={13} className="flex-shrink-0 mt-0.5 opacity-60" />
                     </a>
                   </div>
                 </div>
@@ -167,9 +177,10 @@ export function ContactPage() {
                     </p>
                     <a
                       href={`tel:${siteSettings.phone}`}
-                      className="text-text-muted hover:text-gold transition-colors"
+                      className="text-text-muted hover:text-gold transition-colors inline-flex items-center gap-1"
                     >
                       {siteSettings.phone}
+                      <ExternalLink size={13} className="opacity-60" />
                     </a>
                   </div>
                 </div>
@@ -182,9 +193,10 @@ export function ContactPage() {
                     </p>
                     <a
                       href={`mailto:${siteSettings.email}`}
-                      className="text-text-muted hover:text-gold transition-colors"
+                      className="text-text-muted hover:text-gold transition-colors inline-flex items-center gap-1"
                     >
                       {siteSettings.email}
+                      <ExternalLink size={13} className="opacity-60" />
                     </a>
                   </div>
                 </div>
@@ -210,19 +222,6 @@ export function ContactPage() {
               </div>
             </div>
 
-            {/* Map Embed */}
-            <div className="rounded-xl overflow-hidden border border-border shadow-[var(--shadow-card)]">
-              <iframe
-                title={es ? 'Mapa de ubicación' : 'Location map'}
-                src={siteSettings.googleMapsEmbed}
-                width="100%"
-                height="300"
-                style={{ border: 0, display: 'block' }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
           </motion.div>
 
           {/* Contact Form */}
@@ -298,13 +297,10 @@ export function ContactPage() {
                   )}
                 </div>
 
-                {/* Phone (optional) */}
+                {/* Phone */}
                 <div>
                   <label className="block text-sm font-semibold mb-2">
-                    {es ? 'Teléfono' : 'Phone'}{' '}
-                    <span className="text-text-muted font-normal text-xs">
-                      ({es ? 'opcional' : 'optional'})
-                    </span>
+                    {es ? 'Teléfono' : 'Phone'} <span className="text-gold">*</span>
                   </label>
                   <input
                     type="tel"
@@ -312,9 +308,14 @@ export function ContactPage() {
                     value={form.phone}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    placeholder={es ? '+1 (000) 000-0000' : '+1 (000) 000-0000'}
-                    className="w-full px-4 py-3 border border-border rounded-lg bg-surface focus:outline-none focus:border-gold text-text transition-colors"
+                    placeholder="000-000-0000"
+                    className={inputClass('phone')}
                   />
+                  {errors.phone && touched.phone && (
+                    <p className="text-error text-xs mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} /> {errors.phone}
+                    </p>
+                  )}
                 </div>
 
                 {/* Message */}

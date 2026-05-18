@@ -33,9 +33,8 @@ export function HomePage() {
     'home.hero.headline_es':      'ESTILO LATINO',
     'home.hero.subheadline':      'Live & On-Demand Dance Lessons',
     'home.hero.subheadline_es':   'Clases de Baile en Vivo y Bajo Demanda',
-    'home.hero.cta_label':        'Enroll Now',
-    'home.hero.cta_label_es':     'Inscríbete',
-    'home.hero.cta_link':         '/packages',
+    'home.hero.cta_label':        'Manage Classes',
+    'home.hero.cta_label_es':     'Administrar Clases',
     'home.cta_banner.heading':    'Ready to Dance?',
     'home.cta_banner.heading_es': '¿Listo para Bailar?',
     'home.cta_banner.body':       'Join our classes and start your dance journey today. No experience needed.',
@@ -58,7 +57,7 @@ export function HomePage() {
         subheadlineEs={cms['home.hero.subheadline_es']}
         ctaLabel={cms['home.hero.cta_label']}
         ctaLabelEs={cms['home.hero.cta_label_es']}
-        ctaHref={cms['home.hero.cta_link']}
+        ctaHref="https://payments.estilolatinodance.com/"
         heroImageSrc="https://images.unsplash.com/photo-1545224144-b38cd309ef69?w=1200&q=80"
         heroVideoSrc={heroVideoSrc || undefined}
         showBadge={true}
@@ -78,7 +77,7 @@ export function HomePage() {
         ]}
       />
 
-      <StylesGrid styles={styles} maxVisible={6} />
+      <StylesGrid styles={styles} />
 
       <InstructorGrid instructors={instructors} />
 
