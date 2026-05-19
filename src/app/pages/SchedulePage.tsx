@@ -11,11 +11,11 @@ import { scaleIn, staggerFast, fadeInUp, clipRevealLTR } from '../../lib/animati
 import { ReserveModal } from '../components/ui/ReserveModal';
 import type { SpecialClass } from '../../lib/specialClasses';
 import {
-  getUpcomingActiveSpecialClasses,
   getActiveReservationCount,
   formatPriceCents,
   formatTimeOnly,
 } from '../../lib/specialClasses';
+import { getUpcomingActiveSpecialClasses } from '../../lib/specialClassesService';
 import { getRecurringEntries, getOverviewEntries } from '../../lib/scheduleService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -29,6 +29,7 @@ interface WeeklyClass {
   name: string;
   detail: string;
   category: Category;
+  location?: string;
   isPrivate?: boolean;
 }
 
@@ -475,7 +476,7 @@ function ClassEntryRow({ cls, isLast }: { cls: WeeklyClass; isLast: boolean }) {
             <span>1 hour</span>
             <span>·</span>
             <MapPin size={11} style={{ flexShrink: 0 }} />
-            <span>Main Studio</span>
+            <span>{cls.location || 'Main Studio'}</span>
           </p>
           {payLink && (
             <div className="sm:hidden mt-2 pl-[76px]">
@@ -733,14 +734,14 @@ export function SchedulePage() {
   const [overviewPattern, setOverviewPattern] = useState<WeeklyClass[]>(FALLBACK_WEEKLY_PATTERN);
 
   const loadSpecialClasses = useCallback(() => {
-    setSpecialClasses(getUpcomingActiveSpecialClasses());
+    getUpcomingActiveSpecialClasses().then(setSpecialClasses).catch(console.error);
   }, []);
 
   useEffect(() => {
     loadSpecialClasses();
     document.title = 'Class Schedule | Estilo Latino Dance Company';
 
-    const toWeekly = (entries: { dayOfWeek: string; startTime: string; className: string; detail: string; category: string; isActive: boolean }[]): WeeklyClass[] =>
+    const toWeekly = (entries: { dayOfWeek: string; startTime: string; className: string; detail: string; category: string; isActive: boolean; location?: string }[]): WeeklyClass[] =>
       entries
         .filter((e) => e.isActive)
         .map((e) => ({
@@ -749,6 +750,7 @@ export function SchedulePage() {
           name:      e.className,
           detail:    e.detail,
           category:  e.category as Category,
+          location:  e.location,
           isPrivate: e.className.toLowerCase().includes('private'),
         }));
 
