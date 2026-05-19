@@ -119,7 +119,7 @@ const filters: { id: FilterType; label: string }[] = [
 
 function matchesFilter(category: Category, filter: FilterType): boolean {
   if (filter === 'all') return true;
-  if (filter === 'special') return category === 'special' || category === 'ballet' || category === 'team';
+  if (filter === 'special') return false; // special filter shows only one-off SpecialClass events, not recurring
   return category === (filter as Category);
 }
 
@@ -765,15 +765,24 @@ export function SchedulePage() {
     }).catch(console.error);
   }, [loadSpecialClasses]);
 
-  // Check for ?reserved=success query param
+  // Check for ?reserved=success and ?filter=<type> query params — run once on mount
+  const initialSearch = location.search;
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+    const params = new URLSearchParams(initialSearch);
     if (params.get('reserved') === 'success') {
       setShowSuccessBanner(true);
-      // Clean the URL without a page reload
       window.history.replaceState({}, '', '/schedule');
     }
-  }, [location.search]);
+    const urlFilter = params.get('filter') as FilterType | null;
+    if (urlFilter && ['all', 'kids', 'salsa', 'bachata', 'street', 'special'].includes(urlFilter)) {
+      setFilter(urlFilter);
+      // Wait for data + render before scrolling
+      setTimeout(() => {
+        document.getElementById('detailed-schedule')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 800);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -782,7 +791,18 @@ export function SchedulePage() {
   const recurringGroups = generateSchedule(weeklyPattern, today, daysToShow);
   const allGroups = mergeSpecialClasses(recurringGroups, specialClasses, today, daysToShow);
 
-  const canLoadMore = daysToShow < MAX_DAYS;
+  // When special filter is active, show ALL upcoming special events without window restriction
+  const displayGroups = filter === 'special'
+    ? specialClasses
+        .map(sc => {
+          const d = new Date(sc.date);
+          d.setHours(0, 0, 0, 0);
+          return { date: d, classes: [] as WeeklyClass[], specialClasses: [sc] };
+        })
+        .sort((a, b) => a.date.getTime() - b.date.getTime())
+    : allGroups;
+
+  const canLoadMore = filter !== 'special' && daysToShow < MAX_DAYS;
 
   function openReserveModal(sc: SpecialClass) {
     setReserveTarget(sc);
@@ -882,6 +902,7 @@ export function SchedulePage() {
           className="text-center mb-8"
         >
           <h2
+            id="detailed-schedule"
             className="font-display uppercase"
             style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', lineHeight: 0.95, color: 'var(--white)' }}
           >
@@ -998,7 +1019,7 @@ export function SchedulePage() {
 
         {/* ── Timeline ── */}
         <div>
-          {allGroups.map((group, idx) => (
+          {displayGroups.map((group, idx) => (
             <DateGroupRow
               key={`${group.date.toISOString()}-${idx}`}
               group={group}
@@ -1007,6 +1028,11 @@ export function SchedulePage() {
               onReserve={openReserveModal}
             />
           ))}
+          {filter === 'special' && displayGroups.length === 0 && (
+            <p className="text-center font-body py-16" style={{ color: 'var(--text-muted)' }}>
+              No upcoming special events at this time.
+            </p>
+          )}
         </div>
 
         {/* ── Show more button ── */}
