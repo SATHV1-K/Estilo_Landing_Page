@@ -6,12 +6,13 @@ import { motion } from 'motion/react';
 interface NavPillProps {
   to: string;
   active?: boolean;
+  onClick?: () => void;
   children: React.ReactNode;
 }
 
-export function NavPill({ to, active = false, children }: NavPillProps) {
+export function NavPill({ to, active = false, onClick, children }: NavPillProps) {
   return (
-    <Link to={to}>
+    <Link to={to} onClick={onClick}>
       <motion.div
         className={`px-5 py-2.5 rounded-full text-sm font-semibold uppercase tracking-wider transition-all duration-200 ${
           active

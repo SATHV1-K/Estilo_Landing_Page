@@ -287,11 +287,8 @@ export function VideosPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('all');
   const [activeModal,    setActiveModal]    = useState<Video | null>(null);
 
-  // ── SEO: page title + JSON-LD VideoObject structured data ──────────────────
+  // ── SEO: JSON-LD VideoObject structured data ──────────────────────────────
   useEffect(() => {
-    const prevTitle = document.title;
-    document.title = 'Videos | Estilo Latino Dance Company';
-
     // Build VideoObject list for YouTube videos
     const youtubeVideos = videos.filter(v => v.source === 'youtube' && v.youtubeId);
     if (youtubeVideos.length > 0) {
@@ -322,7 +319,6 @@ export function VideosPage() {
     }
 
     return () => {
-      document.title = prevTitle;
       document.getElementById('videos-jsonld')?.remove();
     };
   }, [videos]);

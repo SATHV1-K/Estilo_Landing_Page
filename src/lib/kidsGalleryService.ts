@@ -2,6 +2,7 @@ import { supabase, uploadFile, genId } from './supabase';
 import type { KidsGalleryItem, KidsGalleryCategory } from './types';
 
 const TABLE = 'kids_gallery_items';
+const COLS  = 'id, title, title_es, type, url, thumbnail_url, youtube_id, category, sort_order, is_active, created_at, updated_at';
 
 function rowToItem(row: Record<string, unknown>): KidsGalleryItem {
   return {
@@ -23,7 +24,7 @@ function rowToItem(row: Record<string, unknown>): KidsGalleryItem {
 export async function getKidsGalleryItems(): Promise<KidsGalleryItem[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToItem);
@@ -32,11 +33,31 @@ export async function getKidsGalleryItems(): Promise<KidsGalleryItem[]> {
 export async function getActiveKidsGalleryItems(): Promise<KidsGalleryItem[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToItem);
+}
+
+export async function getActiveKidsGalleryItemsPaginated(
+  page: number,
+  pageSize: number,
+  filters?: { category?: KidsGalleryCategory; type?: 'photo' | 'video' },
+): Promise<{ items: KidsGalleryItem[]; total: number }> {
+  const from = (page - 1) * pageSize;
+  const to   = from + pageSize - 1;
+  let query = supabase
+    .from(TABLE)
+    .select(COLS, { count: 'exact' })
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .range(from, to);
+  if (filters?.category) query = query.eq('category', filters.category);
+  if (filters?.type)     query = query.eq('type', filters.type);
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { items: (data ?? []).map(rowToItem), total: count ?? 0 };
 }
 
 export async function saveKidsGalleryItem(
@@ -73,7 +94,7 @@ export async function saveKidsGalleryItem(
   const { data: saved, error } = await supabase
     .from(TABLE)
     .upsert(row)
-    .select()
+    .select(COLS)
     .single();
   if (error) throw error;
   return rowToItem(saved as Record<string, unknown>);

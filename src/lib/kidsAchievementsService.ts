@@ -2,6 +2,7 @@ import { supabase, uploadFile, genId } from './supabase';
 import type { KidsAchievement } from './types';
 
 const TABLE = 'kids_achievements';
+const COLS  = 'id, title, title_es, description, description_es, image_url, date, sort_order, is_active, created_at, updated_at';
 
 function rowToAchievement(row: Record<string, unknown>): KidsAchievement {
   return {
@@ -22,7 +23,7 @@ function rowToAchievement(row: Record<string, unknown>): KidsAchievement {
 export async function getKidsAchievements(): Promise<KidsAchievement[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToAchievement);
@@ -31,11 +32,27 @@ export async function getKidsAchievements(): Promise<KidsAchievement[]> {
 export async function getActiveKidsAchievements(): Promise<KidsAchievement[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToAchievement);
+}
+
+export async function getActiveKidsAchievementsPaginated(
+  page: number,
+  pageSize: number,
+): Promise<{ items: KidsAchievement[]; total: number }> {
+  const from = (page - 1) * pageSize;
+  const to   = from + pageSize - 1;
+  const { data, error, count } = await supabase
+    .from(TABLE)
+    .select(COLS, { count: 'exact' })
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .range(from, to);
+  if (error) throw error;
+  return { items: (data ?? []).map(rowToAchievement), total: count ?? 0 };
 }
 
 export async function saveKidsAchievement(
@@ -71,7 +88,7 @@ export async function saveKidsAchievement(
   const { data: saved, error } = await supabase
     .from(TABLE)
     .upsert(row)
-    .select()
+    .select(COLS)
     .single();
   if (error) throw error;
   return rowToAchievement(saved as Record<string, unknown>);

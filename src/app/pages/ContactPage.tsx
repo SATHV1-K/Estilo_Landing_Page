@@ -127,7 +127,9 @@ export function ContactPage() {
           className="text-center mb-16"
         >
           <h1 className="font-display text-[clamp(3rem,6vw,5rem)] leading-[0.95] mb-6 uppercase">
-            {es ? 'Contáctanos' : 'Contact Us'}
+            {es
+              ? <span className="text-gold">CONTÁCTANOS</span>
+              : <><span>CONTACT </span><span className="text-gold">US</span></>}
           </h1>
           <p className="text-xl text-text-muted max-w-2xl mx-auto">
             {es

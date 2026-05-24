@@ -2,6 +2,7 @@ import { supabase, uploadFile, genId } from './supabase';
 import type { Instructor } from './types';
 
 const TABLE = 'instructors';
+const COLS  = 'id, name, specialty, bio, bio_es, photo_url, video_url, social_links, sort_order, is_active';
 
 function rowToInstructor(row: Record<string, unknown>): Instructor {
   return {
@@ -21,7 +22,7 @@ function rowToInstructor(row: Record<string, unknown>): Instructor {
 export async function getInstructors(): Promise<Instructor[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToInstructor);
@@ -30,7 +31,7 @@ export async function getInstructors(): Promise<Instructor[]> {
 export async function getActiveInstructors(): Promise<Instructor[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) throw error;

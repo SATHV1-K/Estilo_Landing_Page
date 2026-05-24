@@ -22,10 +22,12 @@ function rowToAlert(row: Record<string, unknown>): Alert {
   };
 }
 
+const COLS = 'id, title, title_es, message, message_es, type, link, link_label, start_date, end_date, is_active, sort_order, created_at, updated_at';
+
 export async function getAlerts(): Promise<Alert[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToAlert);
@@ -35,17 +37,13 @@ export async function getActiveAlerts(): Promise<Alert[]> {
   const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
+    .or(`start_date.is.null,start_date.lte.${today}`)
+    .or(`end_date.is.null,end_date.gte.${today}`)
     .order('sort_order', { ascending: true });
   if (error) throw error;
-  return (data ?? [])
-    .map(rowToAlert)
-    .filter(a => {
-      if (a.startDate && a.startDate > today) return false;
-      if (a.endDate   && a.endDate   < today) return false;
-      return true;
-    });
+  return (data ?? []).map(rowToAlert);
 }
 
 export async function saveAlert(

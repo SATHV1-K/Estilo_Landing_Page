@@ -14,7 +14,7 @@ function rowToContent(row: Record<string, unknown>): SiteContent {
 export async function getAllContent(): Promise<SiteContent[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select('key, value, updated_at')
     .order('key', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToContent);

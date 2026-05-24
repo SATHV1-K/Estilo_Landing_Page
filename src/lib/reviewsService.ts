@@ -2,6 +2,7 @@ import { supabase, genId } from './supabase';
 import type { Review } from './adminData';
 
 const TABLE = 'reviews';
+const COLS  = 'id, name, stars, text, sort_order, is_active, created_at, updated_at';
 
 function rowToReview(row: Record<string, unknown>): Review {
   return {
@@ -19,7 +20,7 @@ function rowToReview(row: Record<string, unknown>): Review {
 export async function getReviews(): Promise<Review[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToReview);
@@ -28,7 +29,7 @@ export async function getReviews(): Promise<Review[]> {
 export async function getActiveReviews(): Promise<Review[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) throw error;

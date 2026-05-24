@@ -2,6 +2,7 @@ import { supabase, uploadFile, genId } from './supabase';
 import type { GalleryPhoto, PhotoCategory } from './adminData';
 
 const TABLE = 'gallery_photos';
+const COLS  = 'id, title, title_es, alt_text, image_url, category, sort_order, is_active, created_at, updated_at';
 
 function rowToPhoto(row: Record<string, unknown>): GalleryPhoto {
   return {
@@ -21,7 +22,7 @@ function rowToPhoto(row: Record<string, unknown>): GalleryPhoto {
 export async function getGalleryPhotos(): Promise<GalleryPhoto[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToPhoto);
@@ -30,11 +31,30 @@ export async function getGalleryPhotos(): Promise<GalleryPhoto[]> {
 export async function getActiveGalleryPhotos(): Promise<GalleryPhoto[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToPhoto);
+}
+
+export async function getActiveGalleryPhotosPaginated(
+  page: number,
+  pageSize: number,
+  category?: PhotoCategory,
+): Promise<{ photos: GalleryPhoto[]; total: number }> {
+  const from = (page - 1) * pageSize;
+  const to   = from + pageSize - 1;
+  let query = supabase
+    .from(TABLE)
+    .select(COLS, { count: 'exact' })
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .range(from, to);
+  if (category) query = query.eq('category', category);
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { photos: (data ?? []).map(rowToPhoto), total: count ?? 0 };
 }
 
 export async function saveGalleryPhoto(

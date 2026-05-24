@@ -30,7 +30,13 @@ export function CTABanner({
         className="max-w-[1440px] mx-auto px-4 lg:px-16 text-center"
       >
         <h2 className="font-display text-[clamp(2.5rem,6vw,4.5rem)] leading-[0.95] mb-6">
-          {title}
+          {(() => {
+            const words = title.split(' ');
+            if (words.length <= 1) return <span className="text-gold">{title}</span>;
+            const last = words[words.length - 1];
+            const rest = words.slice(0, -1).join(' ');
+            return <>{rest} <span className="text-gold">{last}</span></>;
+          })()}
         </h2>
         {subtitle && (
           <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto">

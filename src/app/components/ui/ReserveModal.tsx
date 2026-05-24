@@ -1,16 +1,11 @@
 // ReserveModal — Customer-facing reservation modal for Special Classes
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { SpecialClass } from '../../../lib/specialClasses';
-import {
-  addReservation,
-  formatPriceCents,
-  formatTimeOnly,
-  formatDateOnly,
-  getActiveReservationCount,
-} from '../../../lib/specialClasses';
+import { formatPriceCents, formatTimeOnly, formatDateOnly } from '../../../lib/specialClasses';
+import { saveReservation, getActiveReservationCount } from '../../../lib/specialClassesService';
 
 interface Props {
   specialClass: SpecialClass | null;
@@ -37,12 +32,19 @@ export function ReserveModal({ specialClass, onClose }: Props) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [reservedCount, setReservedCount] = useState(0);
+
+  useEffect(() => {
+    if (!specialClass) return;
+    getActiveReservationCount(specialClass.id)
+      .then(setReservedCount)
+      .catch(() => setReservedCount(0));
+  }, [specialClass]);
 
   if (!specialClass) return null;
 
-  const reservedCount = getActiveReservationCount(specialClass.id);
-  const spotsLeft     = specialClass.maxCapacity - reservedCount;
-  const isFree        = specialClass.price === 0;
+  const spotsLeft = specialClass.maxCapacity - reservedCount;
+  const isFree    = specialClass.price === 0;
 
   function validate(): boolean {
     const e: Record<string, string> = {};
@@ -50,34 +52,36 @@ export function ReserveModal({ specialClass, onClose }: Props) {
     if (!email.trim()) e.email = 'Email is required';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
       e.email = 'Invalid email address';
+    const digitsOnly = phone.trim().replace(/\D/g, '');
+    if (!phone.trim())          e.phone = 'Phone number is required';
+    else if (digitsOnly.length !== 10) e.phone = 'Enter a valid 10-digit phone number';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-
-    addReservation({
-      specialClassId: specialClass.id,
-      customerName:   name.trim(),
-      customerEmail:  email.trim(),
-      customerPhone:  phone.trim(),
-      paymentStatus:  'pending',
-      amount:         specialClass.price,
-    });
-
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await saveReservation({
+        specialClassId: specialClass.id,
+        customerName:   name.trim(),
+        customerEmail:  email.trim(),
+        customerPhone:  phone.trim(),
+        paymentStatus:  'pending',
+        amount:         specialClass.price,
+      });
       if (isFree || !specialClass.paymentLink) {
-        // Free or no payment link — show success state directly
         setDone(true);
       } else {
-        // Redirect to Square checkout
         window.location.href = specialClass.paymentLink;
       }
-    }, 500);
+    } catch {
+      setErrors({ submit: 'Something went wrong. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
   }
 
   function focusStyle(el: HTMLInputElement | HTMLTextAreaElement) {
@@ -256,18 +260,33 @@ export function ReserveModal({ specialClass, onClose }: Props) {
                       className="block font-body text-xs font-semibold uppercase tracking-wide mb-1.5"
                       style={{ color: 'var(--text-muted)' }}
                     >
-                      Phone <span style={{ color: 'var(--text-dim)' }}>(optional)</span>
+                      Phone *
                     </label>
                     <input
                       type="tel"
                       value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      placeholder="(201) 000-0000"
-                      style={inputBase}
+                      onChange={e => { setPhone(e.target.value); setErrors(p => ({ ...p, phone: '' })); }}
+                      placeholder="0000000000"
+                      style={{
+                        ...inputBase,
+                        borderColor: errors.phone ? 'var(--error)' : 'var(--border-strong)',
+                      }}
                       onFocus={e => focusStyle(e.currentTarget)}
-                      onBlur={e  => blurStyle(e.currentTarget, false)}
+                      onBlur={e  => blurStyle(e.currentTarget, !!errors.phone)}
                     />
+                    {errors.phone && (
+                      <p className="text-xs mt-1 font-body" style={{ color: 'var(--error)' }}>
+                        {errors.phone}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Submit error */}
+                  {errors.submit && (
+                    <p className="text-xs text-center font-body" style={{ color: 'var(--error)' }}>
+                      {errors.submit}
+                    </p>
+                  )}
 
                   {/* Submit */}
                   <button

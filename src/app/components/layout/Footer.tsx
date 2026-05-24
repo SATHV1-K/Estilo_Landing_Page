@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
-import { Facebook, Instagram, Youtube, Music, CheckCircle, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
+import { Facebook, Instagram, Youtube, Music, CheckCircle, AlertCircle, Loader2, ExternalLink, MapPin, Phone, Mail } from 'lucide-react';
 import { useI18n, translations } from '../../../lib/i18n';
 import { getSiteSettings } from '../../../lib/settingsService';
 import { subscribeEmail } from '../../../lib/newsletterService';
@@ -145,37 +145,33 @@ export function Footer() {
             <h3 className="text-lg font-display mb-6">
               {translations.nav.contact[language]}
             </h3>
-            <div className="space-y-3 text-text-muted">
+            <div className="space-y-4 text-text-muted">
               <a
                 href={`https://maps.google.com/?q=${encodeURIComponent(`${siteSettings.address}, ${siteSettings.city}, ${siteSettings.state} ${siteSettings.zip}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-start gap-1 hover:text-gold transition-colors"
+                className="flex items-start gap-3 hover:text-gold transition-colors group"
               >
+                <MapPin size={16} className="flex-shrink-0 mt-0.5 text-gold/60 group-hover:text-gold transition-colors" />
                 <span>
                   {siteSettings.address}<br />
                   {siteSettings.city}, {siteSettings.state} {siteSettings.zip}
                 </span>
-                <ExternalLink size={12} className="flex-shrink-0 mt-0.5 opacity-60" />
               </a>
-              <p>
-                <a
-                  href={`tel:${siteSettings.phone}`}
-                  className="inline-flex items-center gap-1 hover:text-gold transition-colors"
-                >
-                  {siteSettings.phone}
-                  <ExternalLink size={12} className="opacity-60" />
-                </a>
-              </p>
-              <p>
-                <a
-                  href={`mailto:${siteSettings.email}`}
-                  className="inline-flex items-center gap-1 hover:text-gold transition-colors"
-                >
-                  {siteSettings.email}
-                  <ExternalLink size={12} className="opacity-60" />
-                </a>
-              </p>
+              <a
+                href={`tel:${siteSettings.phone}`}
+                className="flex items-center gap-3 hover:text-gold transition-colors group"
+              >
+                <Phone size={16} className="flex-shrink-0 text-gold/60 group-hover:text-gold transition-colors" />
+                {siteSettings.phone}
+              </a>
+              <a
+                href={`mailto:${siteSettings.email}`}
+                className="flex items-center gap-3 hover:text-gold transition-colors group"
+              >
+                <Mail size={16} className="flex-shrink-0 text-gold/60 group-hover:text-gold transition-colors" />
+                {siteSettings.email}
+              </a>
             </div>
           </motion.div>
 

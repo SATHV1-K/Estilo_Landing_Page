@@ -242,8 +242,6 @@ export function KidsSchedulePage() {
   const [overviewPattern, setOverviewPattern] = useState<WeeklyClass[]>(FALLBACK);
 
   useEffect(() => {
-    document.title = 'Kids Schedule | Estilo Kids';
-
     getOverviewEntries().then(entries => {
       const weekly = entries
         .filter(e => e.isActive)

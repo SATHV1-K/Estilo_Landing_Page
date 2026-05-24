@@ -1,15 +1,11 @@
 // ReservationSuccessPage — shown after a free reservation or as a landing page
 // for customers returning from Square payment.
 
-import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { motion } from 'motion/react';
 import { CheckCircle, CalendarDays } from 'lucide-react';
 
 export function ReservationSuccessPage() {
-  useEffect(() => {
-    document.title = 'Reservation Confirmed | Estilo Latino Dance Company';
-  }, []);
 
   return (
     <div

@@ -139,11 +139,11 @@ export const heroImage: Variants = {
 
 // ─── Letter Animations ──────────────────────────────────
 export const letterStagger: Variants = {
-  hidden: { opacity: 0 },
+  hidden: {},
   visible: {
-    opacity: 1,
     transition: {
       staggerChildren: 0.05,
+      delayChildren: 0.1,
     },
   },
 };

@@ -27,7 +27,7 @@ export async function subscribeEmail(email: string): Promise<void> {
 export async function getAllSubscribers(): Promise<NewsletterSubscriber[]> {
   const { data, error } = await supabase
     .from('newsletter_subscribers')
-    .select('*')
+    .select('id, email, subscribed_at')
     .order('subscribed_at', { ascending: false });
   if (error) throw error;
   return (data ?? []).map(toModel);

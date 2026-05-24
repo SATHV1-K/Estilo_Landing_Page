@@ -3,6 +3,7 @@ import type { MediaFile } from './adminData';
 
 const TABLE  = 'media_files';
 const BUCKET = 'media';
+const COLS   = 'id, slot, url, filename, file_size, mime_type, alt_text, width, height, uploaded_at';
 
 function rowToMedia(row: Record<string, unknown>): MediaFile {
   return {
@@ -22,7 +23,7 @@ function rowToMedia(row: Record<string, unknown>): MediaFile {
 export async function getAllMedia(): Promise<MediaFile[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('uploaded_at', { ascending: false });
   if (error) throw error;
   return (data ?? []).map(rowToMedia);
@@ -31,7 +32,7 @@ export async function getAllMedia(): Promise<MediaFile[]> {
 export async function getMedia(slot: string): Promise<MediaFile | undefined> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('slot', slot)
     .order('uploaded_at', { ascending: false })
     .limit(1);

@@ -2,6 +2,7 @@ import { supabase, uploadFile, genId } from './supabase';
 import type { KidsProgram } from './types';
 
 const TABLE = 'kids_programs';
+const COLS  = 'id, name, name_es, description, description_es, age_range, image_url, schedule_note, enroll_link, sort_order, is_active, created_at, updated_at';
 
 function rowToProgram(row: Record<string, unknown>): KidsProgram {
   return {
@@ -24,7 +25,7 @@ function rowToProgram(row: Record<string, unknown>): KidsProgram {
 export async function getKidsPrograms(): Promise<KidsProgram[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToProgram);
@@ -33,7 +34,7 @@ export async function getKidsPrograms(): Promise<KidsProgram[]> {
 export async function getActiveKidsPrograms(): Promise<KidsProgram[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) throw error;
@@ -75,7 +76,7 @@ export async function saveKidsProgram(
   const { data: saved, error } = await supabase
     .from(TABLE)
     .upsert(row)
-    .select()
+    .select(COLS)
     .single();
   if (error) throw error;
   return rowToProgram(saved as Record<string, unknown>);

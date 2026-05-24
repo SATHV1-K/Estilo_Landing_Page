@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Sparkles, FileText, Image, Users,
   Layers, Calendar, Star, LogOut, Menu, X, ChevronRight,
   Package, Settings, Bell, Film, Images, MessageSquare,
-  BookOpen, Trophy, GalleryHorizontal,
+  BookOpen, Trophy, GalleryHorizontal, Crown, MessageCircle,
 } from 'lucide-react';
 import { isAdminLoggedIn, adminLogin, adminLogout } from '../../../lib/specialClasses';
 
@@ -45,6 +45,13 @@ const KIDS_NAV_ITEMS = [
   { to: '/admin/kids/programs',     label: 'Programs',     icon: Layers },
   { to: '/admin/kids/gallery',      label: 'Gallery',      icon: GalleryHorizontal },
   { to: '/admin/kids/achievements', label: 'Achievements', icon: Trophy },
+];
+
+const EUPHORIA_NAV_ITEMS = [
+  { to: '/admin/euphoria/content',      label: 'Content',       icon: FileText },
+  { to: '/admin/euphoria/gallery',      label: 'Gallery',       icon: Images },
+  { to: '/admin/euphoria/testimonials', label: 'Testimonials',  icon: MessageCircle },
+  { to: '/admin/euphoria/auditions',    label: 'Auditions',     icon: Users },
 ];
 
 // ─── Login Screen ─────────────────────────────────────────────────────────────
@@ -183,6 +190,36 @@ function Sidebar({
             </NavLink>
           );
         })}
+
+        {/* Euphoria Ladies section */}
+        <div className="mt-3 mb-1 px-3 pt-3 border-t border-gray-100">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+            <Crown size={10} style={{ color: '#CE1868' }} /> Euphoria Ladies
+          </p>
+        </div>
+        {EUPHORIA_NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onClose}
+            className={({ isActive }) =>
+              [
+                'flex items-center gap-3 px-3 py-2.5 text-sm font-semibold transition-colors mb-0.5',
+                isActive
+                  ? 'border-l-2 border-[#CE1868] bg-[#CE1868]/10 text-[#CE1868] rounded-r-lg'
+                  : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg',
+              ].join(' ')
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <Icon size={17} className={isActive ? '' : 'text-gray-500'} style={isActive ? { color: '#CE1868' } : {}} />
+                <span className="flex-1">{label}</span>
+                {isActive && <ChevronRight size={14} style={{ color: '#CE1868' }} />}
+              </>
+            )}
+          </NavLink>
+        ))}
 
         {/* Kids section */}
         <div className="mt-3 mb-1 px-3 pt-3 border-t border-gray-100">

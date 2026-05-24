@@ -2,6 +2,7 @@ import { supabase, uploadFile, genId } from './supabase';
 import type { Video, VideoSource, VideoCategory } from './adminData';
 
 const TABLE = 'videos';
+const COLS  = 'id, title, title_es, description, description_es, source, external_url, youtube_id, thumbnail_url, video_file_url, duration_sec, category, featured, sort_order, is_active, created_at, updated_at';
 
 function rowToVideo(row: Record<string, unknown>): Video {
   return {
@@ -28,7 +29,7 @@ function rowToVideo(row: Record<string, unknown>): Video {
 export async function getVideos(): Promise<Video[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToVideo);
@@ -37,11 +38,32 @@ export async function getVideos(): Promise<Video[]> {
 export async function getActiveVideos(): Promise<Video[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToVideo);
+}
+
+export async function getActiveVideosPaginated(
+  page: number,
+  pageSize: number,
+  category?: VideoCategory,
+  source?: VideoSource,
+): Promise<{ videos: Video[]; total: number }> {
+  const from = (page - 1) * pageSize;
+  const to   = from + pageSize - 1;
+  let query = supabase
+    .from(TABLE)
+    .select(COLS, { count: 'exact' })
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .range(from, to);
+  if (category) query = query.eq('category', category);
+  if (source)   query = query.eq('source', source);
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { videos: (data ?? []).map(rowToVideo), total: count ?? 0 };
 }
 
 export async function saveVideo(

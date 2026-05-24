@@ -25,7 +25,7 @@ function toModel(row: Record<string, unknown>): ContactMessage {
 export async function getContactMessages(): Promise<ContactMessage[]> {
   const { data, error } = await supabase
     .from('contact_messages')
-    .select('*')
+    .select('id, name, email, phone, message, is_read, created_at')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return (data ?? []).map(toModel);

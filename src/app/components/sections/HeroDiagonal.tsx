@@ -43,7 +43,7 @@ export function HeroDiagonal({
   const { language } = useI18n();
 
   return (
-    <section className="relative min-h-[100svh] lg:min-h-[90vh] flex items-center overflow-hidden bg-bg pt-20">
+    <section className="relative min-h-[100svh] lg:min-h-[90vh] flex items-center overflow-hidden bg-bg pt-32">
       <div className="absolute inset-0 z-0">
         {heroVideoSrc ? (
           <>
@@ -85,11 +85,13 @@ export function HeroDiagonal({
               animate="visible"
               className="font-display text-[clamp(3.5rem,8vw,6rem)] leading-[0.92] tracking-tight"
             >
-              {language === 'es' ? headlineEs : headline}
+              <span className="hero-gradient-text">
+                {language === 'es' ? headlineEs : headline}
+              </span>
               {(headlineAccent || headlineAccentEs) && (
                 <>
                   <br />
-                  <span className="text-gold">
+                  <span className="hero-gradient-text-reverse">
                     {language === 'es' ? headlineAccentEs : headlineAccent}
                   </span>
                 </>

@@ -1,5 +1,5 @@
 // SchedulePage — Chronological date-based scrolling timeline
-// Includes recurring weekly classes + Special Event classes from localStorage.
+// Includes recurring weekly classes + Special Event classes from Supabase.
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
@@ -10,12 +10,11 @@ import { CTAButton } from '../components/ui/CTAButton';
 import { scaleIn, staggerFast, fadeInUp, clipRevealLTR } from '../../lib/animations';
 import { ReserveModal } from '../components/ui/ReserveModal';
 import type { SpecialClass } from '../../lib/specialClasses';
+import { formatPriceCents, formatTimeOnly } from '../../lib/specialClasses';
 import {
+  getUpcomingActiveSpecialClasses,
   getActiveReservationCount,
-  formatPriceCents,
-  formatTimeOnly,
-} from '../../lib/specialClasses';
-import { getUpcomingActiveSpecialClasses } from '../../lib/specialClassesService';
+} from '../../lib/specialClassesService';
 import { getRecurringEntries, getOverviewEntries } from '../../lib/scheduleService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -36,7 +35,7 @@ interface WeeklyClass {
 interface DateGroup {
   date: Date;
   classes: WeeklyClass[];
-  specialClasses: SpecialClass[]; // one-off events from localStorage
+  specialClasses: SpecialClass[]; // one-off events from Supabase
 }
 
 // ─── Helpers: convert adminData RecurringEntry → WeeklyClass ─────────────────
@@ -503,11 +502,17 @@ function SpecialEventCard({
   sc: SpecialClass;
   onReserve: (sc: SpecialClass) => void;
 }) {
-  const reservedCount = getActiveReservationCount(sc.id);
-  const spotsLeft     = sc.maxCapacity - reservedCount;
-  const isSoldOut     = spotsLeft <= 0;
-  const priceLabel    = formatPriceCents(sc.price);
-  const timeLabel     = formatTimeOnly(sc.date);
+  const [reservedCount, setReservedCount] = useState(0);
+  useEffect(() => {
+    getActiveReservationCount(sc.id)
+      .then(setReservedCount)
+      .catch(() => setReservedCount(0));
+  }, [sc.id]);
+
+  const spotsLeft  = sc.maxCapacity - reservedCount;
+  const isSoldOut  = spotsLeft <= 0;
+  const priceLabel = formatPriceCents(sc.price);
+  const timeLabel  = formatTimeOnly(sc.date);
 
   return (
     <motion.div variants={entryVariants} className="flex gap-4 pb-5">
@@ -739,7 +744,6 @@ export function SchedulePage() {
 
   useEffect(() => {
     loadSpecialClasses();
-    document.title = 'Class Schedule | Estilo Latino Dance Company';
 
     const toWeekly = (entries: { dayOfWeek: string; startTime: string; className: string; detail: string; category: string; isActive: boolean; location?: string }[]): WeeklyClass[] =>
       entries

@@ -2,6 +2,7 @@ import { supabase, uploadFile, genId } from './supabase';
 import type { DanceStyle } from './types';
 
 const TABLE = 'dance_styles';
+const COLS  = 'id, slug, name, name_es, tagline, description, description_es, hero_image, card_image, video_url, age_group, sort_order, is_active, contact_only';
 
 function rowToStyle(row: Record<string, unknown>): DanceStyle {
   return {
@@ -25,7 +26,7 @@ function rowToStyle(row: Record<string, unknown>): DanceStyle {
 export async function getStyles(): Promise<DanceStyle[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToStyle);
@@ -34,7 +35,7 @@ export async function getStyles(): Promise<DanceStyle[]> {
 export async function getActiveStyles(): Promise<DanceStyle[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) throw error;

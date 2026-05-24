@@ -28,12 +28,15 @@ export function InstructorsPage() {
     <div className="min-h-screen pt-32 pb-24 bg-bg">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
           className="text-center mb-16"
         >
           <h1 className="font-display text-[clamp(3rem,6vw,5rem)] leading-[0.95] mb-6">
-            {language === 'es' ? cms['instructors.heading_es'] : cms['instructors.heading']}
+            {language === 'es'
+              ? <><span>NUESTROS </span><span className="text-gold">INSTRUCTORES</span></>
+              : <><span>OUR </span><span className="text-gold">INSTRUCTORS</span></>}
           </h1>
           <p className="text-xl text-text-muted max-w-2xl mx-auto">
             {language === 'es'

@@ -1,16 +1,26 @@
 // Estilo Kids — Gallery Page (Photos + Videos)
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, X } from 'lucide-react';
+import { Play, X, ChevronDown } from 'lucide-react';
 import { useCmsContent } from '../../../lib/hooks/useCmsContent';
-import { getActiveKidsGalleryItems } from '../../../lib/kidsGalleryService';
+import { getActiveKidsGalleryItemsPaginated } from '../../../lib/kidsGalleryService';
 import { KidsDoodles } from '../../components/kids/KidsDoodles';
 import type { KidsGalleryItem } from '../../../lib/types';
 
-const SPRING = { type: 'spring', stiffness: 200, damping: 15 } as const;
+const SPRING    = { type: 'spring', stiffness: 200, damping: 15 } as const;
+const PAGE_SIZE = 12;
 
 type Tab = 'photos' | 'videos';
+
+type TabData = {
+  items: KidsGalleryItem[];
+  page:  number;
+  total: number;
+  loaded: boolean;
+};
+
+const INIT_TAB: TabData = { items: [], page: 0, total: 0, loaded: false };
 
 function PhotoItem({ item, onClick }: { item: KidsGalleryItem; onClick: () => void }) {
   return (
@@ -105,26 +115,51 @@ function VideoItem({ item }: { item: KidsGalleryItem }) {
 }
 
 export function KidsGalleryPage() {
-  const [items,   setItems]   = useState<KidsGalleryItem[]>([]);
-  const [tab,     setTab]     = useState<Tab>('photos');
-  const [loading, setLoading] = useState(true);
-  const [lightbox, setLightbox] = useState<KidsGalleryItem | null>(null);
-
-  useEffect(() => {
-    getActiveKidsGalleryItems()
-      .then(setItems)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  const photos = items.filter(i => i.type === 'photo');
-  const videos = items.filter(i => i.type === 'video');
-  const shown  = tab === 'photos' ? photos : videos;
+  const [tab,       setTab]       = useState<Tab>('photos');
+  const [photoData, setPhotoData] = useState<TabData>(INIT_TAB);
+  const [videoData, setVideoData] = useState<TabData>(INIT_TAB);
+  const [loading,   setLoading]   = useState(false);
+  const [lightbox,  setLightbox]  = useState<KidsGalleryItem | null>(null);
+  const initRef = useRef(false);
 
   const cms = useCmsContent({
-    'kids.gallery.heading': 'OUR GALLERY',
+    'kids.gallery.heading':  'OUR GALLERY',
     'kids.gallery.subtitle': 'Memories from our classes, performances, and events.',
   });
+
+  async function fetchMore(type: 'photo' | 'video', currentPage: number) {
+    setLoading(true);
+    try {
+      const { items, total } = await getActiveKidsGalleryItemsPaginated(
+        currentPage + 1,
+        PAGE_SIZE,
+        { type },
+      );
+      const setter = type === 'photo' ? setPhotoData : setVideoData;
+      setter(prev => ({
+        items: [...prev.items, ...items],
+        page:  prev.page + 1,
+        total,
+        loaded: true,
+      }));
+    } catch {}
+    finally { setLoading(false); }
+  }
+
+  useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+    fetchMore('photo', 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleTabSwitch(t: Tab) {
+    setTab(t);
+    if (t === 'videos' && !videoData.loaded) fetchMore('video', 0);
+  }
+
+  const shown   = tab === 'photos' ? photoData : videoData;
+  const hasMore = shown.items.length < shown.total;
 
   return (
     <div>
@@ -164,56 +199,80 @@ export function KidsGalleryPage() {
       {/* ── Tabs + Grid ───────────────────────────────────────── */}
       <section className="py-16" style={{ backgroundColor: '#FFF8E7' }}>
         <div className="max-w-6xl mx-auto px-4 lg:px-8">
+
           {/* Tab bar */}
           <div className="flex gap-2 justify-center mb-10">
-            {(['photos', 'videos'] as Tab[]).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className="px-6 py-2.5 rounded-full font-body font-bold text-sm uppercase tracking-wider transition-all"
-                style={
-                  tab === t
-                    ? { backgroundColor: '#4A6FA5', color: '#FFFFFF', boxShadow: '0 4px 12px rgba(74,111,165,0.35)' }
-                    : { backgroundColor: '#FFFFFF', color: '#7A8BBF', border: '2px solid #CBD5E0' }
-                }
-              >
-                {t === 'photos' ? `📷 Photos` : `🎬 Videos`}
-                {t === 'photos' && photos.length > 0 && ` (${photos.length})`}
-                {t === 'videos' && videos.length > 0 && ` (${videos.length})`}
-              </button>
-            ))}
+            {(['photos', 'videos'] as Tab[]).map(t => {
+              const count = t === 'photos' ? photoData.total : videoData.total;
+              return (
+                <button
+                  key={t}
+                  onClick={() => handleTabSwitch(t)}
+                  className="px-6 py-2.5 rounded-full font-body font-bold text-sm uppercase tracking-wider transition-all"
+                  style={
+                    tab === t
+                      ? { backgroundColor: '#4A6FA5', color: '#FFFFFF', boxShadow: '0 4px 12px rgba(74,111,165,0.35)' }
+                      : { backgroundColor: '#FFFFFF', color: '#7A8BBF', border: '2px solid #CBD5E0' }
+                  }
+                >
+                  {t === 'photos' ? '📷 Photos' : '🎬 Videos'}
+                  {count > 0 && ` (${count})`}
+                </button>
+              );
+            })}
           </div>
 
           {/* Grid */}
-          {loading ? (
+          {!shown.loaded && loading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="rounded-2xl h-56 animate-pulse" style={{ backgroundColor: '#E2E8F0' }} />
               ))}
             </div>
-          ) : shown.length > 0 ? (
-            <motion.div
-              key={tab}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-            >
-              {shown.map(item =>
-                item.type === 'photo' ? (
-                  <PhotoItem key={item.id} item={item} onClick={() => setLightbox(item)} />
-                ) : (
-                  <VideoItem key={item.id} item={item} />
-                ),
+          ) : shown.items.length > 0 ? (
+            <>
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+              >
+                {shown.items.map(item =>
+                  item.type === 'photo' ? (
+                    <PhotoItem key={item.id} item={item} onClick={() => setLightbox(item)} />
+                  ) : (
+                    <VideoItem key={item.id} item={item} />
+                  ),
+                )}
+              </motion.div>
+
+              {/* Load More */}
+              {hasMore && (
+                <div className="flex justify-center mt-10">
+                  <button
+                    onClick={() => fetchMore(tab === 'photos' ? 'photo' : 'video', shown.page)}
+                    disabled={loading}
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-body font-bold text-sm uppercase tracking-wider transition-all disabled:opacity-60"
+                    style={{ backgroundColor: '#4A6FA5', color: '#FFFFFF', boxShadow: '0 4px 12px rgba(74,111,165,0.3)' }}
+                  >
+                    {loading ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <ChevronDown size={16} />
+                    )}
+                    Load More
+                  </button>
+                </div>
               )}
-            </motion.div>
-          ) : (
+            </>
+          ) : shown.loaded ? (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">{tab === 'photos' ? '📷' : '🎬'}</div>
               <p className="font-body text-lg" style={{ color: '#7A8BBF' }}>
                 No {tab} yet — check back soon!
               </p>
             </div>
-          )}
+          ) : null}
         </div>
       </section>
 

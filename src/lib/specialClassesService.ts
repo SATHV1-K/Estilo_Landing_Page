@@ -3,8 +3,10 @@ import type { SpecialClass, Reservation, SpecialCategory } from './specialClasse
 
 // ─── Special Classes ──────────────────────────────────────────────────────────
 
-const SC_TABLE  = 'special_classes';
-const RES_TABLE = 'reservations';
+const SC_TABLE   = 'special_classes';
+const RES_TABLE  = 'reservations';
+const SC_COLS    = 'id, name, description, date, end_time, duration_min, location, instructor, category, price, max_capacity, is_active, payment_link, created_at, updated_at';
+const RES_COLS   = 'id, special_class_id, customer_name, customer_email, customer_phone, payment_status, amount, created_at';
 
 function rowToClass(row: Record<string, unknown>): SpecialClass {
   return {
@@ -42,7 +44,7 @@ function rowToReservation(row: Record<string, unknown>): Reservation {
 export async function getSpecialClasses(): Promise<SpecialClass[]> {
   const { data, error } = await supabase
     .from(SC_TABLE)
-    .select('*')
+    .select(SC_COLS)
     .order('date', { ascending: false });
   if (error) throw error;
   return (data ?? []).map(rowToClass);
@@ -52,7 +54,7 @@ export async function getUpcomingActiveSpecialClasses(): Promise<SpecialClass[]>
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from(SC_TABLE)
-    .select('*')
+    .select(SC_COLS)
     .eq('is_active', true)
     .gte('date', now)
     .order('date', { ascending: true });
@@ -102,7 +104,7 @@ export async function deleteSpecialClass(id: string): Promise<void> {
 // ─── Reservations ─────────────────────────────────────────────────────────────
 
 export async function getReservations(specialClassId?: string): Promise<Reservation[]> {
-  let query = supabase.from(RES_TABLE).select('*').order('created_at', { ascending: false });
+  let query = supabase.from(RES_TABLE).select(RES_COLS).order('created_at', { ascending: false });
   if (specialClassId) query = query.eq('special_class_id', specialClassId);
   const { data, error } = await query;
   if (error) throw error;

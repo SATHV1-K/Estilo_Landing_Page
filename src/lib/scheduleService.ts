@@ -1,6 +1,8 @@
 import { supabase, genId } from './supabase';
 import type { RecurringEntry, RecurringDay, RecurringCategory } from './adminData';
 
+const COLS = 'id, day_of_week, start_time, end_time, class_name, detail, category, location, is_active, sort_order, updated_at';
+
 function rowToEntry(row: Record<string, unknown>): RecurringEntry {
   return {
     id:         row.id          as string,
@@ -41,7 +43,7 @@ const RECURRING = 'recurring_schedule';
 export async function getRecurringEntries(): Promise<RecurringEntry[]> {
   const { data, error } = await supabase
     .from(RECURRING)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToEntry);
@@ -79,7 +81,7 @@ const OVERVIEW = 'overview_schedule';
 export async function getOverviewEntries(): Promise<RecurringEntry[]> {
   const { data, error } = await supabase
     .from(OVERVIEW)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToEntry);

@@ -148,3 +148,44 @@ export interface KidsAchievement {
   createdAt: string;
   updatedAt: string;
 }
+
+// ─── Euphoria Ladies Mini-Site ─────────────────────────────────────────────────
+
+export type EuphoriaGalleryCategory = 'competition' | 'performance' | 'training' | 'backstage' | 'general';
+
+export interface EuphoriaGalleryItem {
+  id: string;
+  title: string;
+  type: 'photo' | 'video';
+  url: string;
+  thumbnailUrl: string;
+  youtubeId: string;
+  category: EuphoriaGalleryCategory;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EuphoriaTestimonial {
+  id: string;
+  dancerName: string;
+  role: string;
+  quote: string;
+  year: string;
+  photoUrl: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EuphoriaAuditionApplication {
+  id: string;
+  fullName: string;
+  phone: string;
+  email: string;
+  about: string;
+  status: 'new' | 'reviewed' | 'contacted';
+  createdAt: string;
+}

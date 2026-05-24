@@ -61,11 +61,15 @@ export function StylesGrid({ styles }: StylesGridProps) {
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         {/* Section Heading */}
         <div className="text-center mb-16">
-          <AnimatedLetters text={translations.sections.styles.title[language]} />
+          <AnimatedLetters
+            text={language === 'es' ? 'NUESTROS ' : 'OUR '}
+            accent={translations.sections.styles.title[language].toUpperCase()}
+          />
           <motion.p
             initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ delay: 0.4 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
             className="text-xl uppercase tracking-wider text-text-muted mt-4"
           >
             {translations.sections.styles.subtitle[language]}

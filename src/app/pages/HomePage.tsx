@@ -18,13 +18,15 @@ export function HomePage() {
   const [styles, setStyles]           = useState<DanceStyle[]>([]);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [heroVideoSrc, setHeroVideoSrc] = useState<string>('');
+  const [mediaReady, setMediaReady]     = useState(false);
 
   useEffect(() => {
     getActiveStyles().then(setStyles).catch(console.error);
     getActiveInstructors().then(setInstructors).catch(console.error);
     getMedia('home.hero.video').then(m => {
       if (m?.url) setHeroVideoSrc(m.url);
-    }).catch(console.error);
+      setMediaReady(true);
+    }).catch(() => setMediaReady(true));
   }, []);
 
   // Text content — async, renders with fallbacks immediately
@@ -58,7 +60,7 @@ export function HomePage() {
         ctaLabel={cms['home.hero.cta_label']}
         ctaLabelEs={cms['home.hero.cta_label_es']}
         ctaHref="https://payments.estilolatinodance.com/"
-        heroImageSrc="https://images.unsplash.com/photo-1545224144-b38cd309ef69?w=1200&q=80"
+        heroImageSrc={mediaReady && !heroVideoSrc ? "https://images.unsplash.com/photo-1545224144-b38cd309ef69?w=1200&q=80" : undefined}
         heroVideoSrc={heroVideoSrc || undefined}
         showBadge={true}
       />

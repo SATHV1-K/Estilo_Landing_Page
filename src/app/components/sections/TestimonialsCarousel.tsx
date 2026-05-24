@@ -7,6 +7,8 @@ import { motion } from 'motion/react';
 import { fadeInUp } from '../../../lib/animations';
 import type { Review } from '../../../lib/adminData';
 import { getActiveReviews } from '../../../lib/reviewsService';
+import { useI18n } from '../../../lib/i18n';
+import { AnimatedLetters } from '../ui/AnimatedLetters';
 
 function StarRating({ stars }: { stars: number }) {
   return (
@@ -56,6 +58,7 @@ function ReviewCard({ review }: { review: Review }) {
 }
 
 export function TestimonialsCarousel() {
+  const { language } = useI18n();
   const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {
@@ -67,20 +70,21 @@ export function TestimonialsCarousel() {
   return (
     <section className="py-24 bg-bg overflow-hidden">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16 mb-12">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={fadeInUp}
-          className="text-center"
-        >
-          <h2 className="font-display text-section text-white uppercase">
-            WHAT OUR STUDENTS SAY
-          </h2>
-          <p className="text-gold text-sm tracking-wide uppercase text-center mt-2">
+        <div className="text-center">
+          <AnimatedLetters
+            text={language === 'es' ? 'LO QUE DICEN NUESTROS ' : 'WHAT OUR STUDENTS '}
+            accent={language === 'es' ? 'ESTUDIANTES' : 'SAY'}
+          />
+          <motion.p
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            variants={fadeInUp}
+            className="text-gold text-sm tracking-wide uppercase text-center mt-2"
+          >
             5.0 ★ from 84+ Google Reviews
-          </p>
-        </motion.div>
+          </motion.p>
+        </div>
       </div>
 
       <motion.div

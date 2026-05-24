@@ -50,13 +50,18 @@ export function InstructorGrid({ instructors }: InstructorGridProps) {
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         {/* Section Heading */}
         <div className="text-center mb-16">
-          <AnimatedLetters
-            text={translations.sections.instructors.title[language]}
-          />
+          {(() => {
+            const title = translations.sections.instructors.title[language].toUpperCase();
+            const words = title.split(' ');
+            const accentWord = words[words.length - 1];
+            const mainText = words.slice(0, -1).join(' ') + ' ';
+            return <AnimatedLetters text={mainText} accent={accentWord} />;
+          })()}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ delay: 0.4 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
             className="text-xl uppercase tracking-wider text-text-muted mt-4"
           >
             {translations.sections.instructors.subtitle[language]}

@@ -2,6 +2,7 @@ import { supabase, genId } from './supabase';
 import type { Package } from './types';
 
 const TABLE = 'packages';
+const COLS  = 'id, name, name_es, category, price, currency, class_count, expiration_months, description, description_es, payment_link, sort_order, is_active';
 
 function rowToPackage(row: Record<string, unknown>): Package {
   return {
@@ -24,7 +25,7 @@ function rowToPackage(row: Record<string, unknown>): Package {
 export async function getAllPackages(): Promise<Package[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .order('sort_order', { ascending: true });
   if (error) throw error;
   return (data ?? []).map(rowToPackage);
@@ -33,7 +34,7 @@ export async function getAllPackages(): Promise<Package[]> {
 export async function getPackages(): Promise<Package[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('*')
+    .select(COLS)
     .eq('is_active', true)
     .order('sort_order', { ascending: true });
   if (error) throw error;

@@ -1,8 +1,8 @@
 // KidsLayout — separate blue-theme layout for all /kids/* pages.
 // Has its own header and footer; completely independent of the main dark Layout.
 
-import { useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router';
+import { useState, useEffect } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { Menu, X, Phone, Mail, MapPin, Instagram, Facebook } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { KidsPageBackground } from './KidsDoodles';
@@ -240,7 +240,22 @@ function KidsFooter() {
 
 // ─── KidsLayout ───────────────────────────────────────────────────────────────
 
+const KIDS_TITLES: Record<string, string> = {
+  '/kids':              'Estilo Kids | Latin Rhythms for Kids',
+  '/kids/about':        'About | Estilo Kids',
+  '/kids/schedule':     'Schedule | Estilo Kids',
+  '/kids/achievements': 'Achievements | Estilo Kids',
+  '/kids/gallery':      'Gallery | Estilo Kids',
+};
+
 export function KidsLayout() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const title = KIDS_TITLES[location.pathname];
+    if (title) document.title = title;
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen flex flex-col relative" style={{ backgroundColor: KIDS_BG, isolation: 'isolate' }}>
       <KidsPageBackground />

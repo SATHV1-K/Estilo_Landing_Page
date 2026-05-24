@@ -29,12 +29,15 @@ export function StylesPage() {
     <div className="min-h-screen pt-32 pb-24 bg-bg">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-16">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
           className="text-center mb-16"
         >
           <h1 className="font-display text-[clamp(3rem,6vw,5rem)] leading-[0.95] mb-6">
-            {language === 'es' ? cms['styles.heading_es'] : cms['styles.heading']}
+            {language === 'es'
+              ? <><span>ESTILOS DE </span><span className="text-gold">BAILE</span></>
+              : <><span>DANCE </span><span className="text-gold">STYLES</span></>}
           </h1>
           <p className="text-xl text-text-muted max-w-2xl mx-auto">
             {language === 'es' ? cms['styles.subheading_es'] : cms['styles.subheading']}

@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, Film, X, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getActiveVideos, type Video, type VideoSource, type VideoCategory } from '../../lib/videosService';
-import { getActiveGalleryPhotos, type GalleryPhoto, type PhotoCategory } from '../../lib/galleryService';
+import { getActiveVideosPaginated, type Video, type VideoSource, type VideoCategory } from '../../lib/videosService';
+import { getActiveGalleryPhotosPaginated, type GalleryPhoto, type PhotoCategory } from '../../lib/galleryService';
 import { getYouTubeThumbnail } from '../../lib/youtube';
 import { useI18n } from '../../lib/i18n';
 import { fadeInUp } from '../../lib/animations';
@@ -320,40 +320,83 @@ function PhotoCard({ photo, language, onClick }: { photo: GalleryPhoto; language
 
 // ─── GalleryPage ──────────────────────────────────────────────────────────────
 
+const PHOTO_PAGE_SIZE = 20;
+const VIDEO_PAGE_SIZE = 12;
+
 export function GalleryPage() {
   const { language } = useI18n();
-  const [tab, setTab]                       = useState<Tab>('photos');
-  const [videos, setVideos]                 = useState<Video[]>([]);
-  const [photos, setPhotos]                 = useState<GalleryPhoto[]>([]);
+  const [tab, setTab] = useState<Tab>('photos');
 
+  // ── Photos state ──
+  const [photos, setPhotos]               = useState<GalleryPhoto[]>([]);
+  const [photosTotal, setPhotosTotal]     = useState(0);
+  const [photosPage, setPhotosPage]       = useState(1);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [photoCat, setPhotoCat]           = useState<PhotoCatFilter>('all');
+
+  // ── Videos state ──
+  const [videos, setVideos]               = useState<Video[]>([]);
+  const [videosTotal, setVideosTotal]     = useState(0);
+  const [videosPage, setVideosPage]       = useState(1);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [sourceFilter, setSourceFilter]   = useState<SourceFilter>('all');
+  const [videoCat, setVideoCat]           = useState<VideoCatFilter>('all');
+
+  const [activeModal, setActiveModal] = useState<Video | null>(null);
+  const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+
+  // ── Fetch photos (page 1 on filter change, append on load-more) ──
   useEffect(() => {
-    getActiveGalleryPhotos().then(setPhotos).catch(console.error);
-    getActiveVideos().then(setVideos).catch(console.error);
-  }, []);
-  const [sourceFilter, setSourceFilter]     = useState<SourceFilter>('all');
-  const [videoCat, setVideoCat]             = useState<VideoCatFilter>('all');
-  const [photoCat, setPhotoCat]             = useState<PhotoCatFilter>('all');
-  const [activeModal, setActiveModal]       = useState<Video | null>(null);
-  const [lightboxIdx, setLightboxIdx]       = useState<number | null>(null);
+    setLoadingPhotos(true);
+    setPhotosPage(1);
+    getActiveGalleryPhotosPaginated(1, PHOTO_PAGE_SIZE, photoCat === 'all' ? undefined : photoCat)
+      .then(({ photos: p, total }) => { setPhotos(p); setPhotosTotal(total); })
+      .catch(console.error)
+      .finally(() => setLoadingPhotos(false));
+  }, [photoCat]);
 
+  const loadMorePhotos = useCallback(() => {
+    const nextPage = photosPage + 1;
+    setLoadingPhotos(true);
+    getActiveGalleryPhotosPaginated(nextPage, PHOTO_PAGE_SIZE, photoCat === 'all' ? undefined : photoCat)
+      .then(({ photos: p }) => { setPhotos(prev => [...prev, ...p]); setPhotosPage(nextPage); })
+      .catch(console.error)
+      .finally(() => setLoadingPhotos(false));
+  }, [photosPage, photoCat]);
+
+  // ── Fetch videos (page 1 on filter change, append on load-more) ──
   useEffect(() => {
-    const prev = document.title;
-    document.title = 'Gallery | Estilo Latino Dance Company';
-    return () => { document.title = prev; };
-  }, []);
+    setLoadingVideos(true);
+    setVideosPage(1);
+    getActiveVideosPaginated(
+      1, VIDEO_PAGE_SIZE,
+      videoCat !== 'all' ? videoCat : undefined,
+      sourceFilter !== 'all' ? sourceFilter : undefined,
+    )
+      .then(({ videos: v, total }) => { setVideos(v); setVideosTotal(total); })
+      .catch(console.error)
+      .finally(() => setLoadingVideos(false));
+  }, [videoCat, sourceFilter]);
 
-  const filteredVideos = videos.filter(v => {
-    if (sourceFilter !== 'all' && v.source !== sourceFilter) return false;
-    if (videoCat !== 'all' && v.category !== videoCat) return false;
-    return true;
-  });
-
-  const filteredPhotos = photos.filter(p => photoCat === 'all' || p.category === photoCat);
+  const loadMoreVideos = useCallback(() => {
+    const nextPage = videosPage + 1;
+    setLoadingVideos(true);
+    getActiveVideosPaginated(
+      nextPage, VIDEO_PAGE_SIZE,
+      videoCat !== 'all' ? videoCat : undefined,
+      sourceFilter !== 'all' ? sourceFilter : undefined,
+    )
+      .then(({ videos: v }) => { setVideos(prev => [...prev, ...v]); setVideosPage(nextPage); })
+      .catch(console.error)
+      .finally(() => setLoadingVideos(false));
+  }, [videosPage, videoCat, sourceFilter]);
 
   const clearVideoFilters = useCallback(() => { setSourceFilter('all'); setVideoCat('all'); }, []);
   const clearPhotoFilters = useCallback(() => { setPhotoCat('all'); }, []);
 
-  const visiblePhotos = filteredPhotos;
+  const hasMorePhotos = photos.length < photosTotal;
+  const hasMoreVideos = videos.length < videosTotal;
+  const isFiltering   = photoCat !== 'all';
 
   return (
     <div className="min-h-screen pt-32 pb-24 bg-bg">
@@ -423,34 +466,50 @@ export function GalleryPage() {
               ))}
             </motion.div>
 
-            {photos.length === 0 ? (
+            {!loadingPhotos && photos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <ImageIcon size={48} className="text-border-strong mb-4" />
-                <p className="text-text-muted text-lg">
-                  {language === 'es' ? 'Fotos próximamente' : 'Photos coming soon'}
-                </p>
-              </div>
-            ) : filteredPhotos.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <ImageIcon size={48} className="text-border-strong mb-4" />
-                <p className="text-text-muted text-lg mb-4">
-                  {language === 'es' ? 'Ninguna foto coincide con este filtro' : 'No photos match this filter'}
-                </p>
-                <button onClick={clearPhotoFilters} className="px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wider bg-gold text-ink hover:bg-gold-hover transition-colors">
-                  {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
-                </button>
+                {isFiltering ? (
+                  <>
+                    <p className="text-text-muted text-lg mb-4">
+                      {language === 'es' ? 'Ninguna foto coincide con este filtro' : 'No photos match this filter'}
+                    </p>
+                    <button onClick={clearPhotoFilters} className="px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wider bg-gold text-ink hover:bg-gold-hover transition-colors">
+                      {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-text-muted text-lg">
+                    {language === 'es' ? 'Fotos próximamente' : 'Photos coming soon'}
+                  </p>
+                )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {visiblePhotos.map((photo, idx) => (
-                  <PhotoCard
-                    key={photo.id}
-                    photo={photo}
-                    language={language}
-                    onClick={() => setLightboxIdx(idx)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {photos.map((photo, idx) => (
+                    <PhotoCard
+                      key={photo.id}
+                      photo={photo}
+                      language={language}
+                      onClick={() => setLightboxIdx(idx)}
+                    />
+                  ))}
+                </div>
+                {hasMorePhotos && (
+                  <div className="flex justify-center mt-10">
+                    <button
+                      onClick={loadMorePhotos}
+                      disabled={loadingPhotos}
+                      className="px-8 py-3 rounded-full text-sm font-bold uppercase tracking-wider border-2 border-gold text-gold hover:bg-gold hover:text-ink transition-all disabled:opacity-50"
+                    >
+                      {loadingPhotos
+                        ? (language === 'es' ? 'Cargando…' : 'Loading…')
+                        : (language === 'es' ? 'Cargar más' : 'Load More')}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
@@ -500,27 +559,43 @@ export function GalleryPage() {
               ))}
             </motion.div>
 
-            {videos.length === 0 ? (
+            {!loadingVideos && videos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
                 <Film size={48} className="text-border-strong mb-4" />
-                <p className="text-text-muted text-lg">{language === 'es' ? 'Videos próximamente' : 'Videos coming soon'}</p>
-              </div>
-            ) : filteredVideos.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <Film size={48} className="text-border-strong mb-4" />
-                <p className="text-text-muted text-lg mb-4">
-                  {language === 'es' ? 'Ningún video coincide con este filtro' : 'No videos match this filter'}
-                </p>
-                <button onClick={clearVideoFilters} className="px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wider bg-gold text-ink hover:bg-gold-hover transition-colors">
-                  {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
-                </button>
+                {(sourceFilter !== 'all' || videoCat !== 'all') ? (
+                  <>
+                    <p className="text-text-muted text-lg mb-4">
+                      {language === 'es' ? 'Ningún video coincide con este filtro' : 'No videos match this filter'}
+                    </p>
+                    <button onClick={clearVideoFilters} className="px-5 py-2 rounded-full text-sm font-bold uppercase tracking-wider bg-gold text-ink hover:bg-gold-hover transition-colors">
+                      {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-text-muted text-lg">{language === 'es' ? 'Videos próximamente' : 'Videos coming soon'}</p>
+                )}
               </div>
             ) : (
-              <div key={`${sourceFilter}__${videoCat}`} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredVideos.map(video => (
-                  <VideoCard key={video.id} video={video} language={language} onClick={() => setActiveModal(video)} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {videos.map(video => (
+                    <VideoCard key={video.id} video={video} language={language} onClick={() => setActiveModal(video)} />
+                  ))}
+                </div>
+                {hasMoreVideos && (
+                  <div className="flex justify-center mt-10">
+                    <button
+                      onClick={loadMoreVideos}
+                      disabled={loadingVideos}
+                      className="px-8 py-3 rounded-full text-sm font-bold uppercase tracking-wider border-2 border-gold text-gold hover:bg-gold hover:text-ink transition-all disabled:opacity-50"
+                    >
+                      {loadingVideos
+                        ? (language === 'es' ? 'Cargando…' : 'Loading…')
+                        : (language === 'es' ? 'Cargar más' : 'Load More')}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
@@ -538,7 +613,7 @@ export function GalleryPage() {
         {lightboxIdx !== null && (
           <PhotoLightbox
             key="lightbox"
-            photos={visiblePhotos}
+            photos={photos}
             startIndex={lightboxIdx}
             onClose={() => setLightboxIdx(null)}
             language={language}

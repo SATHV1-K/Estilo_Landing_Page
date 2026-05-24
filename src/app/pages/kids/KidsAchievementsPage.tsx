@@ -1,13 +1,15 @@
 // Estilo Kids — Achievements Page
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { ChevronDown } from 'lucide-react';
 import { useCmsContent } from '../../../lib/hooks/useCmsContent';
-import { getActiveKidsAchievements } from '../../../lib/kidsAchievementsService';
+import { getActiveKidsAchievementsPaginated } from '../../../lib/kidsAchievementsService';
 import { KidsDoodles } from '../../components/kids/KidsDoodles';
 import type { KidsAchievement } from '../../../lib/types';
 
-const SPRING = { type: 'spring', stiffness: 200, damping: 15 } as const;
+const SPRING    = { type: 'spring', stiffness: 200, damping: 15 } as const;
+const PAGE_SIZE = 9;
 
 function AchievementCard({ achievement, index }: { achievement: KidsAchievement; index: number }) {
   const [lightbox, setLightbox] = useState(false);
@@ -22,7 +24,7 @@ function AchievementCard({ achievement, index }: { achievement: KidsAchievement;
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
-        transition={{ ...SPRING, delay: (index % 4) * 0.1 }}
+        transition={{ ...SPRING, delay: (index % 3) * 0.1 }}
         whileHover={{ y: -6, transition: { duration: 0.2 } }}
         className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow cursor-pointer"
         style={{ backgroundColor: '#FFFFFF' }}
@@ -37,6 +39,7 @@ function AchievementCard({ achievement, index }: { achievement: KidsAchievement;
             src={achievement.imageUrl}
             alt={achievement.title}
             className="w-full h-52 object-cover"
+            loading="lazy"
           />
         ) : (
           <div
@@ -94,19 +97,39 @@ function AchievementCard({ achievement, index }: { achievement: KidsAchievement;
 
 export function KidsAchievementsPage() {
   const [achievements, setAchievements] = useState<KidsAchievement[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getActiveKidsAchievements()
-      .then(setAchievements)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+  const [page,         setPage]         = useState(0);
+  const [total,        setTotal]        = useState(0);
+  const [loading,      setLoading]      = useState(false);
+  const [initialLoad,  setInitialLoad]  = useState(true);
+  const initRef = useRef(false);
 
   const cms = useCmsContent({
     'kids.achievements.page.heading': 'OUR LITTLE STARS',
     'kids.achievements.page.subtitle': 'Celebrating the incredible wins, performances, and milestones of our young dancers.',
   });
+
+  async function loadMore(currentPage: number) {
+    setLoading(true);
+    try {
+      const { items, total: t } = await getActiveKidsAchievementsPaginated(currentPage + 1, PAGE_SIZE);
+      setAchievements(prev => [...prev, ...items]);
+      setPage(currentPage + 1);
+      setTotal(t);
+    } catch {}
+    finally {
+      setLoading(false);
+      setInitialLoad(false);
+    }
+  }
+
+  useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+    loadMore(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const hasMore = achievements.length < total;
 
   return (
     <div>
@@ -146,9 +169,9 @@ export function KidsAchievementsPage() {
       {/* ── Grid ──────────────────────────────────────────────── */}
       <section className="py-20" style={{ backgroundColor: '#FFF8E7' }}>
         <div className="max-w-6xl mx-auto px-4 lg:px-8">
-          {loading ? (
+          {initialLoad ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
                 <div key={i} className="rounded-2xl overflow-hidden animate-pulse" style={{ backgroundColor: '#FFFFFF' }}>
                   <div className="w-full h-52" style={{ backgroundColor: '#E2E8F0' }} />
                   <div className="p-5">
@@ -159,11 +182,32 @@ export function KidsAchievementsPage() {
               ))}
             </div>
           ) : achievements.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {achievements.map((a, i) => (
-                <AchievementCard key={a.id} achievement={a} index={i} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {achievements.map((a, i) => (
+                  <AchievementCard key={a.id} achievement={a} index={i} />
+                ))}
+              </div>
+
+              {/* Load More */}
+              {hasMore && (
+                <div className="flex justify-center mt-12">
+                  <button
+                    onClick={() => loadMore(page)}
+                    disabled={loading}
+                    className="inline-flex items-center gap-2 px-8 py-3 rounded-full font-body font-bold text-sm uppercase tracking-wider transition-all disabled:opacity-60"
+                    style={{ backgroundColor: '#4A6FA5', color: '#FFFFFF', boxShadow: '0 4px 12px rgba(74,111,165,0.3)' }}
+                  >
+                    {loading ? (
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <ChevronDown size={16} />
+                    )}
+                    Load More ({achievements.length} of {total})
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🏆</div>

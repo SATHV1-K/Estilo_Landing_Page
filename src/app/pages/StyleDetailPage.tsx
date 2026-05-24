@@ -31,7 +31,9 @@ export function StyleDetailPage() {
 
   useEffect(() => {
     getStyles().then((styles) => {
-      setStyle(styles.find((s) => s.slug === slug) ?? null);
+      const found = styles.find((s) => s.slug === slug) ?? null;
+      setStyle(found);
+      if (found) document.title = `${found.name} | Estilo Latino Dance Company`;
       setLoading(false);
     }).catch(() => setLoading(false));
     getSiteSettings().then(setSiteSettings).catch(() => {});
@@ -44,7 +46,7 @@ export function StyleDetailPage() {
   }
 
   return (
-    <div className="min-h-screen pt-20">
+    <div className="min-h-screen pt-32">
       {/* Hero */}
       <section className="relative h-[60vh] overflow-hidden">
         {style.videoUrl ? (
@@ -67,6 +69,7 @@ export function StyleDetailPage() {
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
           className="absolute inset-0 flex items-center justify-center text-center text-white"
         >
           <div>
