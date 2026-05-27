@@ -80,7 +80,7 @@ export function Footer() {
         <img
           src="/map.png"
           alt=""
-          className="w-full h-full object-cover object-[center_50%] opacity-[0.45]"
+          className="w-full h-full object-cover object-[center_50%] opacity-[0.45] scale-[2] origin-[50%_40%] md:scale-100 md:origin-center"
           draggable={false}
         />
         <div className="absolute inset-0 bg-surface/60" />

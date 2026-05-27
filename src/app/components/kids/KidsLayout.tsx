@@ -6,6 +6,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { Menu, X, Phone, Mail, MapPin, Instagram, Facebook } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { KidsPageBackground } from './KidsDoodles';
+import { useI18n } from '../../../lib/i18n';
 
 const KIDS_BG    = '#4A6FA5';
 const KIDS_TEXT  = '#2D3D6B';
@@ -23,6 +24,7 @@ const NAV = [
 
 function KidsHeader() {
   const [open, setOpen] = useState(false);
+  const { language, setLanguage } = useI18n();
 
   return (
     <header
@@ -65,6 +67,21 @@ function KidsHeader() {
           </nav>
 
           <div className="flex items-center gap-3">
+            {/* Language toggle */}
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
+              className="hidden md:flex items-center gap-1 font-body font-bold text-xs uppercase tracking-wider rounded-full px-3 py-1.5 transition-all"
+              style={{
+                border: '1.5px solid rgba(240,191,113,0.5)',
+                backgroundColor: 'transparent',
+              }}
+              aria-label="Toggle language"
+            >
+              <span style={{ color: language === 'en' ? '#f0bf71' : 'rgba(255,255,255,0.4)' }}>EN</span>
+              <span style={{ color: 'rgba(255,255,255,0.3)', margin: '0 1px' }}>|</span>
+              <span style={{ color: language === 'es' ? '#f0bf71' : 'rgba(255,255,255,0.4)' }}>ES</span>
+            </button>
+
             {/* Main site link */}
             <Link
               to="/"
@@ -121,6 +138,13 @@ function KidsHeader() {
                     {label}
                   </NavLink>
                 ))}
+                <button
+                  onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
+                  className="px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-center mt-1 w-full"
+                  style={{ backgroundColor: 'rgba(240,191,113,0.12)', color: '#f0bf71', border: '1px solid rgba(240,191,113,0.3)' }}
+                >
+                  {language === 'en' ? 'Switch to Español' : 'Switch to English'}
+                </button>
                 <Link
                   to="/"
                   onClick={() => setOpen(false)}

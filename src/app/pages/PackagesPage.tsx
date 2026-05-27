@@ -48,7 +48,7 @@ export function PackagesPage() {
     return `$${(price / 100).toFixed(0)}`;
   };
 
-  const isContactCategory = selectedCategory === 'private' || selectedCategory === 'event';
+  const isContactCategory = selectedCategory === 'event';
 
   const whatsappMessages: Record<string, string> = {
     'adults-salsa-bachata': 'Hi%2C+I%27m+interested+in+Salsa+%26+Bachata+classes',

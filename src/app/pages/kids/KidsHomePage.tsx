@@ -83,6 +83,7 @@ export function KidsHomePage() {
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ ...SPRING, delay: 0.5 }}
+                className="flex flex-wrap gap-4 items-center"
               >
                 <a
                   href="https://payments.estilolatinodance.com"
@@ -97,6 +98,17 @@ export function KidsHomePage() {
                 >
                   {cms['kids.hero.cta.label']}
                 </a>
+                <Link
+                  to="/kids/about"
+                  className="inline-flex items-center gap-2 font-body font-bold uppercase tracking-wider rounded-full px-8 py-4 text-lg transition-all hover:-translate-y-1"
+                  style={{
+                    border: '2px solid #f0bf71',
+                    color: '#f0bf71',
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  About Us
+                </Link>
               </motion.div>
             </div>
 
