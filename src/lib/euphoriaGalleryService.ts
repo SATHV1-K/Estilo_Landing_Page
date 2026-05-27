@@ -1,4 +1,4 @@
-import { supabase, uploadFile, genId } from './supabase';
+import { supabase, uploadFile, genId, compressImage } from './supabase';
 import type { EuphoriaGalleryItem, EuphoriaGalleryCategory } from './types';
 
 const TABLE = 'euphoria_gallery_items';
@@ -80,9 +80,9 @@ export async function saveEuphoriaGalleryItem(
   let url = data.url;
 
   if (imageFile) {
-    const ext  = imageFile.name.split('.').pop() ?? 'jpg';
-    const path = `euphoria/gallery/${genId()}.${ext}`;
-    url        = await uploadFile('gallery', path, imageFile, imageFile.type);
+    const compressed = await compressImage(imageFile);
+    const path = `euphoria/gallery/${genId()}.webp`;
+    url        = await uploadFile('gallery', path, compressed, 'image/webp');
   }
 
   const id    = data.id ?? genId();

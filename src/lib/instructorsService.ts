@@ -1,4 +1,4 @@
-import { supabase, uploadFile, genId } from './supabase';
+import { supabase, uploadFile, genId, compressImage } from './supabase';
 import type { Instructor } from './types';
 
 const TABLE = 'instructors';
@@ -47,10 +47,10 @@ export async function saveInstructor(
   let videoUrl = data.videoUrl;
 
   if (photoFile) {
-    const ext  = photoFile.name.split('.').pop() ?? 'jpg';
-    const path = `instructors/${genId()}.${ext}`;
+    const path = `instructors/${genId()}.webp`;
     try {
-      photoUrl = await uploadFile('media', path, photoFile, photoFile.type);
+      const compressed = await compressImage(photoFile);
+      photoUrl = await uploadFile('media', path, compressed, 'image/webp');
     } catch (e) {
       throw new Error(`Photo upload failed: ${(e as Error).message}`);
     }

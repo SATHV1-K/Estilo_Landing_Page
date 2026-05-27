@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import imageCompression from 'browser-image-compression';
 
 const supabaseUrl     = import.meta.env.VITE_SUPABASE_URL     as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
@@ -7,6 +8,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export function genId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export async function compressImage(file: File): Promise<File> {
+  if (!file.type.startsWith('image/')) return file;
+  return imageCompression(file, {
+    maxSizeMB: 0.4,
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+    fileType: 'image/webp',
+    initialQuality: 0.9,
+  });
 }
 
 export async function uploadFile(

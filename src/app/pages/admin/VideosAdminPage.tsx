@@ -299,8 +299,8 @@ function VideoFormPanel({
   }
 
   function handleVideoSelect(file: File) {
-    if (file.size > 100 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, videoFile: 'Video must be under 100 MB' }));
+    if (file.size > 20 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, videoFile: 'Video must be under 20 MB to avoid Supabase bandwidth limits. Use HandBrake or clideo.com to compress it first.' }));
       return;
     }
     setVideoFile(file);
@@ -512,6 +512,14 @@ function VideoFormPanel({
           {/* ──────────── Direct Upload fields ──────────── */}
           {form.source === 'upload' && (
             <div className="space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+              {/* Bandwidth warning */}
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 leading-relaxed">
+                <strong>Bandwidth tip:</strong> Keep videos under 20 MB — every visitor streams the full file. Compress using{' '}
+                <a href="https://handbrake.fr" target="_blank" rel="noopener noreferrer" className="underline font-semibold">HandBrake</a>{' '}
+                (free) or{' '}
+                <a href="https://clideo.com/compress-video" target="_blank" rel="noopener noreferrer" className="underline font-semibold">clideo.com</a>.
+                For the hero background, YouTube embeds use zero Supabase bandwidth.
+              </div>
               {/* Video file */}
               <div>
                 <label className={S.label}>Video File *</label>
@@ -544,7 +552,7 @@ function VideoFormPanel({
                   >
                     <Upload size={20} />
                     <span className="text-sm font-semibold">Click to upload video</span>
-                    <span className="text-xs">MP4, WebM, MOV · Max 100 MB</span>
+                    <span className="text-xs">MP4, WebM, MOV · Max 20 MB</span>
                   </button>
                 )}
                 {errors.videoFile && (

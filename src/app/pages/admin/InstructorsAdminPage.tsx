@@ -281,6 +281,11 @@ function InstructorFormPanel({ instructor, saving, onSave, onClose }: FormPanelP
   }
 
   function handleVideoFilePick(file: File) {
+    if (file.size > 20 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, video: 'Video must be under 20 MB. Compress with HandBrake or clideo.com first.' }));
+      return;
+    }
+    setErrors(prev => ({ ...prev, video: '' }));
     if (videoPreviewUrl.startsWith('blob:')) URL.revokeObjectURL(videoPreviewUrl);
     setPendingVideo(file);
     setVideoPreviewUrl(URL.createObjectURL(file));
@@ -344,12 +349,16 @@ function InstructorFormPanel({ instructor, saving, onSave, onClose }: FormPanelP
                 Preview Video
               </span>
             </label>
+            <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-2">
+              Keep under 20 MB — compress with <a href="https://handbrake.fr" target="_blank" rel="noopener noreferrer" className="underline font-semibold">HandBrake</a> or <a href="https://clideo.com/compress-video" target="_blank" rel="noopener noreferrer" className="underline font-semibold">clideo.com</a> first.
+            </p>
             <VideoUploader
               previewUrl={videoPreviewUrl}
               pendingFile={pendingVideo}
               onFilePick={handleVideoFilePick}
               onClear={handleVideoClear}
             />
+            {errors.video && <p className="text-xs text-red-600 mt-1">{errors.video}</p>}
           </div>
 
           {/* Name & specialty */}

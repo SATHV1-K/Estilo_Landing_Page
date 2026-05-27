@@ -1,4 +1,4 @@
-import { supabase, uploadFile, genId } from './supabase';
+import { supabase, uploadFile, genId, compressImage } from './supabase';
 import type { DanceStyle } from './types';
 
 const TABLE = 'dance_styles';
@@ -51,14 +51,12 @@ export async function saveStyle(
   let videoUrl  = data.videoUrl;
 
   if (files?.heroFile) {
-    const ext  = files.heroFile.name.split('.').pop() ?? 'jpg';
-    const path = `styles/${genId()}-hero.${ext}`;
-    heroImage  = await uploadFile('media', path, files.heroFile, files.heroFile.type);
+    const path = `styles/${genId()}-hero.webp`;
+    heroImage  = await uploadFile('media', path, await compressImage(files.heroFile), 'image/webp');
   }
   if (files?.cardFile) {
-    const ext  = files.cardFile.name.split('.').pop() ?? 'jpg';
-    const path = `styles/${genId()}-card.${ext}`;
-    cardImage  = await uploadFile('media', path, files.cardFile, files.cardFile.type);
+    const path = `styles/${genId()}-card.webp`;
+    cardImage  = await uploadFile('media', path, await compressImage(files.cardFile), 'image/webp');
   }
   if (files?.videoFile) {
     const ext  = files.videoFile.name.split('.').pop() ?? 'mp4';

@@ -1,4 +1,4 @@
-import { supabase, uploadFile, genId } from './supabase';
+import { supabase, uploadFile, genId, compressImage } from './supabase';
 import type { GalleryPhoto, PhotoCategory } from './adminData';
 
 const TABLE = 'gallery_photos';
@@ -64,9 +64,9 @@ export async function saveGalleryPhoto(
   let imageUrl = data.imageUrl;
 
   if (imageFile) {
-    const ext  = imageFile.name.split('.').pop() ?? 'jpg';
-    const path = `photos/${genId()}.${ext}`;
-    imageUrl   = await uploadFile('gallery', path, imageFile, imageFile.type);
+    const compressed = await compressImage(imageFile);
+    const path = `photos/${genId()}.webp`;
+    imageUrl   = await uploadFile('gallery', path, compressed, 'image/webp');
   }
 
   const id    = data.id ?? genId();
