@@ -263,8 +263,8 @@ export function EuphoriaContentAdminPage() {
             <MediaUploadCard
               slot="euphoria.hero.video"
               label="Background Video"
-              accept="video/mp4,video/webm,video/*"
-              hint="Short video (10–60s) plays silently behind the hero text. MP4 recommended."
+              accept="video/mp4,video/quicktime,video/webm"
+              hint="Upload a video file (MP4, MOV, WebM) up to 20 MB. It will autoplay muted behind the hero."
             />
             <MediaUploadCard
               slot="euphoria.hero.image"

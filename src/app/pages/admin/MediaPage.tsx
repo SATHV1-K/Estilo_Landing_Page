@@ -10,6 +10,7 @@ import {
   getAllMedia, saveMedia, deleteMedia, uploadMediaFile,
   formatBytes, type MediaFile,
 } from '../../../lib/mediaService';
+import { getYouTubeThumbnail, parseYouTubeId } from '../../../lib/youtube';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -117,6 +118,7 @@ function UploadZone({
   );
 }
 
+
 // ─── Slot selector ────────────────────────────────────────────────────────────
 
 const COMMON_SLOTS = [
@@ -171,6 +173,7 @@ function MediaCard({
   const [slot, setSlot]         = useState(file.slot);
   const [editSaving, setEditSaving] = useState(false);
   const isVideo = file.mimeType.startsWith('video/');
+  const ytId = file.mimeType === 'video/youtube' ? parseYouTubeId(file.url) : null;
 
   async function saveEdits() {
     setEditSaving(true);
@@ -190,7 +193,13 @@ function MediaCard({
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden group">
       {/* Thumbnail */}
       <div className="aspect-video bg-gray-100 relative overflow-hidden">
-        {isVideo ? (
+        {ytId ? (
+          <img
+            src={getYouTubeThumbnail(ytId)}
+            alt={file.altText || file.filename}
+            className="w-full h-full object-cover"
+          />
+        ) : isVideo ? (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
             <Film size={32} className="text-gray-400" />
           </div>
@@ -333,30 +342,8 @@ export function MediaPage() {
         </div>
         <UploadZone slot={slot} onUploaded={handleUploaded} />
         <p className="text-xs text-gray-400 mt-3">
-          <span className="font-semibold">Note:</span> Images up to 10 MB and videos up to 50 MB are supported.
+          <span className="font-semibold">Note:</span> Images up to 10 MB · Videos up to 50 MB (MP4, MOV).
         </p>
-
-        {/* Hero video requirements — shown when home.hero.video slot is selected */}
-        {slot === 'home.hero.video' && (
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-xs font-black uppercase tracking-wider text-amber-700 mb-2">
-              Hero Video Requirements
-            </p>
-            <ul className="space-y-1 text-xs text-gray-700">
-              <li><span className="font-semibold">Format:</span> MP4 (H.264 codec) — widest browser support</li>
-              <li><span className="font-semibold">Dimensions:</span> 1920 × 1080 px (Full HD) — minimum 1280 × 720 px</li>
-              <li><span className="font-semibold">Aspect ratio:</span> 16:9</li>
-              <li><span className="font-semibold">Duration:</span> ~10 seconds for a clean seamless loop</li>
-              <li><span className="font-semibold">File size:</span> 5 – 20 MB recommended (max 50 MB)</li>
-              <li><span className="font-semibold">Frame rate:</span> 24 – 30 fps</li>
-              <li><span className="font-semibold">Audio:</span> Not needed — video plays muted on all browsers</li>
-              <li><span className="font-semibold">Color space:</span> sRGB / Rec. 709</li>
-            </ul>
-            <p className="mt-2 text-[11px] text-gray-500">
-              Tip: Export from Premiere / DaVinci at H.264, CRF 23, Faststart enabled. Smaller files stream faster on mobile.
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Library */}

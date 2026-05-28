@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useCmsContent } from '../../../lib/hooks/useCmsContent';
 import { getMedia } from '../../../lib/mediaService';
+import { parseYouTubeId } from '../../../lib/youtube';
 import LiquidEther from '../../components/euphoria/LiquidEther';
 import { useAuditionModal } from '../../components/euphoria/EuphoriaLayout';
 
@@ -355,15 +356,36 @@ export function EuphoriaHomePage() {
         className="relative flex items-center overflow-hidden"
         style={{ minHeight: '100svh', backgroundColor: BG }}
       >
-        {/* ── Static video background — no parallax transform to avoid compositor jank ── */}
-        {heroVideoUrl && (
-          <video
-            autoPlay muted loop playsInline preload="auto"
-            className="absolute inset-0 w-full h-full object-cover"
-            src={heroVideoUrl}
-            style={{ zIndex: 0 }}
-          />
-        )}
+        {/* ── Video/YouTube background ── */}
+        {heroVideoUrl && (() => {
+          const ytId = parseYouTubeId(heroVideoUrl);
+          return ytId ? (
+            <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0, pointerEvents: 'none' }}>
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&rel=0&modestbranding=1&playsinline=1`}
+                allow="autoplay; encrypted-media"
+                aria-hidden="true"
+                tabIndex={-1}
+                title="Euphoria hero background video"
+                style={{
+                  position: 'absolute',
+                  top: '50%', left: '50%',
+                  transform: 'translate(-50%, -50%) scale(1.25)',
+                  width: '100%', height: '100%',
+                  minWidth: '177.78vh', minHeight: '56.25vw',
+                  border: 'none', pointerEvents: 'none',
+                }}
+              />
+            </div>
+          ) : (
+            <video
+              autoPlay muted loop playsInline preload="auto"
+              className="absolute inset-0 w-full h-full object-cover"
+              src={heroVideoUrl}
+              style={{ zIndex: 0 }}
+            />
+          );
+        })()}
 
         {/* ── Parallax background layer (lightweight overlays + image/fallback only) ── */}
         <motion.div style={{ y: heroBgY }} className="absolute inset-0 z-[1]">

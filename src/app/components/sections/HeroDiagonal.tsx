@@ -11,6 +11,7 @@ import {
 import { CTAButton } from '../ui/CTAButton';
 import { ImageWithFallback } from '../figma/ImageWithFallback';
 import { SubBrands } from '../ui/SubBrands';
+import { parseYouTubeId } from '../../../lib/youtube';
 
 interface HeroDiagonalProps {
   headline: string;
@@ -45,27 +46,50 @@ export function HeroDiagonal({
   return (
     <section className="relative min-h-[100svh] lg:min-h-[90vh] flex items-center overflow-hidden bg-bg pt-32">
       <div className="absolute inset-0 z-0">
-        {heroVideoSrc ? (
-          <>
-            {/* Video always full-bleed — clip only on desktop */}
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              className="absolute inset-0 w-full h-full object-cover"
-              src={heroVideoSrc}
-            />
-            {/* Mobile: gradient overlay so text stays readable over the video */}
-            <div className="absolute inset-0 bg-gradient-to-br from-bg/95 via-bg/85 to-bg/50 lg:hidden" />
-            {/* Desktop: solid dark panel on the left half (diagonal cut) */}
-            <div
-              className="absolute inset-0 bg-bg hidden lg:block"
-              style={{ clipPath: 'polygon(0 0, 45% 0, 50% 100%, 0 100%)' }}
-            />
-          </>
-        ) : (
+        {heroVideoSrc ? (() => {
+          const ytId = parseYouTubeId(heroVideoSrc);
+          return ytId ? (
+            <>
+              {/* YouTube background — scaled to cover full area without letterboxing */}
+              <div className="absolute inset-0 overflow-hidden" style={{ pointerEvents: 'none' }}>
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&controls=0&rel=0&modestbranding=1&playsinline=1`}
+                  allow="autoplay; encrypted-media"
+                  aria-hidden="true"
+                  tabIndex={-1}
+                  title="Hero background video"
+                  style={{
+                    position: 'absolute',
+                    top: '50%', left: '50%',
+                    transform: 'translate(-50%, -50%) scale(1.25)',
+                    width: '100%', height: '100%',
+                    minWidth: '177.78vh', minHeight: '56.25vw',
+                    border: 'none', pointerEvents: 'none',
+                  }}
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-bg/95 via-bg/85 to-bg/50 lg:hidden" />
+              <div
+                className="absolute inset-0 bg-bg hidden lg:block"
+                style={{ clipPath: 'polygon(0 0, 45% 0, 50% 100%, 0 100%)' }}
+              />
+            </>
+          ) : (
+            <>
+              {/* Native video fallback */}
+              <video
+                autoPlay muted loop playsInline preload="metadata"
+                className="absolute inset-0 w-full h-full object-cover"
+                src={heroVideoSrc}
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-bg/95 via-bg/85 to-bg/50 lg:hidden" />
+              <div
+                className="absolute inset-0 bg-bg hidden lg:block"
+                style={{ clipPath: 'polygon(0 0, 45% 0, 50% 100%, 0 100%)' }}
+              />
+            </>
+          );
+        })() : (
           <>
             <div className="absolute inset-0 bg-bg" />
             <div
