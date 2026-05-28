@@ -27,7 +27,7 @@ export function SubBrands() {
             style={{ background: 'radial-gradient(ellipse at 80% 80%, #3d2200 0%, #1a0e00 40%, #0A0A0A 70%)' }}
           >
             <img
-              src="/estilo_bee.png"
+              src="/bee_main_home.png"
               alt="Estilo Kids"
               className="absolute inset-0 w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
             />
