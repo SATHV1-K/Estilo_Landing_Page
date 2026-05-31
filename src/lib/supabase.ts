@@ -29,31 +29,46 @@ export async function uploadFile(
   file: File | Blob,
   contentType: string,
 ): Promise<string> {
-  if (R2_FN_URL) {
-    const form = new FormData();
-    form.append('file', file instanceof File ? file : new File([file], 'upload', { type: contentType }));
-    form.append('path', path);
-    form.append('contentType', contentType);
-    const res = await fetch(R2_FN_URL, {
+  if (!R2_FN_URL) {
+    throw new Error(
+      'Upload misconfigured: VITE_SUPABASE_EDGE_FN_URL is not set.\n' +
+      'Check your .env file and deployment environment variables.',
+    );
+  }
+
+  const form = new FormData();
+  form.append('file', file instanceof File ? file : new File([file], 'upload', { type: contentType }));
+  form.append('path', path);
+  form.append('contentType', contentType);
+
+  let res: Response;
+  try {
+    res = await fetch(R2_FN_URL, {
       method: 'POST',
       headers: { Authorization: `Bearer ${supabaseAnonKey}` },
       body: form,
     });
-    if (!res.ok) throw new Error(`R2 upload failed (${res.status})`);
-    const json = await res.json() as { url: string };
-    return json.url;
+  } catch (err) {
+    throw new Error(
+      `Upload failed: could not reach the upload service at ${R2_FN_URL}.\n` +
+      `Check that the Supabase Edge Function is deployed and reachable.\n` +
+      `(${(err as Error).message})`,
+    );
   }
 
-  // Fallback: Supabase Storage (used when VITE_SUPABASE_EDGE_FN_URL is not set)
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(path, file, { contentType, upsert: true });
+  if (!res.ok) {
+    let detail = res.statusText;
+    try {
+      const body = await res.json() as { error?: string };
+      if (body.error) detail = body.error;
+    } catch { /* response wasn't JSON, keep statusText */ }
+    throw new Error(`Upload failed (HTTP ${res.status}): ${detail}`);
+  }
 
-  if (error) throw new Error(`Upload failed: ${error.message}`);
+  const json = await res.json() as { url?: string };
+  if (!json.url) {
+    throw new Error('Upload failed: upload service returned an unexpected response (no URL).');
+  }
 
-  const { data: { publicUrl } } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(data.path);
-
-  return publicUrl;
+  return json.url;
 }
