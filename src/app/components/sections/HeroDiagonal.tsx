@@ -76,17 +76,26 @@ export function HeroDiagonal({
             </>
           ) : (
             <>
-              {/* Native video fallback */}
+              {/* Native video — confined to the right panel so small videos don't get upscaled across the full bg */}
+              <div className="absolute inset-0 bg-bg" />
               <video
                 autoPlay muted loop playsInline preload="metadata"
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute top-0 bottom-0 right-0 h-full object-cover hidden lg:block"
+                style={{ left: '45%', width: '55%', objectPosition: 'center 10%' }}
                 src={heroVideoSrc}
               />
-              <div className="absolute inset-0 bg-gradient-to-br from-bg/95 via-bg/85 to-bg/50 lg:hidden" />
+              {/* Diagonal split overlay */}
               <div
                 className="absolute inset-0 bg-bg hidden lg:block"
                 style={{ clipPath: 'polygon(0 0, 45% 0, 50% 100%, 0 100%)' }}
               />
+              {/* Mobile: full-width video with gradient overlay */}
+              <video
+                autoPlay muted loop playsInline preload="metadata"
+                className="absolute inset-0 w-full h-full object-cover lg:hidden"
+                src={heroVideoSrc}
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-bg/95 via-bg/85 to-bg/50 lg:hidden" />
             </>
           );
         })() : (
