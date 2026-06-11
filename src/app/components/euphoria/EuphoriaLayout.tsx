@@ -1,13 +1,13 @@
-// EuphoriaLayout — dark layout for all /euphoria-ladies/* pages.
-// Primary accent: #E83A7E (hot pink). Black (#0A0A0A) background.
-// Provides EuphoriaAuditionContext so any child can call openAuditionModal().
+// EuphoriaLayout — uses the main Estilo Latino Header for brand continuity.
+// A dark context strip with pink accents sits below the main header for Euphoria nav.
+// EuphoriaAuditionContext is still provided here so child pages can open the modal.
 
 import { useState, useEffect, useContext, createContext } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { Menu, X, Phone, Mail, MapPin, Instagram, Facebook, Youtube, ArrowUpRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { Phone, Mail, MapPin, Instagram, Facebook, Youtube } from 'lucide-react';
 import { EuphoriaAuditionModal } from './EuphoriaAuditionModal';
 import { getAuditionsActive } from '../../../lib/euphoriaAuditionsService';
+import { Header } from '../layout/Header';
 
 const EL_PINK = '#E83A7E';
 const EL_BG = '#0A0A0A';
@@ -39,20 +39,14 @@ export function useAuditionModal() {
   return useContext(EuphoriaAuditionContext);
 }
 
-// ─── Header ───────────────────────────────────────────────────────────────────
+// ─── Euphoria Context Strip ───────────────────────────────────────────────────
+// Fixed bar positioned directly below the main header (top: 128px = h-32).
+// Dark background with pink accent carries Euphoria-specific nav + auditions CTA.
 
-function EuphoriaHeader({ onJoinAuditions }: { onJoinAuditions: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+function EuphoriaContextStrip({ onJoinAuditions }: { onJoinAuditions: () => void }) {
   const [activeHash, setActiveHash] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   useEffect(() => {
     if (location.pathname !== '/euphoria-ladies') {
@@ -60,7 +54,7 @@ function EuphoriaHeader({ onJoinAuditions }: { onJoinAuditions: () => void }) {
       return;
     }
     const handleScroll = () => {
-      const offset = 120;
+      const offset = 200; // accounts for taller combined header+strip
       let current = '';
       for (const id of HASH_SECTION_IDS) {
         const el = document.getElementById(id);
@@ -76,8 +70,6 @@ function EuphoriaHeader({ onJoinAuditions }: { onJoinAuditions: () => void }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
 
-  useEffect(() => { setOpen(false); }, [location]);
-
   function scrollToSection(anchor: string) {
     if (location.pathname === '/euphoria-ladies') {
       document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth' });
@@ -86,7 +78,7 @@ function EuphoriaHeader({ onJoinAuditions }: { onJoinAuditions: () => void }) {
     }
   }
 
-  function isActive(to: string, hash: boolean, end: boolean): boolean {
+  function isNavActive(to: string, hash: boolean, end: boolean): boolean {
     if (hash) return activeHash === to;
     if (end) return location.pathname === '/euphoria-ladies' && !activeHash;
     return location.pathname === to;
@@ -94,171 +86,71 @@ function EuphoriaHeader({ onJoinAuditions }: { onJoinAuditions: () => void }) {
 
   function navCls(active: boolean) {
     return [
-      'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap',
+      'px-3.5 py-1.5 rounded-full text-[13px] font-bold uppercase tracking-wider transition-all duration-200 whitespace-nowrap flex-shrink-0',
       active
-        ? 'text-white'
-        : 'text-white/60 hover:text-white hover:bg-white/8',
+        ? 'bg-white'
+        : 'text-white/80 hover:text-white hover:bg-white/15',
     ].join(' ');
   }
 
   return (
-    <header
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+    <div
+      className="fixed left-0 right-0 z-40 flex items-center overflow-hidden"
       style={{
-        backgroundColor: scrolled ? 'rgba(10,10,10,0.98)' : 'rgba(10,10,10,0.72)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: scrolled
-          ? `1px solid rgba(232,58,126,0.15)`
-          : '1px solid transparent',
-        boxShadow: scrolled ? `0 1px 0 rgba(232,58,126,0.08)` : 'none',
+        top: '128px',
+        height: '56px',
+        backgroundColor: EL_PINK,
+        boxShadow: '0 2px 12px rgba(232,58,126,0.35)',
       }}
     >
-      <div className="max-w-6xl mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 w-full flex items-center gap-1 overflow-x-auto">
+        <span className="font-display text-xs text-white/70 uppercase tracking-widest mr-3 whitespace-nowrap flex-shrink-0 hidden sm:inline">
+          💃 Euphoria Ladies
+        </span>
+        <div className="w-px h-4 bg-white/30 mr-2 flex-shrink-0 hidden sm:block" />
 
-          {/* Logo */}
-          <Link to="/euphoria-ladies" className="flex items-center gap-2.5 group flex-shrink-0">
-            <img
-              src="/eupLadies.png"
-              alt="Euphoria Ladies"
-              className="h-54 w-auto object-contain transition-all duration-300 group-hover:opacity-90"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(232,58,126,0.2))' }}
-            />
-          </Link>
-
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV.map(({ to, label, end, hash }) => {
-              const active = isActive(to, hash, end);
-              return hash ? (
-                <a
-                  key={to}
-                  href={to}
-                  onClick={e => { e.preventDefault(); scrollToSection(to.split('#')[1]); }}
-                  className={navCls(active)}
-                  style={active ? { backgroundColor: EL_PINK } : {}}
-                >
-                  {label}
-                </a>
-              ) : (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={end}
-                  onClick={() => {
-                    if (location.pathname === '/euphoria-ladies') {
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                  }}
-                  className={() => navCls(active)}
-                  style={() => active ? { backgroundColor: EL_PINK } : {}}
-                >
-                  {label}
-                </NavLink>
-              );
-            })}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            {/* Join Auditions CTA — opens modal */}
-            <button
-              type="button"
-              onClick={onJoinAuditions}
-              className="hidden md:inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider text-white transition-all hover:-translate-y-0.5"
-              style={{
-                backgroundColor: EL_PINK,
-                boxShadow: `0 4px 20px rgba(232,58,126,0.35)`,
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 28px rgba(232,58,126,0.55)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(232,58,126,0.35)'; }}
+        {NAV.map(({ to, label, end, hash }) => {
+          const active = isNavActive(to, hash, end);
+          return hash ? (
+            <a
+              key={to}
+              href={to}
+              onClick={e => { e.preventDefault(); scrollToSection(to.split('#')[1]); }}
+              className={navCls(active)}
+              style={active ? { color: EL_PINK } : {}}
             >
-              Join Auditions
-            </button>
-
-            {/* Main site link */}
-            <Link
-              to="/"
-              className="hidden md:inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-white/30 hover:text-white/60 transition-colors"
+              {label}
+            </a>
+          ) : (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={() => navCls(active)}
+              style={() => active ? { color: EL_PINK } : {}}
             >
-              Main Site <ArrowUpRight size={10} />
-            </Link>
+              {label}
+            </NavLink>
+          );
+        })}
 
-            {/* Hamburger */}
-            <button
-              className="md:hidden p-2 rounded-lg text-white/60 hover:text-white transition-colors"
-              onClick={() => setOpen(!open)}
-              aria-label="Toggle menu"
-            >
-              {open ? <X size={22} /> : <Menu size={22} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile nav */}
-        <AnimatePresence>
-          {open && (
-            <motion.nav
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.22, ease: 'easeOut' }}
-              className="md:hidden pb-5 overflow-hidden"
-            >
-              <div className="flex flex-col gap-1.5 pt-2">
-                {NAV.map(({ to, label, end, hash }) => {
-                  const active = isActive(to, hash, end);
-                  return hash ? (
-                    <a
-                      key={to}
-                      href={to}
-                      onClick={e => { e.preventDefault(); setOpen(false); setTimeout(() => scrollToSection(to.split('#')[1]), 100); }}
-                      className="px-4 py-3.5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all"
-                      style={{
-                        backgroundColor: active ? EL_PINK : 'rgba(255,255,255,0.06)',
-                        color: active ? '#fff' : 'rgba(255,255,255,0.75)',
-                      }}
-                    >
-                      {label}
-                    </a>
-                  ) : (
-                    <NavLink
-                      key={to}
-                      to={to}
-                      end={end}
-                      onClick={() => setOpen(false)}
-                      className="px-4 py-3.5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all"
-                      style={() => ({
-                        backgroundColor: active ? EL_PINK : 'rgba(255,255,255,0.06)',
-                        color: active ? '#fff' : 'rgba(255,255,255,0.75)',
-                      })}
-                    >
-                      {label}
-                    </NavLink>
-                  );
-                })}
-                {/* Mobile Join Auditions — opens modal */}
-                <button
-                  type="button"
-                  onClick={() => { setOpen(false); onJoinAuditions(); }}
-                  className="px-4 py-3.5 rounded-xl text-sm font-bold uppercase tracking-wider text-white text-center mt-1"
-                  style={{ backgroundColor: EL_PINK, boxShadow: '0 4px 20px rgba(232,58,126,0.3)' }}
-                >
-                  Join Auditions
-                </button>
-                <Link
-                  to="/"
-                  onClick={() => setOpen(false)}
-                  className="px-4 py-3 rounded-xl text-sm font-semibold text-white/35 text-center"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}
-                >
-                  ← Back to Main Site
-                </Link>
-              </div>
-            </motion.nav>
-          )}
-        </AnimatePresence>
+        {/* Join Auditions CTA — desktop only, pinned to right */}
+        <button
+          type="button"
+          onClick={onJoinAuditions}
+          className="hidden md:inline-flex items-center gap-1.5 ml-auto px-4 py-1.5 rounded-full text-[13px] font-bold uppercase tracking-wider whitespace-nowrap flex-shrink-0 transition-all hover:-translate-y-0.5"
+          style={{
+            backgroundColor: '#ffffff',
+            color: EL_PINK,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(0,0,0,0.25)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 10px rgba(0,0,0,0.15)'; }}
+        >
+          Join Auditions
+        </button>
       </div>
-    </header>
+    </div>
   );
 }
 
@@ -282,16 +174,22 @@ function EuphoriaFooter() {
               style={{ filter: 'drop-shadow(0 0 8px rgba(232,58,126,0.15))' }}
             />
             <p className="font-body text-sm leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              A high-performance ladies training team by Estilo Latino Dance Company.
+              A high-performance ladies training team.
               Building dancers, champions, performers, and confident women since 2018.
             </p>
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider transition-colors hover:opacity-80"
-              style={{ color: EL_PINK }}
-            >
-              Estilo Latino Dance Company <ArrowUpRight size={12} />
-            </Link>
+            {/* Prominent parent brand link */}
+            <div className="pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                Part of
+              </p>
+              <Link
+                to="/"
+                className="font-display text-lg uppercase tracking-wide transition-opacity hover:opacity-75"
+                style={{ color: EL_PINK }}
+              >
+                Estilo Latino Dance Company →
+              </Link>
+            </div>
           </div>
 
           {/* Quick links + Contact */}
@@ -409,8 +307,8 @@ const EUPHORIA_TITLES: Record<string, string> = {
 
 export function EuphoriaLayout() {
   const location = useLocation();
-  const [modalOpen, setModalOpen]     = useState(false);
-  const [isActive, setIsActive]       = useState(false);
+  const [modalOpen, setModalOpen]       = useState(false);
+  const [isActive, setIsActive]         = useState(false);
   const [activeLoaded, setActiveLoaded] = useState(false);
 
   useEffect(() => {
@@ -418,7 +316,6 @@ export function EuphoriaLayout() {
     if (title) document.title = title;
   }, [location.pathname]);
 
-  // Load auditions active status once
   useEffect(() => {
     getAuditionsActive()
       .then(v => setIsActive(v))
@@ -426,7 +323,6 @@ export function EuphoriaLayout() {
       .finally(() => setActiveLoaded(true));
   }, []);
 
-  // Re-fetch active status whenever modal opens to stay in sync
   function handleOpenModal() {
     getAuditionsActive()
       .then(v => setIsActive(v))
@@ -449,13 +345,16 @@ export function EuphoriaLayout() {
         className="min-h-screen flex flex-col"
         style={{ backgroundColor: EL_BG, color: '#E8E8E8', overflowX: 'clip' }}
       >
-        <EuphoriaHeader onJoinAuditions={handleOpenModal} />
-        <main className="flex-1 pt-20">
+        {/* Main Estilo Latino header — same chrome as the main site */}
+        <Header />
+        {/* Dark context strip for Euphoria-specific navigation, sits below main header */}
+        <EuphoriaContextStrip onJoinAuditions={handleOpenModal} />
+        {/* pt-[184px] = h-32 main header (128px) + 56px context strip */}
+        <main className="flex-1 pt-[184px]">
           <Outlet />
         </main>
         <EuphoriaFooter />
 
-        {/* Audition modal — rendered at layout level so it's available on all sub-pages */}
         {activeLoaded && (
           <EuphoriaAuditionModal
             isOpen={modalOpen}

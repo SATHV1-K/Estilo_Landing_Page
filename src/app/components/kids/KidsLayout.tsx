@@ -1,16 +1,16 @@
-// KidsLayout — separate blue-theme layout for all /kids/* pages.
-// Has its own header and footer; completely independent of the main dark Layout.
+// KidsLayout — uses the main Estilo Latino Header for brand continuity.
+// A fixed blue context strip below the main header carries Kids-specific nav.
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
-import { Menu, X, Phone, Mail, MapPin, Instagram, Facebook } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { Phone, Mail, MapPin, Instagram, Facebook } from 'lucide-react';
 import { KidsPageBackground } from './KidsDoodles';
-import { useI18n } from '../../../lib/i18n';
+import { Header } from '../layout/Header';
 
-const KIDS_BG    = '#4A6FA5';
-const KIDS_TEXT  = '#2D3D6B';
-const KIDS_CREAM = '#FFF8E7';
+const KIDS_BG      = '#4A6FA5';
+const KIDS_TEXT    = '#2D3D6B';
+const KIDS_NAV_BG  = 'rgb(240,191,113)';
+const KIDS_NAV_INK = '#2D1A00';
 
 const NAV = [
   { to: '/kids',              label: 'Home',         end: true },
@@ -20,145 +20,42 @@ const NAV = [
   { to: '/kids/gallery',      label: 'Gallery',      end: false },
 ];
 
-// ─── Kids Header ─────────────────────────────────────────────────────────────
+// ─── Kids Context Strip ───────────────────────────────────────────────────────
+// Fixed bar positioned directly below the main header (top: 128px = h-32).
+// Carries Kids-specific sub-navigation so the main header stays clean.
 
-function KidsHeader() {
-  const [open, setOpen] = useState(false);
-  const { language, setLanguage } = useI18n();
-
+function KidsContextStrip() {
   return (
-    <header
-      className="fixed top-0 left-0 right-0 z-50"
-      style={{ backgroundColor: KIDS_BG, boxShadow: '0 2px 12px rgba(0,0,0,0.2)' }}
+    <div
+      className="fixed left-0 right-0 z-40 flex items-center overflow-hidden"
+      style={{ top: '128px', height: '56px', backgroundColor: KIDS_NAV_BG, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
     >
-      <div className="max-w-6xl mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between h-24 py-4">
-          {/* Logo */}
-          <Link to="/kids" className="flex items-center flex-shrink-0 group">
-            <img
-              src="/estilo_bee.png"
-              alt="Estilo Kids"
-              className="h-20 w-auto object-contain group-hover:scale-105 transition-transform"
-            />
-          </Link>
-
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV.map(({ to, label, end }) => (
-              <NavLink
-                key={to}
-                to={to}
-                end={end}
-                className={({ isActive }) =>
-                  [
-                    'px-4 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wider transition-colors',
-                    isActive
-                      ? 'text-kids-text font-bold'
-                      : 'text-white/80 hover:text-kids-yellow',
-                  ].join(' ')
-                }
-                style={({ isActive }) =>
-                  isActive ? { backgroundColor: '#f0bf71' } : {}
-                }
-              >
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            {/* Language toggle */}
-            <button
-              onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
-              className="hidden md:flex items-center gap-1 font-body font-bold text-xs uppercase tracking-wider rounded-full px-3 py-1.5 transition-all"
-              style={{
-                border: '1.5px solid rgba(240,191,113,0.5)',
-                backgroundColor: 'transparent',
-              }}
-              aria-label="Toggle language"
-            >
-              <span style={{ color: language === 'en' ? '#f0bf71' : 'rgba(255,255,255,0.4)' }}>EN</span>
-              <span style={{ color: 'rgba(255,255,255,0.3)', margin: '0 1px' }}>|</span>
-              <span style={{ color: language === 'es' ? '#f0bf71' : 'rgba(255,255,255,0.4)' }}>ES</span>
-            </button>
-
-            {/* Main site link */}
-            <Link
-              to="/"
-              className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider transition-colors"
-              style={{ color: 'rgba(255,255,255,0.5)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.9)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
-            >
-              Main Site →
-            </Link>
-
-            {/* Hamburger */}
-            <button
-              className="md:hidden p-2 rounded-lg transition-colors"
-              style={{ color: 'rgba(255,255,255,0.8)' }}
-              onClick={() => setOpen(!open)}
-              aria-label="Toggle menu"
-            >
-              {open ? <X size={22} /> : <Menu size={22} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile nav */}
-        <AnimatePresence>
-          {open && (
-            <motion.nav
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden pb-4 overflow-hidden"
-            >
-              <div className="flex flex-col gap-1.5">
-                {NAV.map(({ to, label, end }) => (
-                  <NavLink
-                    key={to}
-                    to={to}
-                    end={end}
-                    onClick={() => setOpen(false)}
-                    className={({ isActive }) =>
-                      [
-                        'px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider w-full',
-                        isActive
-                          ? 'text-kids-text'
-                          : 'text-white/80',
-                      ].join(' ')
-                    }
-                    style={({ isActive }) =>
-                      isActive
-                        ? { backgroundColor: '#f0bf71' }
-                        : { backgroundColor: 'rgba(255,255,255,0.1)' }
-                    }
-                  >
-                    {label}
-                  </NavLink>
-                ))}
-                <button
-                  onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
-                  className="px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider text-center mt-1 w-full"
-                  style={{ backgroundColor: 'rgba(240,191,113,0.12)', color: '#f0bf71', border: '1px solid rgba(240,191,113,0.3)' }}
-                >
-                  {language === 'en' ? 'Switch to Español' : 'Switch to English'}
-                </button>
-                <Link
-                  to="/"
-                  onClick={() => setOpen(false)}
-                  className="px-4 py-3 rounded-xl text-sm font-semibold text-white/50 text-center mt-1"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.15)' }}
-                >
-                  ← Back to Main Site
-                </Link>
-              </div>
-            </motion.nav>
-          )}
-        </AnimatePresence>
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 w-full flex items-center gap-1 overflow-x-auto">
+        <span
+          className="font-display text-xs uppercase tracking-widest mr-3 whitespace-nowrap flex-shrink-0 hidden sm:inline"
+          style={{ color: `${KIDS_NAV_INK}99` }}
+        >
+          🐝 Estilo Kids
+        </span>
+        <div className="w-px h-4 mr-2 flex-shrink-0 hidden sm:block" style={{ backgroundColor: `${KIDS_NAV_INK}30` }} />
+        {NAV.map(({ to, label, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) => [
+              'px-3.5 py-1.5 rounded-full text-[13px] font-bold uppercase tracking-wider transition-colors whitespace-nowrap flex-shrink-0',
+              isActive
+                ? 'bg-white/40 text-[#2D1A00]'
+                : 'hover:bg-white/20',
+            ].join(' ')}
+            style={({ isActive }) => ({ color: isActive ? KIDS_NAV_INK : `${KIDS_NAV_INK}BB` })}
+          >
+            {label}
+          </NavLink>
+        ))}
       </div>
-    </header>
+    </div>
   );
 }
 
@@ -174,16 +71,22 @@ function KidsFooter() {
             <div className="flex items-center mb-3">
               <img src="/estilo_bee.png" alt="Estilo Kids" className="h-28 w-auto object-contain" />
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              Part of Estilo Latino Dance Company. Nurturing young dancers with joy, rhythm, and passion.
+            <p className="text-sm leading-relaxed mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              Nurturing young dancers with joy, rhythm, and passion.
             </p>
-            <Link
-              to="/"
-              className="inline-flex items-center gap-1 mt-3 text-xs font-semibold uppercase tracking-wider transition-colors"
-              style={{ color: '#f0bf71' }}
-            >
-              Main Site →
-            </Link>
+            {/* Prominent parent brand link */}
+            <div className="pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                Part of
+              </p>
+              <Link
+                to="/"
+                className="font-display text-lg uppercase tracking-wide transition-opacity hover:opacity-75"
+                style={{ color: '#f0bf71' }}
+              >
+                Estilo Latino Dance Company →
+              </Link>
+            </div>
           </div>
 
           {/* Contact */}
@@ -283,8 +186,12 @@ export function KidsLayout() {
   return (
     <div className="min-h-screen flex flex-col relative" style={{ backgroundColor: KIDS_BG, isolation: 'isolate' }}>
       <KidsPageBackground />
-      <KidsHeader />
-      <main className="flex-1 pt-24">
+      {/* Main Estilo Latino header — same chrome as the main site */}
+      <Header />
+      {/* Blue context strip for Kids-specific navigation, sits below main header */}
+      <KidsContextStrip />
+      {/* pt-[184px] = h-32 main header (128px) + 56px context strip */}
+      <main className="flex-1 pt-[184px]">
         <Outlet />
       </main>
       <KidsFooter />

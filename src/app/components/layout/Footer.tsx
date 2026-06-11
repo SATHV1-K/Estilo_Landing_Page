@@ -120,6 +120,25 @@ export function Footer() {
               </Link>
             </div>
 
+            {/* Programs */}
+            <div className="mt-6 pt-5 border-t border-border">
+              <h4 className="font-display text-sm tracking-widest text-text-muted uppercase mb-3">
+                {language === 'en' ? 'Programs' : 'Programas'}
+              </h4>
+              <Link
+                to="/kids"
+                className="flex items-center gap-2 text-text-muted hover:text-gold transition-colors mb-2"
+              >
+                🐝 Estilo Kids
+              </Link>
+              <Link
+                to="/euphoria-ladies"
+                className="flex items-center gap-2 text-text-muted hover:text-[#E83A7E] transition-colors"
+              >
+                💃 Euphoria Ladies
+              </Link>
+            </div>
+
             {/* Social Links */}
             <div className="flex gap-4 mt-8">
               {siteSettings.socialLinks.map((link) => (
