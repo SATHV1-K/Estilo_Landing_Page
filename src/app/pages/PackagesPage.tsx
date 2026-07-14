@@ -48,6 +48,12 @@ export function PackagesPage() {
     return `$${(price / 100).toFixed(0)}`;
   };
 
+  const hasDiscount = (pkg: Package) =>
+    pkg.price !== null && pkg.compareAtPrice != null && pkg.compareAtPrice > pkg.price;
+
+  const discountAmount = (pkg: Package) =>
+    ((pkg.compareAtPrice! - pkg.price!) / 100).toFixed(0);
+
   const isContactCategory = selectedCategory === 'event';
 
   const whatsappMessages: Record<string, string> = {
@@ -112,14 +118,29 @@ export function PackagesPage() {
             <motion.div
               key={pkg.id}
               variants={fadeInUp}
-              className="bg-surface-card rounded-xl p-8 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all group flex flex-col"
+              className="relative bg-surface-card rounded-xl p-8 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all group flex flex-col"
             >
+              {hasDiscount(pkg) && (
+                <span className="absolute -top-3 right-6 bg-gold text-ink text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-[0_4px_12px_rgba(246,176,0,0.4)]">
+                  {language === 'es'
+                    ? `$${discountAmount(pkg)} DE DESCUENTO`
+                    : `$${discountAmount(pkg)} OFF`}
+                </span>
+              )}
+
               <h3 className="font-display text-3xl mb-2">
                 {language === 'es' ? pkg.nameEs : pkg.name}
               </h3>
 
-              <div className="text-5xl font-bold text-gold my-6">
-                {formatPrice(pkg.price)}
+              <div className="flex items-baseline gap-3 flex-wrap my-6">
+                {hasDiscount(pkg) && (
+                  <span className="text-2xl text-text-dim line-through">
+                    {formatPrice(pkg.compareAtPrice!)}
+                  </span>
+                )}
+                <span className="text-5xl font-bold text-gold">
+                  {formatPrice(pkg.price)}
+                </span>
               </div>
 
               {pkg.classCount && (

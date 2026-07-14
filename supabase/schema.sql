@@ -146,6 +146,7 @@ CREATE TABLE IF NOT EXISTS packages (
   name_es            TEXT        NOT NULL DEFAULT '',
   category           TEXT        NOT NULL DEFAULT 'adults-salsa-bachata',
   price              NUMERIC,
+  compare_at_price   NUMERIC,
   currency           TEXT        NOT NULL DEFAULT 'USD',
   class_count        INTEGER,
   expiration_months  INTEGER,

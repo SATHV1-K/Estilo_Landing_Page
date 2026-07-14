@@ -25,7 +25,7 @@ export function AboutPage() {
       'Multiple world dance champions have been trained at our studio.',
     'about.highlight_es':
       'Múltiples campeones mundiales de baile han sido entrenados en nuestro estudio.',
-    'about.stat.years':       '14+',
+    'about.stat.years':       '16+',
     'about.stat.years_label':  'Years of Experience',
     'about.stat.years_label_es': 'Años de Experiencia',
     'about.stat.students':       '1000+',

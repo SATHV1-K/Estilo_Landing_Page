@@ -3,7 +3,7 @@
 // updates silently once the API responds.
 
 import { useState, useEffect, useRef } from 'react';
-import { resolveContent } from '../cms';
+import { resolveContent } from '../contentService';
 
 /**
  * Fetches CMS content for the given `{ key: fallback }` map.

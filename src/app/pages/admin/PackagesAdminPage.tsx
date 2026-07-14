@@ -57,6 +57,7 @@ interface PkgForm {
   nameEs: string;
   category: Category;
   price: string;          // dollars as string, blank = "Call for pricing"
+  compareAtPrice: string; // dollars as string, blank = no discount shown
   classCount: string;     // blank = none
   expirationMonths: string;
   description: string;
@@ -70,7 +71,7 @@ interface PkgForm {
 function emptyForm(category: Category): PkgForm {
   return {
     name: '', nameEs: '', category,
-    price: '', classCount: '', expirationMonths: '',
+    price: '', compareAtPrice: '', classCount: '', expirationMonths: '',
     description: '', descriptionEs: '', paymentLink: '',
     isActive: true, sortOrder: 999, currency: 'USD',
   };
@@ -83,6 +84,7 @@ function pkgToForm(pkg: ReturnType<typeof getAllPackages>[number]): PkgForm {
     nameEs: pkg.nameEs,
     category: pkg.category,
     price: pkg.price !== null ? String(pkg.price / 100) : '',
+    compareAtPrice: pkg.compareAtPrice != null ? String(pkg.compareAtPrice / 100) : '',
     classCount: pkg.classCount ? String(pkg.classCount) : '',
     expirationMonths: pkg.expirationMonths ? String(pkg.expirationMonths) : '',
     description: pkg.description,
@@ -101,6 +103,7 @@ function formToPkg(f: PkgForm) {
     nameEs: f.nameEs.trim(),
     category: f.category,
     price: f.price.trim() !== '' ? Math.round(parseFloat(f.price) * 100) : null,
+    compareAtPrice: f.compareAtPrice.trim() !== '' ? Math.round(parseFloat(f.compareAtPrice) * 100) : null,
     currency: 'USD' as const,
     classCount: f.classCount !== '' ? parseInt(f.classCount) : undefined,
     expirationMonths: f.expirationMonths !== '' ? parseInt(f.expirationMonths) : undefined,
@@ -141,6 +144,7 @@ function PackageFormPanel({
     const e: Record<string, string> = {};
     if (!form.name.trim()) e.name = 'Name is required';
     if (form.price !== '' && isNaN(parseFloat(form.price))) e.price = 'Enter a valid number';
+    if (form.compareAtPrice !== '' && isNaN(parseFloat(form.compareAtPrice))) e.compareAtPrice = 'Enter a valid number';
     if (form.classCount !== '' && isNaN(parseInt(form.classCount))) e.classCount = 'Enter a number';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -219,6 +223,23 @@ function PackageFormPanel({
               {errors.price && <p className="text-xs text-red-600 mt-1">{errors.price}</p>}
             </div>
             <div>
+              <label className={S.label}>Compare-at Price ($)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.compareAtPrice}
+                onChange={e => set('compareAtPrice', e.target.value)}
+                className={S.input}
+                placeholder="Leave blank = no discount badge"
+              />
+              {errors.compareAtPrice && <p className="text-xs text-red-600 mt-1">{errors.compareAtPrice}</p>}
+            </div>
+          </div>
+
+          {/* Class Count + Expiration */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
               <label className={S.label}>Class Count</label>
               <input
                 type="number"
@@ -230,20 +251,18 @@ function PackageFormPanel({
               />
               {errors.classCount && <p className="text-xs text-red-600 mt-1">{errors.classCount}</p>}
             </div>
-          </div>
-
-          {/* Expiration */}
-          <div>
-            <label className={S.label}>Expiration</label>
-            <select
-              value={form.expirationMonths}
-              onChange={e => set('expirationMonths', e.target.value)}
-              className={S.input}
-            >
-              {EXPIRATION_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+            <div>
+              <label className={S.label}>Expiration</label>
+              <select
+                value={form.expirationMonths}
+                onChange={e => set('expirationMonths', e.target.value)}
+                className={S.input}
+              >
+                {EXPIRATION_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Description with EN/ES tabs */}
@@ -358,8 +377,13 @@ function PackageRow({
         {/* Price */}
         <div className="flex-shrink-0 text-right">
           {pkg.price !== null ? (
-            <p className="font-black text-base" style={{ color: GOLD }}>
-              ${(pkg.price / 100).toFixed(0)}
+            <p className="font-black text-base flex items-center gap-1.5 justify-end">
+              {pkg.compareAtPrice != null && pkg.compareAtPrice > pkg.price && (
+                <span className="text-xs font-semibold text-gray-400 line-through">
+                  ${(pkg.compareAtPrice / 100).toFixed(0)}
+                </span>
+              )}
+              <span style={{ color: GOLD }}>${(pkg.price / 100).toFixed(0)}</span>
             </p>
           ) : (
             <p className="text-xs font-semibold text-gray-400">Call us</p>

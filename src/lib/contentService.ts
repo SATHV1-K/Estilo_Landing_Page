@@ -44,6 +44,19 @@ export async function setPageContent(updates: Record<string, string>): Promise<v
   if (error) throw error;
 }
 
+export async function resolveContent(
+  keysWithFallbacks: Record<string, string>,
+): Promise<Record<string, string>> {
+  const keys = Object.keys(keysWithFallbacks);
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('key, value')
+    .in('key', keys);
+  if (error) throw error;
+  const found = Object.fromEntries((data ?? []).map(row => [row.key as string, row.value as string]));
+  return Object.fromEntries(keys.map(key => [key, found[key] ?? keysWithFallbacks[key]]));
+}
+
 export async function getPageContent(prefix: string): Promise<Record<string, string>> {
   const { data, error } = await supabase
     .from(TABLE)

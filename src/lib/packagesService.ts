@@ -2,7 +2,7 @@ import { supabase, genId } from './supabase';
 import type { Package } from './types';
 
 const TABLE = 'packages';
-const COLS  = 'id, name, name_es, category, price, currency, class_count, expiration_months, description, description_es, payment_link, sort_order, is_active';
+const COLS  = 'id, name, name_es, category, price, compare_at_price, currency, class_count, expiration_months, description, description_es, payment_link, sort_order, is_active';
 
 function rowToPackage(row: Record<string, unknown>): Package {
   return {
@@ -11,6 +11,7 @@ function rowToPackage(row: Record<string, unknown>): Package {
     nameEs:            (row.name_es          as string)  ?? '',
     category:          (row.category         as Package['category']) ?? 'adults-salsa-bachata',
     price:             row.price !== null ? (row.price as number) : null,
+    compareAtPrice:    row.compare_at_price !== null && row.compare_at_price !== undefined ? (row.compare_at_price as number) : null,
     currency:          'USD',
     classCount:        (row.class_count       as number | undefined),
     expirationMonths:  (row.expiration_months as number | undefined),
@@ -54,6 +55,7 @@ export async function savePackage(
     name_es:            data.nameEs,
     category:           data.category,
     price:              data.price,
+    compare_at_price:   data.compareAtPrice ?? null,
     currency:           data.currency,
     class_count:        data.classCount ?? null,
     expiration_months:  data.expirationMonths ?? null,

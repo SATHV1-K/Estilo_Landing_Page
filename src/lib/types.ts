@@ -52,6 +52,7 @@ export interface Package {
   nameEs: string;
   category: "kids" | "adults-salsa-bachata" | "adults-street" | "private" | "event";
   price: number | null;
+  compareAtPrice?: number | null;
   currency: "USD";
   classCount?: number;
   expirationMonths?: number;

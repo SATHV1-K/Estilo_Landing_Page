@@ -122,7 +122,7 @@ export function StyleDetailPage() {
                   {language === 'es' ? 'Ver Horario' : 'View Schedule'}
                 </CTAButton>
                 <CTAButton href="https://payments.estilolatinodance.com" variant="outline" size="lg">
-                  {language === 'es' ? 'Gestionar Clases' : 'Manage Classes'}
+                  {language === 'es' ? 'Únete' : 'Join Us'}
                 </CTAButton>
               </div>
             )}
