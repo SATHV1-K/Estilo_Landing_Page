@@ -56,7 +56,7 @@ export function StyleDetailPage() {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-[center_25%]"
           />
         ) : (
           <ImageWithFallback

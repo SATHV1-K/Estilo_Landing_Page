@@ -176,11 +176,14 @@ export function KidsHomePage() {
               >
                 <Link to={`/kids/programs/${prog.id}`} className="block group">
                   {prog.imageUrl ? (
-                    <div className="overflow-hidden" style={{ height: 220 }}>
+                    <div
+                      className="overflow-hidden flex items-center justify-center p-4"
+                      style={{ height: 220, backgroundColor: '#EAF0F6' }}
+                    >
                       <img
                         src={prog.imageUrl}
                         alt={prog.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                       />
                     </div>
                   ) : (
